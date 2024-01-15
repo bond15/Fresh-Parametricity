@@ -1,0 +1,316 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{simplebnf}
+\usepackage{comment}
+\usepackage{bussproofs}
+\usepackage[llbracket,rrbracket]{stmaryrd}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{cite}
+\usepackage{scalerel}
+\usepackage{oz}
+\def\sq{\mathbin{\scalerel*{\strut\rule[-.5ex]{2ex}{2ex}}{\cdot}}}
+
+
+\newcommand{\blue}[1]{\textcolor{blue}{#1}}
+\newcommand\sep{\mathrel{-\mkern-6mu*}}
+
+\title{Honey Bunches of OSum}
+\author{Eric Bond}
+\date{January 2024}
+
+\begin{document}
+\maketitle
+
+\section{Untyped Syntax}
+\begin{bnfgrammar}
+$A$ : value types ::= $X$ 
+| $\mathbf{1}$
+| $A\; \times \; A$  
+| $A\; * \; A$
+| $U\underline{B}$
+;;
+$B$ : computation types ::= $A \rightarrow \underline{B}$ 
+| $A \sep \underline{B}$
+| $F\;A$
+;;
+$\Gamma$ : value typing context ::= $x\; \colon A$ 
+| $\phi$ : additive unit
+| $\Gamma ; \Gamma$ : additive combination (product)
+| $\varphi$ : multiplicative unit
+| $\Gamma \fatsemi \Gamma$ : multiplicative combination (tensor)
+;;
+
+$\Delta$ : stoup ::= $\cdot$ 
+| $\bullet$
+;;
+\end{bnfgrammar}
+
+\section{Typed Syntax}
+
+\subsection{Var}
+\begin{prooftree}
+\AxiomC{}
+\RightLabel{$Id_v$}
+\UnaryInfC{$x : A \vdash x : A$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{}
+\RightLabel{$Id_c$}
+\UnaryInfC{$\Gamma | \bullet : \underline{B} \vdash \bullet : \underline{B}$}
+\end{prooftree}
+
+\subsection{One}
+\begin{prooftree}
+\AxiomC{}
+\RightLabel{$\mathbf{1} Intro$}
+\UnaryInfC{$\Gamma \vdash^v () : \mathbf{1}$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash^v M : \mathbf{1}$}
+\RightLabel{$\mathbf{1} \eta$}
+\UnaryInfC{$\Gamma \vdash^v ()  = M: \mathbf{1}$}
+\end{prooftree}
+
+\subsection{Product}
+\begin{prooftree}
+\AxiomC{$\Gamma_1  \vdash^v V_1 : A_1$}
+\AxiomC{$\Gamma_2  \vdash^v V_2 : A_2$}
+\RightLabel{$\times Intro$}
+\BinaryInfC{$ \Gamma_1 ; \Gamma_2 \vdash^v (V_1,V_2) : A_1 \times A_2$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash^v M : A_1 \times A_2 $}
+\RightLabel{$\times Elim_i$}
+\UnaryInfC{$\Gamma \vdash^v \pi_i M : A_i$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash^v M_1 : A_1 $}
+\AxiomC{$\Gamma \vdash^v M_2 : A_2$}
+\RightLabel{$\times \beta_i$}
+\BinaryInfC{$\Gamma \vdash^v \pi_i (M_1,M_2)  = M_i : A_i$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash^v M : A_1 \times A_2 $}
+\RightLabel{$\times \eta$}
+\UnaryInfC{$\Gamma \vdash^v M = (\pi_1 M , \pi_2 M) : A_1 \times A_2$}
+\end{prooftree}
+
+\subsection{Sep Product}
+\begin{prooftree}
+\AxiomC{$\Gamma_1  \vdash^v V_1 : A_1$}
+\AxiomC{$\Gamma_2  \vdash^v V_2 : A_2$}
+\RightLabel{$* Intro$}
+\BinaryInfC{$ \Gamma_1 \fatsemi \Gamma_2 \vdash^v V_1 * V_2 : A_1 * A_2$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma_1(x : A \fatsemi y : B) \vdash^v N : C $}
+\AxiomC{$\Gamma_2 \vdash^v M : A * B$}
+\RightLabel{$*Elim$}
+\BinaryInfC{$\Gamma_1(\Gamma_2) \vdash^v \mathbf{let} (x,y) = M \; \mathbf{in} \; N : C$}
+\end{prooftree}
+
+
+\begin{prooftree}
+\AxiomC{$\Gamma_1 \vdash^v M_1 : A$}
+\AxiomC{$\Gamma_2 \vdash^v M_2 : B $}
+\AxiomC{$\Gamma_3(x : A \fatsemi y : B) \vdash^v N : C $}
+\RightLabel{$* \beta$}\footnote{beta eta from page 21 of \cite{Semantics-Proof-Theory-Bunched-Implications}}
+\TrinaryInfC{$\blue{\Gamma?} \vdash^v (\mathbf{let} (x,y) = (M_1 * M_2) \; \mathbf{in}\; N) = N[M_1/x,M_2/y] : C$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash^v  M : A_1 * A_2 $}
+\RightLabel{$* \eta $}
+\UnaryInfC{$\Gamma \vdash^v (\mathbf{let} (x,y) = M\; \mathbf{in}\; x * y) = M : A_1 * A_2$}
+\end{prooftree}
+
+
+\subsection{U}
+
+\begin{prooftree}
+\AxiomC{$\Gamma | \cdot \vdash^c M : \underline{B}$}
+\RightLabel{$\mathbf{tf} \; Intro$}
+\UnaryInfC{$\Gamma \vdash^v \mathbf{thunk} M : U \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash^v V : U \underline{B}$}
+\RightLabel{$\mathbf{tf} \; Elim$}
+\UnaryInfC{$\Gamma | \cdot \vdash^c \mathbf{force} V : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma | \cdot \vdash^c M  : \underline{B}$}
+\RightLabel{$\mathbf{tf} \; \beta$}
+\UnaryInfC{$\Gamma | \cdot \vdash^c \mathbf{force}\; (\mathbf{thunk}\; M) = M : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash^v V : U \underline{B}$}
+\RightLabel{$\mathbf{tf}\; \eta$}
+\UnaryInfC{$\Gamma \vdash^v V = \mathbf{thunk}\; (\mathbf{force}\; V) : U\underline{B}$}
+\end{prooftree}
+
+
+\subsection{"Normal" functions}
+This is where things get tricky..
+
+\begin{prooftree}
+\AxiomC{$\Gamma ; (x : A) | \underline{\Delta} \vdash^c  M : \underline{B}$}
+\RightLabel{$\rightarrow Intro$}
+\UnaryInfC{$\Gamma | \underline{\Delta}\vdash^c (\lambda x : A .\; M) : A \rightarrow \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma_1 | \underline{\Delta} \vdash^c  M : A \rightarrow \underline{B} $}
+\AxiomC{$\Gamma_2 \vdash^v V : A$}
+\RightLabel{$\rightarrow Elim$}
+\BinaryInfC{$\Gamma_1 ; \Gamma_2 | \underline{\Delta} \vdash^c M V : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma_1 ; (x : A) | \underline{\Delta} \vdash^c  M : \underline{B}$}
+\AxiomC{$\Gamma_2  \vdash^v N : A$}
+\RightLabel{$\rightarrow \beta$}
+\BinaryInfC{$\Gamma_1 ; \Gamma_2 | \underline{\Delta} \vdash^c (\lambda x : A.\; M) N = M[N/x] : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma ; (x : A) | \underline{\Delta} \vdash^c  M : \underline{B}$}
+\AxiomC{$x \notin FV(M)$}
+\RightLabel{$\rightarrow \eta$}
+\BinaryInfC{$\Gamma | \underline{\Delta} \vdash^c (\lambda x : A.\; M x) = M : A \rightarrow \underline{B}$}
+\end{prooftree}
+
+
+
+
+\subsection{Wand}
+This is the same as $\rightarrow$, just "alpha renamed" symbols ($\fatsemi, \textit{@},\alpha, \sep$).
+\begin{prooftree}
+\AxiomC{$\Gamma \fatsemi (x : A) | \underline{\Delta} \vdash^c  M : \underline{B}$}
+\RightLabel{$\sep Intro$}
+\UnaryInfC{$\Gamma | \underline{\Delta}\vdash^c (\alpha x : A .\; M) : A \sep \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma_1 | \underline{\Delta} \vdash^c  M : A \sep \underline{B} $}
+\AxiomC{$\Gamma_2 \vdash^v V : A$}
+\RightLabel{$\sep Elim$}
+\BinaryInfC{$\Gamma_1 \fatsemi \Gamma_2 | \underline{\Delta} \vdash^c M  \textit{@} V : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma_1 \fatsemi (x : A) | \underline{\Delta} \vdash^c  M : \underline{B}$}
+\AxiomC{$\Gamma_2  \vdash^v N : A$}
+\RightLabel{$\sep \beta$}
+\BinaryInfC{$\Gamma_1 \fatsemi \Gamma_2 | \underline{\Delta} \vdash^c (\alpha x : A.\; M) \textit{@} N = M[N/x] : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma \fatsemi (x : A) | \underline{\Delta} \vdash^c  M : \underline{B}$}
+\AxiomC{$x \notin FV(M)$}
+\RightLabel{$\sep \eta$}
+\BinaryInfC{$\Gamma | \underline{\Delta} \vdash^c (\alpha x : A.\; M \textit{@} \;x) = M : A \sep \underline{B}$}
+\end{prooftree}
+
+
+\subsection{F}\footnote{following \cite{Max-CT-W23}}
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash^v M : A$}
+\RightLabel{$\textbf{ret} Intro$}
+\UnaryInfC{$\Gamma | \cdot \vdash^c : \textbf{ret} M : F \underline{A}$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma_1 | \underline{\Delta} \vdash^c M : F A$}
+\AxiomC{$\Gamma_2 ; x : A | \cdot \vdash^c N : \underline{B}$}
+\RightLabel{$\textbf{ret} Elim(;)$}
+\BinaryInfC{$\blue{\Gamma_1 ; \Gamma_2} | \underline{\Delta} \vdash^c x \leftarrow M ; N : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma_1 | \underline{\Delta} \vdash^c M : F A$}
+\AxiomC{$\Gamma_2 \fatsemi x : A | \cdot \vdash^c N : \underline{B}$}
+\RightLabel{$\textbf{ret} Elim(\fatsemi)$}
+\BinaryInfC{$\blue{\Gamma_1 \fatsemi \Gamma_2} | \underline{\Delta} \vdash^c x \leftarrow M ; N : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma_1 \vdash^v V : A$}
+\AxiomC{$\Gamma_2 ; x : A | \cdot \vdash^c M : \underline{B}$}
+\RightLabel{$\mathbf{ret} \; \beta(;)$}
+\BinaryInfC{$\blue{\Gamma_1 ; \Gamma_2}  | \cdot \vdash^c (x \leftarrow \mathbf{ret} V ; M) = M[V/x] : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma_1 \vdash^v V : A$}
+\AxiomC{$\Gamma_2 \fatsemi x : A | \cdot \vdash^c M : \underline{B}$}
+\RightLabel{$\mathbf{ret} \; \beta(\fatsemi)$}
+\BinaryInfC{$\blue{\Gamma_1 \fatsemi \Gamma_2}  | \cdot \vdash^c (x \leftarrow \mathbf{ret} V ; M) = M[V/x] : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma | \underline{\Delta} \vdash^c N : F A$}
+\AxiomC{$\Gamma | \bullet : F A \vdash^c M : \underline{B}$}
+\RightLabel{$\mathbf{ret} \; \eta$}
+\BinaryInfC{$\Gamma | \underline{\Delta} \vdash^c M[N] = (x \leftarrow N ; M[\mathbf{ret}x]) : \underline{B}$}
+\end{prooftree}
+
+\section{Structural rules}
+see page 20 of  https://link.springer.com/book/10.1007/978-94-017-0091-7
+
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash^v M : A$}
+\AxiomC{$\Upsilon(x : A) \vdash^v N : B$}
+\RightLabel{$Cut$}
+\BinaryInfC{$\Upsilon(\Gamma) \vdash^v N[M/x] : B$}
+\end{prooftree}
+is this $\string^$ needed?
+
+\begin{prooftree}
+\AxiomC{$\Gamma(\Upsilon) \vdash^v M : A$}
+\RightLabel{$Weakening\;$(for $;$)}
+\UnaryInfC{$\Gamma(\Upsilon \;; \Upsilon') \vdash^v M : A$}
+\end{prooftree}
+
+
+
+\begin{prooftree}
+\AxiomC{$\Gamma(\Upsilon \; ; \Upsilon') \vdash^v M : A$}
+\RightLabel{$(\Upsilon' \cong \Upsilon) Contraction\;$(for $;$)}
+\UnaryInfC{$\Gamma(\Upsilon) \vdash^v M[i(\Upsilon)/i(\Upsilon')] : A$}
+\end{prooftree}
+\\
+$\cong$ is isomorphism of bunches
+\\
+$i(\Upsilon)$ denote an in order traversal of the identifiers in $\Upsilon$
+    
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash^v M : A$}
+\RightLabel{(where $\Gamma \equiv \Upsilon) Exchange$}
+\UnaryInfC{$\Upsilon \vdash^v M : A$}
+\end{prooftree}
+\\
+$\equiv$ is a coherence equivalece defined by 
+\begin{itemize}
+    \item Commutative monoid equations for $;$
+    \item Commutative monoid equations for $\fatsemi$
+    \item Congruence: $\Upsilon \equiv \Upsilon' \implies \Gamma(\Upsilon) \equiv \Gamma(\Upsilon')$
+\end{itemize}
+
+\section{Questions}
+\begin{itemize}
+    \item I've only "bunched" the value context.. the computation context already has a linear restraint on usage.. but do we need to say something about enforcing separation..?
+\end{itemize}
+\bibliographystyle{acm}
+\bibliography{CBPV-OSum/osumref}
+\end{document}
