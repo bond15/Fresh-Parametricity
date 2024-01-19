@@ -1,0 +1,11 @@
+{
+    // build the docker image in this dir, and tag is with some name
+    "image": "agda-lnl",
+    "customizations": {
+        // Configure properties specific to VS Code.
+        "vscode": {
+          // Add the IDs of extensions you want installed when the container is created.
+          "extensions": ["banacorn.agda-mode"]
+        }
+      }
+}
