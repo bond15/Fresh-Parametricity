@@ -223,10 +223,18 @@ module LearnPresheaf {o ℓ} (𝒞 : Category o ℓ) where
         term .Fid {F} = refl
         term .Fcomp = refl
 
+        unit-is-prop : is-prop Unit 
+        unit-is-prop tt tt = refl
+
         Psh-term : TerminalT
         Psh-term .⊤ = term
-        Psh-term .⊤-is-terminal = {!   !}
+        Psh-term .⊤-is-terminal = record { ! = ! ; !-unique = uniq } where
+                    ! : {A : FunctorT (𝒞 ^op) Sets} → A ⇛ term
+                    ! = Mknt (λ X → λ _ → tt) λ X Y f → refl
 
+                    uniq : {F : FunctorT (𝒞 ^op) Sets} (f : F ⇛ term) → ! ≡ f 
+                    uniq {F} nt = Nat-path λ Cob → funExt λ x → unit-is-prop tt (_⇛_.η nt Cob x)  
+                                    where open NP F term
 
         Psh-exp : ExponentialsT
         Psh-exp = {!   !}
@@ -236,6 +244,20 @@ module LearnPresheaf {o ℓ} (𝒞 : Category o ℓ) where
         CCC-Psh-𝒞 .terminal = Psh-term
         CCC-Psh-𝒞 .products = Psh-prod
         CCC-Psh-𝒞 .exponentials = Psh-exp
+
+
+        -- yoneda embedding
+        -- Mcy
+        𝓎 : FunctorT 𝒞 Psh-𝒞
+        𝓎 .F₀ = 𝓎₀ where 
+            𝓎₀ : Ob 𝒞 → Ob Psh-𝒞
+            𝓎₀ c .F₀ c' = {! (_⇒_ 𝒞) c' c  !}
+            𝓎₀ c .F₁ = {!   !}
+            𝓎₀ c .Fid = {!   !}
+            𝓎₀ c .Fcomp = {!   !}
+        𝓎 .F₁ = {!   !}
+        𝓎 .Fid = {!   !}
+        𝓎 .Fcomp = {!   !}
 
 
     module Syntax where 
@@ -280,4 +302,5 @@ module LearnPresheaf {o ℓ} (𝒞 : Category o ℓ) where
         ⦅ T * T₁ ⦆val = {!   !} -- Day convolution?
         ⦅ U T ⦆val = ⦅ T ⦆cmp
 
-        ⦅_⦆cmp = {!   !}
+        ⦅_⦆cmp = {!   !}        
+ 
