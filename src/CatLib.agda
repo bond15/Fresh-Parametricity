@@ -1,5 +1,5 @@
 {-# OPTIONS --cubical --allow-unsolved-metas #-}
--- Taken from https://github.com/agda/agda-categories
+-- Based off of https://github.com/agda/agda-categories and https://1lab.dev/
 module CatLib where 
     open import Cubical.Core.Everything using (_≡_)
     open import Cubical.Foundations.Prelude using (refl; ~_)
