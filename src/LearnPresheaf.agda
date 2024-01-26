@@ -1,4 +1,4 @@
-{-# OPTIONS --cubical #-}
+{-# OPTIONS --cubical --type-in-type  #-} -- type-in-type for the exponent object in Psh-𝒞.. yeah yeah ... it will dissapear 
 open import CatLib 
 open import Agda.Primitive 
 open import Cubical.Foundations.Prelude hiding(comp)
@@ -6,39 +6,7 @@ open import Cubical.Foundations.Prelude hiding(comp)
 module LearnPresheaf {o ℓ} (𝒞 : Category o ℓ) where 
 
 
-    module SetCat where 
-        open Category        
-
-        comp : {A B C : Set₀} → (B → C) → (A → B) → A → C 
-        comp g f x = g (f x)
-
-        pre : {A B C : Set₀}{g h : B → C}{f : A → B} → (p : g ≡ h) → 
-            comp g f ≡ comp h f
-        pre p = cong₂ comp p  refl
-        
-        post : {A B C : Set₀}{h : B → C}{f g : A → B} → (p : f ≡ g) → 
-            comp h f ≡ comp h g
-        post p = {!   !}
-        
-        Sets : Category (lsuc lzero) (lzero)
-        Sets .Ob = Set₀
-        Sets ._⇒_ X Y = X → Y
-        Sets .id x = x
-        Sets ._∘_ = comp
-        Sets .idr = refl
-        Sets .idl = refl
-        Sets .assoc = refl
-
-        open Terminal Sets 
-        open TerminalT
-
-        data Unit : Set₀ where 
-            tt : Unit
-
-        set-term : TerminalT 
-        set-term .⊤ =  Unit
-        set-term .⊤-is-terminal = record { ! = λ _ → tt ; !-unique = λ f → funExt λ x → {!   !}} -- use hlevel argument
-
+    
     module power where
         open import Cubical.Data.Bool
         open Category
@@ -110,31 +78,32 @@ module LearnPresheaf {o ℓ} (𝒞 : Category o ℓ) where
 
     module Psh {o ℓ} (𝒞 : Category o ℓ)  where
         open Category
-        open SetCat
+        open SetCat hiding (Sets)
 
-        Psh-𝒞 : Category (lsuc lzero ⊔ o ⊔ ℓ) (o ⊔ ℓ) 
-        Psh-𝒞 .Ob = Functor.FunctorT (𝒞 ^op) Sets
+
+        Psh-𝒞 : Category (ℓ-max o (ℓ-suc ℓ)) (o ⊔ ℓ) 
+        Psh-𝒞 .Ob = Functor.FunctorT (𝒞 ^op) (ℓSets {ℓ})
             -- Objects are functors from 𝒞 ^op to Set
         Psh-𝒞 ._⇒_ F G = F ⇛ G
             -- Morphisms are natural transformations 
         Psh-𝒞 .id {x = P} = 
             Mknt 
-                (λ o → id Sets ) 
+                (λ o → id ℓSets ) 
                 -- The component of the natural transformation is the identity morphism in Set
                 (λ X Y f → refl)
                 -- The commuting diagram trivially becomes P(f) = P(f)
         (Psh-𝒞 ._∘_ {x = F} {y = G} {z = H} M N) = 
             (Mknt α commutes ) where 
-                α₁ : (x : Ob (𝒞 ^op)) → (Sets ⇒ Functor.FunctorT.F₀ F x) (Functor.FunctorT.F₀ G x)
+                α₁ : (x : Ob (𝒞 ^op)) → (ℓSets ⇒ Functor.FunctorT.F₀ F x) (Functor.FunctorT.F₀ G x)
                 α₁ = _⇛_.η N
                 -- F₀(x) → G₀(x)
 
-                α₂ : (x : Ob 𝒞) → (Sets ⇒ Functor.FunctorT.F₀ G x) (Functor.FunctorT.F₀ H x)
+                α₂ : (x : Ob 𝒞) → (ℓSets ⇒ Functor.FunctorT.F₀ G x) (Functor.FunctorT.F₀ H x)
                 α₂ = _⇛_.η M
                 -- G₀(x) → H₀(x)
 
                 -- simply compose
-                α : (x : Ob 𝒞) → (Sets ⇒ Functor.FunctorT.F₀ F x) (Functor.FunctorT.F₀ H x)
+                α : (x : Ob 𝒞) → (ℓSets ⇒ Functor.FunctorT.F₀ F x) (Functor.FunctorT.F₀ H x)
                 α o = comp (α₂ o) (α₁ o)
 
                 sq₁ = _⇛_.is-natural N -- top square
@@ -153,11 +122,11 @@ module LearnPresheaf {o ℓ} (𝒞 : Category o ℓ) where
                         comp (α y) (F₁ f) ≡ comp (H₁ f) (α x)
                 commutes x y f =  
                         comp (α y) (F₁ f)                   ≡⟨ refl ⟩ 
-                        comp (comp (α₂ y) (α₁ y)) (F₁ f)    ≡⟨ sym (Sets .assoc {f = (α₂ y)} {g = (α₁ y)} {h = (F₁ f)}) ⟩        
+                        comp (comp (α₂ y) (α₁ y)) (F₁ f)    ≡⟨ sym (ℓSets .assoc {f = (α₂ y)} {g = (α₁ y)} {h = (F₁ f)}) ⟩        
                         comp (α₂ y) (comp (α₁ y) (F₁ f))    ≡⟨ (post {h = α₂ y} (sq₁ x y f)) ⟩
-                        comp (α₂ y) (comp (G₁ f) (α₁ x))    ≡⟨ Sets .assoc {f = (α₂ y)} {g = G₁ f} ⟩ 
+                        comp (α₂ y) (comp (G₁ f) (α₁ x))    ≡⟨ ℓSets .assoc {f = (α₂ y)} {g = G₁ f} ⟩ 
                         comp (comp (α₂ y) (G₁ f) ) (α₁ x)   ≡⟨ pre (sq₂ x y f) ⟩ 
-                        comp (comp (H₁ f) (α₂ x) ) (α₁ x)   ≡⟨ sym (Sets .assoc {f = H₁ f} {g = α₂ x})  ⟩ 
+                        comp (comp (H₁ f) (α₂ x) ) (α₁ x)   ≡⟨ sym (ℓSets .assoc {f = H₁ f} {g = α₂ x})  ⟩ 
                         comp (H₁ f) (comp (α₂ x) ((α₁ x)))  ≡⟨ refl ⟩ 
                         comp (H₁ f) (α x) ∎
 
@@ -170,6 +139,120 @@ module LearnPresheaf {o ℓ} (𝒞 : Category o ℓ) where
         Psh-𝒞 .assoc {w = F} {z = G}= Nat-path λ o → refl where  -- the components are trivially associative (just associatity of functions in Set)
             open NP F G
 
+
+
+        -- See Notability 1-25-24
+        module Yoneda where
+            open Functor
+            open FunctorT 
+            open HomFunctors
+
+            open Category 𝒞 renaming (Ob to Cob; _⇒_ to _⇒c_ ; _∘_ to _∘c_ ; id to cId ; assoc to Cassoc ; idl to  cidl)
+            open Category Psh-𝒞 renaming (Ob to psh; _⇒_ to _⇒psh_)
+            open Category (ℓSets {ℓ}) renaming (Ob to set; _⇒_ to _⇒s_ ; _∘_ to _∘s_)
+
+            𝓨₀ : Ob 𝒞 → Ob Psh-𝒞
+            𝓨₀ = Hom[-,_]
+
+            𝓨₁ : {X Y : Ob 𝒞} → (f : X ⇒c Y) → 𝓨₀ X ⇒psh 𝓨₀ Y
+            𝓨₁ {X} {Y} f = Mknt (λ Z → f ∘c_) λ A B g → funExt λ h → Cassoc
+
+            -- MCY 
+            -- Yonedda embedding
+            𝓨 : FunctorT 𝒞 Psh-𝒞 
+            𝓨 .F₀ = 𝓨₀ 
+            𝓨 .F₁ = 𝓨₁
+            𝓨 .Fid = Nat-path _ _ λ o → funExt λ g → cidl where open NP
+            𝓨 .Fcomp = Nat-path _ _ λ o → funExt λ h → sym Cassoc where open NP
+
+        module Psh× where 
+            open BinaryProducts Psh-𝒞 
+            open BinaryProductsT hiding (_×_)
+            open ObjectProduct Psh-𝒞
+            open Product
+            open import Cubical.Data.Prod
+            open Functor 
+
+            psh× : {A B : Ob (𝒞 ^op)}{F G : FunctorT (𝒞 ^op) ℓSets} → 
+                ((𝒞 ^op) ⇒ A) B → ((FunctorT.F₀ F A) × (FunctorT.F₀ G A)) → ((FunctorT.F₀ F B) × (FunctorT.F₀ G B))
+            psh× {F = F} {G} f (FA , GA) = F₁ f FA , G₁ f GA where 
+                open Functor.FunctorT G renaming (F₀ to G₀ ; F₁ to G₁)
+                open Functor.FunctorT F 
+            
+            Psh-prod : BinaryProductsT
+            Psh-prod .product {F} {G} .A×B = p where
+
+
+                open Functor.FunctorT G renaming (F₀ to G₀ ; F₁ to G₁)
+                open Functor.FunctorT F 
+                open Category 𝒞 renaming (Ob to Cob ; id to cId ; _⇒_ to _⇒c_ ; _∘_ to _∘c_)
+                
+                m : {A B : Ob (𝒞 ^op)} → ((𝒞 ^op) ⇒ A) B → ((F₀ A) × (G₀ A)) → ((F₀ B) × (G₀ B))
+                m f (FA , GA) = F₁ f FA , G₁ f GA
+
+                p : Functor.FunctorT (𝒞 ^op) ℓSets
+                p .FunctorT.F₀ c = (F₀ c) × (G₀ c)
+                p .FunctorT.F₁ f pair = psh× {F = F} {G = G} f pair 
+                p .FunctorT.Fid = funExt λ {(Fa , Ga) →  
+                    (F₁ cId Fa , G₁ cId Ga) ≡⟨ cong₂ _,_ (funExt⁻ (F .Fid) Fa) (funExt⁻ (G .Fid) Ga) ⟩ 
+                    (Fa , Ga) ∎ }  
+                p .FunctorT.Fcomp {f = f} {g = g} = funExt λ {(Fa , Ga) → --(F₁ (f ∘ g) Fa , G₁ (f ∘ g) Ga) ≡ (F₁ g (F₁ f Fa) , G₁ g (G₁ f Ga))
+                    ((F₁ (f ∘c g) Fa , G₁ (f ∘c g) Ga)) ≡⟨ cong₂ _,_ (funExt⁻ (F .Fcomp {f = f} {g = g}) Fa) ((funExt⁻ (G .Fcomp {f = f} {g = g}) Ga)) ⟩ 
+                    (F₁ g (F₁ f Fa) , G₁ g (G₁ f Ga)) ∎   }
+
+
+            Psh-prod .product {A} {B} .π₁ = Mknt (λ o → λ {(x , _ ) → x}) λ x y f → funExt λ {(x , _) → refl}
+            Psh-prod .product {A} {B} .π₂ = Mknt (λ o → λ {( _ , y ) → y}) λ x y f → funExt λ {( _ , y ) → refl}
+            Psh-prod .product {A} {B} .⟨_,_⟩ = λ f g → Mknt (λ o → {!   !}) {!   !}
+            Psh-prod .product {A} {B} .project₁ = {!   !}
+            Psh-prod .product {A} {B} .project₂ = {!   !}
+            Psh-prod .product {A} {B} .unique = {!   !}
+
+        module Psh^ where 
+            open Functor
+            open FunctorT
+            open HomFunctors
+            open Yoneda
+
+            open Psh× 
+            open BinaryProducts
+            open BinaryProductsT Psh-prod renaming (_×_ to _×psh_)
+            open import Cubical.Data.Prod  using (_×_ ; _,_)
+            open Category 𝒞 renaming (Ob to Cob ; _⇒_ to _⇒c_ ; _∘_ to _∘c_)
+            open Category Psh-𝒞 renaming (Ob to psh ; _⇒_ to _⇒p_ ; _∘_ to _∘p_)
+            open Category ℓSets renaming (Ob to set ; _⇒_ to _⇒s_ ; _∘_ to _∘s_)
+            
+            -- TODO: type-in-type violation here
+            Psh-𝒞^ : (A B : Ob Psh-𝒞) → Ob Psh-𝒞
+            Psh-𝒞^ A B .F₀ c = (𝓨₀ c ×psh A) ⇛ B
+            Psh-𝒞^ A B .F₁ {X} {Y} = fmap where 
+                fmap : (f : Y ⇒c X) → ((𝓨₀ X ×psh A) ⇛ B) → ((𝓨₀ Y ×psh A) ⇛ B)
+                fmap f nt = Mknt η₃ is-natural₃ where 
+
+                    open FunctorT A renaming (F₀ to A₀ ; F₁ to A₁)
+                    open FunctorT B renaming (F₀ to B₀ ; F₁ to B₁)
+                    open _⇛_ nt renaming (η to η₁ ; is-natural to is-natural₁) 
+                    open _⇛_ (𝓨₁ f) renaming (η to η₂ ; is-natural to is-natural₂)
+
+                    _ : (Z : Cob) → ((Z ⇒c X) × A₀ Z) ⇒s (B₀ Z)
+                    _ = η₁
+
+                    _ : (V : Cob) → (V ⇒c Y) → (V ⇒c X)
+                    _ = η₂ 
+
+                    η₃ : (Z : Cob) → ((Z ⇒c Y) × A₀ Z) ⇒s (B₀ Z)
+                    η₃ Z (z→y , Az) = η₁ Z (η₂ Z z→y , Az) 
+
+                    -- square
+                    open NP
+                    -- x₁ : (V ⇒c Y) × A₀ V
+                    is-natural₃ : (V W : Cob) → (g : W ⇒c V) →  
+                        (λ x₁ → η₃ W (psh× g x₁)) ≡ (λ x₁ → B₁ g (η₃ V x₁))
+                    is-natural₃ = {!   !}
+
+                
+            Psh-𝒞^ A B .Fid = {!   !}
+            Psh-𝒞^ A B .Fcomp = {!   !}
 
         -- the category of presheaves on 𝒞 is cartesian closed
 
@@ -201,7 +284,7 @@ module LearnPresheaf {o ℓ} (𝒞 : Category o ℓ) where
             m : {A B : Ob (𝒞 ^op)} → ((𝒞 ^op) ⇒ A) B → ((F₀ A) × (G₀ A)) → ((F₀ B) × (G₀ B))
             m f (FA , GA) = F₁ f FA , G₁ f GA
 
-            p : Functor.FunctorT (𝒞 ^op) Sets
+            p : Functor.FunctorT (𝒞 ^op) ℓSets
             p .FunctorT.F₀ c = (F₀ c) × (G₀ c) 
             p .FunctorT.F₁ = m 
             p .FunctorT.Fid = {!   !} 
@@ -217,33 +300,40 @@ module LearnPresheaf {o ℓ} (𝒞 : Category o ℓ) where
 
         open Functor.FunctorT 
         
-        term : Ob Psh-𝒞 
-        term .F₀ Cob  = Terminal.TerminalT.⊤ set-term
-        term .F₁ f = λ x → x
-        term .Fid {F} = refl
-        term .Fcomp = refl
+       -- term : Ob Psh-𝒞 
+       -- term .F₀ Cob  = Terminal.TerminalT.⊤ set-term
+       -- term .F₁ f = λ x → x
+       -- term .Fid {F} = refl
+       -- term .Fcomp = refl
 
-        unit-is-prop : is-prop Unit 
-        unit-is-prop tt tt = refl
-
+    {- 
         Psh-term : TerminalT
         Psh-term .⊤ = term
         Psh-term .⊤-is-terminal = record { ! = ! ; !-unique = uniq } where
-                    ! : {A : FunctorT (𝒞 ^op) Sets} → A ⇛ term
+                    ! : {A : FunctorT (𝒞 ^op) ℓSets} → A ⇛ term
                     ! = Mknt (λ X → λ _ → tt) λ X Y f → refl
 
-                    uniq : {F : FunctorT (𝒞 ^op) Sets} (f : F ⇛ term) → ! ≡ f 
+                    uniq : {F : FunctorT (𝒞 ^op) ℓSets} (f : F ⇛ term) → ! ≡ f 
                     uniq {F} nt = Nat-path λ Cob → funExt λ x → unit-is-prop tt (_⇛_.η nt Cob x)  
                                     where open NP F term
+    -}
 
         Psh-exp : ExponentialsT
-        Psh-exp = {!   !}
+        Psh-exp = record { 
+            exponential = 
+                record { 
+                    B^A = {!   !} ; 
+                    product = {!   !} ; 
+                    eval = {!   !} ; 
+                    λg = {!   !} 
+                } 
+            }
         
         -- https://rak.ac/blog/2016-08-24-presheaf-categories-are-cartesian-closed/
-        CCC-Psh-𝒞 : CartesianClosedT 
-        CCC-Psh-𝒞 .terminal = Psh-term
-        CCC-Psh-𝒞 .products = Psh-prod
-        CCC-Psh-𝒞 .exponentials = Psh-exp
+        --CCC-Psh-𝒞 : CartesianClosedT 
+        --CCC-Psh-𝒞 .terminal = Psh-term
+        --CCC-Psh-𝒞 .products = Psh-prod
+        --CCC-Psh-𝒞 .exponentials = Psh-exp
 
 
         -- yoneda embedding
@@ -258,6 +348,11 @@ module LearnPresheaf {o ℓ} (𝒞 : Category o ℓ) where
         𝓎 .F₁ = {!   !}
         𝓎 .Fid = {!   !}
         𝓎 .Fcomp = {!   !}
+
+        -- also need hom functor
+        --https://ncatlab.org/nlab/show/closed+monoidal+structure+on+presheaves
+        -- https://github.com/agda/agda-categories/blob/9ece1e0b86b0bf5092ef1a0b74dadcb90810b936/src/Categories/Category/Construction/Properties/Presheaves/CartesianClosed.agda
+        -- https://github.com/agda/agda-categories/blob/9ece1e0b86b0bf5092ef1a0b74dadcb90810b936/src/Categories/Functor/Hom.agda
 
 
     module Syntax where 
@@ -287,7 +382,7 @@ module LearnPresheaf {o ℓ} (𝒞 : Category o ℓ) where
         open Syntax
 
     
-        Psh-World : Category (ℓ-suc ℓ-zero) ℓ-zero
+        Psh-World : Category  {!   !} {!   !} 
         Psh-World = Psh-𝒞
 
        -- open ObjectProduct
@@ -297,10 +392,10 @@ module LearnPresheaf {o ℓ} (𝒞 : Category o ℓ) where
         ⦅_⦆val : VType → Psh-World .Ob
         ⦅_⦆cmp : CType → {!   !} 
         
-        ⦅ One ⦆val = term
+        ⦅ One ⦆val = {!   !} -- term
         ⦅ T ×ty T₁ ⦆val = _×_ Psh-prod ⦅ T ⦆val ⦅ T₁ ⦆val 
         ⦅ T * T₁ ⦆val = {!   !} -- Day convolution?
         ⦅ U T ⦆val = ⦅ T ⦆cmp
 
         ⦅_⦆cmp = {!   !}        
- 
+    

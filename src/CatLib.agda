@@ -1,4 +1,4 @@
-{-# OPTIONS --cubical --allow-unsolved-metas #-}
+{-# OPTIONS --cubical --allow-unsolved-metas  #-}
 -- Based off of https://github.com/agda/agda-categories and https://1lab.dev/
 module CatLib where 
     open import Cubical.Core.Everything using (_≡_)
@@ -26,6 +26,15 @@ module CatLib where
     is-set : ∀{ℓ} → Set ℓ → Set ℓ 
     is-set A = is-hlevel A 2
 
+    record n-Type ℓ : Set (lsuc ℓ) where
+        no-eta-equality
+        constructor el
+        field
+            ∣_∣   : Set ℓ
+            --is-tr : is-hlevel ∣_∣ n
+        infix 100 ∣_∣
+    open n-Type using (∣_∣) public
+
     record Category (o h : Level) : Set (lsuc (o ⊔ h)) where 
         field 
             Ob : Set o
@@ -40,6 +49,7 @@ module CatLib where
 
         infixr 40 _∘_
 
+    
 
     infixl 60 _^op
     _^op : ∀ {o₁ h₁} → Category o₁ h₁ → Category o₁ h₁
@@ -508,4 +518,214 @@ module CatLib where
             zag : ∀{B : D.Ob} → R₁ (ε B) C.∘ η (R₀ B) ≡ C.id
     
 
+    module SetCat  where 
+        open Category  
+        open import Agda.Primitive
+        open import Cubical.Foundations.Prelude hiding(comp)     
+
+        comp : {ℓ : Level}{A B C : Set ℓ} → (B → C) → (A → B) → A → C 
+        comp g f x = g (f x)
+
+        pre : {ℓ : Level}{A B C : Set ℓ}{g h : B → C}{f : A → B} → (p : g ≡ h) → 
+            comp g f ≡ comp h f
+        pre p = cong₂ comp p  refl
+            
+        post : {ℓ : Level}{A B C : Set ℓ}{h : B → C}{f g : A → B} → (p : f ≡ g) → 
+            comp h f ≡ comp h g
+        post p = {!   !}
+            
+        Sets : Category (lsuc lzero) (lzero)
+        Sets .Ob = Set₀
+        Sets ._⇒_ X Y = X → Y
+        Sets .id x = x
+        Sets ._∘_ = comp
+        Sets .idr = refl
+        Sets .idl = refl
+        Sets .assoc = refl
+
+        ℓSets : {ℓ : Level} → Category (lsuc ℓ) ℓ 
+        ℓSets {ℓ} .Ob = Set ℓ
+        ℓSets ._⇒_ X Y = X → Y  
+        ℓSets .id x = x
+        ℓSets ._∘_ = comp
+        ℓSets .idr = refl
+        ℓSets .idl = refl
+        ℓSets .assoc = refl
+
+        open Terminal Sets 
+        open TerminalT
+
+        data Unit : Set₀ where 
+            tt : Unit
+
+
+        unit-is-prop : is-prop Unit 
+        unit-is-prop tt tt = refl
+
+        set-term : TerminalT 
+        set-term .⊤ =  Unit
+        set-term .⊤-is-terminal = 
+            record { 
+                ! = λ _ → tt ; 
+                !-unique = λ f → funExt λ x → unit-is-prop tt (f x)} 
+
+
  
+    module HomFunctors 
+        {o ℓ}
+        {𝒞 : Category o ℓ} where
+        open SetCat
+
+        open Functor
+        open Category
+        open import Cubical.Foundations.Prelude
+
+
+        Hom[_,-] : (Ob (𝒞 ^op)) →  FunctorT 𝒞 (ℓSets)
+        Hom[_,-] X = 
+            record { 
+                F₀ = λ Y → X ⇒c Y ;
+                F₁ = λ f g → f ∘c g ; 
+                Fid = funExt λ g → idlc ; 
+                Fcomp = funExt λ h → sym assocc 
+            } where 
+                open Category 𝒞 renaming 
+                    (Ob to Cob ; _⇒_ to _⇒c_; _∘_ to _∘c_; idl to idlc ; assoc to assocc)
+
+        Hom[-,_] : (Ob 𝒞 ) →  FunctorT (𝒞 ^op) (ℓSets)
+        Hom[-,_] X = 
+            record { 
+                F₀ = λ Y → Y ⇒c X ; -- flipped
+                F₁ = λ f → _∘c f ; 
+                Fid = funExt λ g → idrc ; 
+                Fcomp = funExt λ h → assocc
+            } where 
+                open Category 𝒞 renaming 
+                    (Ob to Cob ; _⇒_ to _⇒c_; _∘_ to _∘c_; idr to idrc ; assoc to assocc)
+
+        open ProductCat
+        Hom[_,_] : FunctorT (Product (𝒞 ^op) 𝒞) (ℓSets {ℓ})
+        Hom[_,_] = 
+            record { 
+                F₀ = λ {(X , Y) → X ⇒c Y} ; 
+                F₁ = λ {(f , h) g → h ∘c g ∘c f} ; 
+                Fid = λ { {X , Y} → funExt λ f → 
+                    cId ∘c f ∘c cId ≡⟨ idlc ⟩ 
+                    f ∘c cId ≡⟨ idrc ⟩ 
+                    f  ∎ };
+                Fcomp = λ { {f = f , h} {f' , h'} → funExt λ g → 
+                    𝒞 ._∘_ h' h ∘c g ∘c f ∘c f'  ≡⟨ {!   !} ⟩ {!   !} } --𝒞 ._∘_ h' h ∘c g ∘c f ∘c f' ≡ h' ∘c (h ∘c g ∘c f) ∘c f'
+            } where
+                open Category 𝒞 renaming 
+                    (Ob to Cob ; _⇒_ to _⇒c_; _∘_ to _∘c_; id to cId ; idr to idrc ; idl to idlc ; assoc to assocc)
+
+        -- よ doesn't seem to have an agda input mode mapping
+        
+
+
+{- Cruft
+
+from messing up the hom functor definition 
+
+
+    {- 
+       record Category (o h : Level) : Set (lsuc (o ⊔ h)) where 
+        field 
+            Ob : Set o
+    -}
+    module foobar where 
+        open import Agda.Primitive 
+        --open Category
+
+
+        no : Set₀ 
+        no = {!   !} -- Set₀ 
+        
+        dumb1 : {Obty : Set₀} → Obty → Set₀ 
+        dumb1 X = {! X  !} → {!   !}
+
+        dumb2 : {Obty : Set₁} → Obty → Set₀ 
+        dumb2 X = {! X  !} → {!   !}
+        
+        -- duh.. because it is the morphisms of 𝒞
+        -- here Obty has to be a datatype, since Set₀ ∉ Set₀
+        -- then X is an element of the datatype
+        -- in which case we can't use the function arrow construction because X and Y are not Sorts
+        -- but we can use the definition of morphism in 𝒞 
+        -- mor is a function type where the two arguments live at a lower universe level than the result type
+        -- the type constructor 
+        dumb3 : {Obty : Set₀} → (X : Obty) → (Y : Obty) → (mor : Obty → Obty → Set₀) → Set₀ 
+        dumb3 X Y fun = fun X Y
+
+        -- this does not work
+        test : (X : Set₀) → (Y : Set₀) → Set₁
+        test X Y = X → {!  Y !}
+
+
+
+        open import Cubical.Foundations.Prelude using (Lift ; lift ; ℓ-suc)
+        {-
+        record Lift {i j} (A : Type i) : Type (ℓ-max i j) where
+            constructor lift
+            field
+                lower : A
+
+        open Lift public 
+        -}
+
+        -- Lift : {i j : Level} (A : Set i) → Set (i ⊔ j)
+        -- lift : (lower : A : Set i) → Lift A : Set (i ⊔ j)
+        -- have to lift it
+        lifttype : (X : Set₀) → (Y : Set₀) → Set₁
+        lifttype X Y = Lift {lzero} {ℓ-suc lzero} (X → Y)
+
+        -- (X → Y) : Set₀
+        -- this does not work
+        liftterm : (X Y : Set₀) → (X → Y) → Set₁
+        liftterm X Y f = {!lift  f  !}
+
+        -- this does
+        liftterm' : (X Y : Set₀) → (X → Y) → lifttype X Y
+        liftterm' X Y f = lift f
+
+        dumb5 : (T : Set₀) → (e : T) → Set₀ 
+        dumb5 T e = T
+
+
+        dumb4 : {𝒞 : Category lzero lzero} → (X : Category.Ob 𝒞) → (Y : Category.Ob 𝒞) → Set₀
+        dumb4 {𝒞} X Y = Category._⇒_ SetCat.Sets {!   !} {!   !}
+
+        -- Category.Ob (SetCat.ℓSets {ℓ'})) : Set (ℓ-suc ℓ')
+        -- Category.Ob (SetCat.ℓSets {ℓ'})) = Set ℓ'
+
+        -- Category.Ob 𝒞  : Set ℓ
+
+        why : (ℓ : Level)→ (ℓ' : Level) → (𝒞 : Category ℓ ℓ') → 
+            (X : Category.Ob 𝒞) → ( Y : Category.Ob 𝒞) → (Category.Ob (SetCat.ℓSets {ℓ'}))
+        why ℓ ℓ' 𝒞 X Y = X ⇒ Y where 
+                open Category 𝒞
+            -- (Category._⇒_ (SetCat.ℓSets {ℓ'})) {!  X !} {! Category.Ob 𝒞  !}
+            -- ... so it is not the hom in Set.. but the Hom in C.... which is a Set... wtf
+       
+        
+            
+        -- {-# NO_UNIVERSE_CHECK #-}
+        {-record Cheat ℓ : Set ℓ where 
+            constructor el
+            field 
+                ∣_∣ : Set ℓ
+        open Cheat -}
+
+        open import Cubical.Foundations.Prelude
+        data wtf ℓ : Set (lsuc ℓ) where 
+            inject : Set ℓ → wtf ℓ
+
+        foo : {ℓ : Level} → Set ℓ → Set (lsuc ℓ)
+        foo x = Lift x
+        
+        import Cubical.Categories.Functors.HomFunctor
+
+        test : (Ob 𝒞) → (Ob 𝒞)→ (Ob ℓSets) --(Ob ℓSets)
+        test X Y = (ℓSets ._⇒_) {! Ob Sets  !} (Lift (Ob 𝒞))
+
+-}  
