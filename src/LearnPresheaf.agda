@@ -165,6 +165,31 @@ module LearnPresheaf {o ℓ} (𝒞 : Category o ℓ) where
             𝓨 .Fid = Nat-path _ _ λ o → funExt λ g → cidl where open NP
             𝓨 .Fcomp = Nat-path _ _ λ o → funExt λ h → sym Cassoc where open NP
 
+        module Psh-⊤ where 
+            open Terminal (Psh-𝒞)
+            open TerminalT
+
+            open Functor
+            open FunctorT
+
+            term : Ob Psh-𝒞 
+            term .F₀ Cob  = Terminal.TerminalT.⊤ set-term
+            term .F₁ f = λ x → x
+            term .Fid {F} = refl
+            term .Fcomp = refl
+
+            Psh-term : TerminalT
+            Psh-term .⊤ = term
+            Psh-term .⊤-is-terminal = record { ! = ! ; !-unique = uniq } where
+                        ! : {A : FunctorT (𝒞 ^op) ℓSets} → A ⇛ term
+                        ! = Mknt (λ X → λ _ → tt) λ X Y f → refl
+
+                        uniq : {F : FunctorT (𝒞 ^op) ℓSets} (f : F ⇛ term) → ! ≡ f 
+                        uniq {F} nt = Nat-path λ Cob → funExt λ x → unit-is-prop tt (_⇛_.η nt Cob x)  
+                                        where open NP F term
+    
+            
+
         module Psh× where 
             open BinaryProducts Psh-𝒞 
             open BinaryProductsT hiding (_×_)
@@ -368,91 +393,20 @@ module LearnPresheaf {o ℓ} (𝒞 : Category o ℓ) where
 
                         huh : P₀ y → B₀ y
                         huh = η₁ y
-
-                        dd = huh {!   !}
                         
-
-
         -- the category of presheaves on 𝒞 is cartesian closed
+        module Psh-CCC where 
+            open CartesianClosed Psh-𝒞
+            open CartesianClosedT
 
-        open CartesianClosed Psh-𝒞
-        open CartesianClosedT
+            open Psh-⊤
+            open Psh×
+            open Psh^
 
-        open BinaryProducts Psh-𝒞 
-        open BinaryProductsT hiding (_×_)
-
-        open Terminal Psh-𝒞
-        open TerminalT
-
-        open Exponentials Psh-𝒞
-        open ExponentialsT
-
-        open ObjectProduct Psh-𝒞
-        open Product
-
-        open Functor
-        --open FunctorT
-
-        open import Cubical.Data.Prod
-        Psh-prod : BinaryProductsT
-        Psh-prod .product {F} {G} .A×B = p where
-
-            open Functor.FunctorT G renaming (F₀ to G₀ ; F₁ to G₁)
-            open Functor.FunctorT F 
-            
-            m : {A B : Ob (𝒞 ^op)} → ((𝒞 ^op) ⇒ A) B → ((F₀ A) × (G₀ A)) → ((F₀ B) × (G₀ B))
-            m f (FA , GA) = F₁ f FA , G₁ f GA
-
-            p : Functor.FunctorT (𝒞 ^op) ℓSets
-            p .FunctorT.F₀ c = (F₀ c) × (G₀ c) 
-            p .FunctorT.F₁ = m 
-            p .FunctorT.Fid = {!   !} 
-            p .FunctorT.Fcomp = {!   !}
-
-        Psh-prod .product {A} {B} .π₁ = {!   !}
-        Psh-prod .product {A} {B} .π₂ = {!   !}
-        Psh-prod .product {A} {B} .⟨_,_⟩ = {!   !}
-        Psh-prod .product {A} {B} .project₁ = {!   !}
-        Psh-prod .product {A} {B} .project₂ = {!   !}
-        Psh-prod .product {A} {B} .unique = {!   !}
-
-
-        open Functor.FunctorT 
-        
-       -- term : Ob Psh-𝒞 
-       -- term .F₀ Cob  = Terminal.TerminalT.⊤ set-term
-       -- term .F₁ f = λ x → x
-       -- term .Fid {F} = refl
-       -- term .Fcomp = refl
-
-    {- 
-        Psh-term : TerminalT
-        Psh-term .⊤ = term
-        Psh-term .⊤-is-terminal = record { ! = ! ; !-unique = uniq } where
-                    ! : {A : FunctorT (𝒞 ^op) ℓSets} → A ⇛ term
-                    ! = Mknt (λ X → λ _ → tt) λ X Y f → refl
-
-                    uniq : {F : FunctorT (𝒞 ^op) ℓSets} (f : F ⇛ term) → ! ≡ f 
-                    uniq {F} nt = Nat-path λ Cob → funExt λ x → unit-is-prop tt (_⇛_.η nt Cob x)  
-                                    where open NP F term
-    -}
-
-        Psh-exp : ExponentialsT
-        Psh-exp = record { 
-            exponential = 
-                record { 
-                    B^A = {!   !}  ; 
-                    product = {!   !} ; 
-                    eval = {!   !} ; 
-                    λg = {!   !} 
-                } 
-            }
-        
-        -- https://rak.ac/blog/2016-08-24-presheaf-categories-are-cartesian-closed/
-        --CCC-Psh-𝒞 : CartesianClosedT 
-        --CCC-Psh-𝒞 .terminal = Psh-term
-        --CCC-Psh-𝒞 .products = Psh-prod
-        --CCC-Psh-𝒞 .exponentials = Psh-exp
+            Psh-ccc : CartesianClosedT 
+            Psh-ccc .terminal = Psh-term
+            Psh-ccc .products = Psh-prod
+            Psh-ccc .exponentials = Psh-exp
 
 
 
@@ -483,19 +437,21 @@ module LearnPresheaf {o ℓ} (𝒞 : Category o ℓ) where
         open Syntax
 
     
-        Psh-World : Category  {!   !} {!   !} 
+        Psh-World : Category _ _ 
         Psh-World = Psh-𝒞
 
-       -- open ObjectProduct
-        open BinaryProducts Psh-World
-        open BinaryProductsT
+        open Psh-CCC 
+        open CartesianClosed Psh-World
+        open CartesianClosedT Psh-ccc
+        open Terminal.TerminalT
+        open BinaryProducts.BinaryProductsT
 
         ⦅_⦆val : VType → Psh-World .Ob
         ⦅_⦆cmp : CType → {!   !} 
         
-        ⦅ One ⦆val = {!   !} -- term
-        ⦅ T ×ty T₁ ⦆val = _×_ Psh-prod ⦅ T ⦆val ⦅ T₁ ⦆val 
-        ⦅ T * T₁ ⦆val = {!   !} -- Day convolution?
+        ⦅ One ⦆val = terminal .⊤ 
+        ⦅ T₁ ×ty T₂ ⦆val =  _×_ products ⦅ T₁ ⦆val ⦅ T₂ ⦆val
+        ⦅ T₁ * T₂ ⦆val = {!   !} -- Day convolution?
         ⦅ U T ⦆val = ⦅ T ⦆cmp
 
         ⦅_⦆cmp = {!   !}        
