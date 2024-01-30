@@ -428,11 +428,20 @@ module CatLib where
     module NP {o₁ h₁ o₂ h₂} {C : Category o₁ h₁}{D : Category o₂ h₂}(F G : Functor.FunctorT C D) where 
         -- according to 1Lab https://1lab.dev/Cat.Base.html#1850
         open Category C
-        
+        open Cubical.Core.Everything
+        open _⇛_
         Nat-path : {a b : F ⇛ G} → 
             ((x : Ob) → _⇛_.η a x ≡ _⇛_.η b x  )→ 
             a ≡ b 
         Nat-path = {!   !}
+
+        ap : ∀ {a b} {A : Set a} {B : A → Set b} (f : (x : A) → B x) {x y : A}
+            → (p : x ≡ y) → PathP (λ i → B (p i)) (f x) (f y)
+        ap f p i = f (p i)
+        {-# NOINLINE ap #-}
+
+        η≡ : {a b : F ⇛ G} → a ≡ b → ((x : Ob) → _⇛_.η a x ≡ _⇛_.η b x)
+        η≡ p x = ap (λ e → e .η x) p
 
 
     _F∘_ : {o₁ h₁ o₂ h₂ o₃ h₃ : Level} → {B : Category o₁ h₁}{C : Category o₂ h₂}{D : Category o₃ h₃}
@@ -728,4 +737,4 @@ from messing up the hom functor definition
         test : (Ob 𝒞) → (Ob 𝒞)→ (Ob ℓSets) --(Ob ℓSets)
         test X Y = (ℓSets ._⇒_) {! Ob Sets  !} (Lift (Ob 𝒞))
 
--}  
+-}   

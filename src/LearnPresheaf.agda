@@ -155,7 +155,7 @@ module LearnPresheaf {o ℓ} (𝒞 : Category o ℓ) where
             𝓨₀ = Hom[-,_]
 
             𝓨₁ : {X Y : Ob 𝒞} → (f : X ⇒c Y) → 𝓨₀ X ⇒psh 𝓨₀ Y
-            𝓨₁ {X} {Y} f = Mknt (λ Z → f ∘c_) (λ A B g → funExt λ h → Cassoc)
+            𝓨₁ {X} {Y} f = Mknt (λ Z → f ∘c_) (λ A B g → funExt λ h → Cassoc )
 
             -- MCY 
             -- Yonedda embedding
@@ -200,7 +200,7 @@ module LearnPresheaf {o ℓ} (𝒞 : Category o ℓ) where
 
             psh×₀ : {A B : Ob (𝒞 ^op)}{F G : FunctorT (𝒞 ^op) ℓSets} → 
                 ((𝒞 ^op) ⇒ A) B → ((FunctorT.F₀ F A) × (FunctorT.F₀ G A)) → ((FunctorT.F₀ F B) × (FunctorT.F₀ G B))
-            psh×₀ {F = F} {G} f (FA , GA) = F₁ f FA , G₁ f GA where 
+            psh×₀ {F = F} {G} f (FA , GA) = F₁ f FA , G₁ f GA where     -- implicitly using things like ⟨_,_⟩ 
                 open Functor.FunctorT G renaming (F₀ to G₀ ; F₁ to G₁)
                 open Functor.FunctorT F 
 
@@ -228,12 +228,17 @@ module LearnPresheaf {o ℓ} (𝒞 : Category o ℓ) where
             eq-× : {ℓ : Level}{A B : Set ℓ}{x y : A}{w z : B} → (p : x ≡ y) → (q : w ≡ z) → Path {ℓ} (A × B) (x , w) (y , z) 
             eq-× p q i = (p i) , (q i)
 
-            -- this name is bad
+            π₁-psh : {F G : Ob Psh-𝒞} →  psh× F G  ⇛ F
+            π₁-psh = Mknt ((λ o → λ {(x , _ ) → x})) (λ x y f → funExt λ {(x , _) → refl})
 
+            π₂-psh : {F G : Ob Psh-𝒞} →  psh× F G  ⇛ G
+            π₂-psh = Mknt ((λ o → λ {( _ , y ) → y})) (λ x y f → funExt λ {( _ , y ) → refl})
+
+            -- this name is bad
             Psh-Product : (X Y : Ob Psh-𝒞) → Product X Y 
             Psh-Product X Y .A×B = psh× X Y
-            Psh-Product X Y .π₁ = Mknt ((λ o → λ {(x , _ ) → x})) (λ x y f → funExt λ {(x , _) → refl})
-            Psh-Product X Y .π₂ = Mknt ((λ o → λ {( _ , y ) → y})) (λ x y f → funExt λ {( _ , y ) → refl})
+            Psh-Product X Y .π₁ = π₁-psh
+            Psh-Product X Y .π₂ = π₂-psh
             Psh-Product X Y .⟨_,_⟩ {C} nt1 nt2 = Mknt η {!   !} where 
                 open FunctorT X renaming(F₀ to X₀ ; F₁ to X₁)
                 open FunctorT Y renaming(F₀ to Y₀ ; F₁ to Y₁)
@@ -247,20 +252,50 @@ module LearnPresheaf {o ℓ} (𝒞 : Category o ℓ) where
             Psh-Product X Y .project₁ = Nat-path _ _ λ ob → refl where open NP
             Psh-Product X Y .project₂ = Nat-path _ _ λ ob → refl where open NP
             --  unique   : π₁ ∘ h ≡ i → π₂ ∘ h ≡ j → ⟨ i , j ⟩ ≡ h 
-            Psh-Product X Y .unique {F} {h} {i} {j} p q = 
+            Psh-Product F G .unique {C} {h} {i} {j} p q = 
                 Nat-path _ _ prf where 
                     open NP
+                    open Category Psh-𝒞 renaming (_∘_ to _∘psh_)
                     open Category 𝒞 renaming (Ob to Cob)
-                    open FunctorT X renaming(F₀ to X₀ ; F₁ to X₁)
-                    open FunctorT Y renaming(F₀ to Y₀ ; F₁ to Y₁)
-                    open FunctorT F renaming(F₀ to F'₀ ; F₁ to F'₁)
+                    open FunctorT F
+                    open FunctorT G renaming(F₀ to G₀ ; F₁ to G₁)
+                    open FunctorT C renaming(F₀ to C₀ ; F₁ to C₁)
                     open _⇛_ h renaming (η to ηₕ ; is-natural to is-naturalₕ) 
                     open _⇛_ i renaming (η to ηᵢ ; is-natural to is-naturalᵢ) 
                     open _⇛_ j renaming (η to ηⱼ ; is-natural to is-naturalⱼ) 
 
                     prf : (ob : Cob) → (λ Cx → ηᵢ ob Cx , ηⱼ ob Cx) ≡ ηₕ ob 
-                    prf = {!   !}
+                    prf ob = funExt goal where
 
+                        -- now this is a proof in Set using the components of the natural transformations
+
+                        ηiob : C₀ ob → F₀ ob
+                        ηiob = ηᵢ ob
+
+                        ηjob : C₀ ob → G₀ ob
+                        ηjob = ηⱼ ob
+
+                        ηhob : C₀ ob → F₀ ob × G₀ ob
+                        ηhob = ηₕ ob
+                        
+                        open _⇛_
+                        eq₁ : (π₁-psh ∘psh h) .η ob  ≡  ηiob 
+                        eq₁  = (η≡ _ _ p) ob 
+
+                        eq₂ : (π₂-psh ∘psh h) .η ob ≡  ηjob 
+                        eq₂ = (η≡ _ _ q) ob 
+
+                        goal : (c : C₀ ob) → (ηiob c , ηjob c) ≡ ηhob c 
+                        goal c = 
+                            (ηiob c , ηjob c) ≡⟨ sym (eq-× {A = F₀ ob} {B = G₀ ob} foo bar ) ⟩ 
+                            (((π₁-psh ∘psh h) .η ob c) , ((π₂-psh ∘psh h) .η ob c)) 
+                            ≡⟨ {!   !} ⟩ {! π₁-psh .η ob  !} where 
+
+                            foo : (π₁-psh ∘psh h) .η ob c ≡ ηiob c
+                            foo = funExt⁻ eq₁ c
+
+                            bar : (π₂-psh ∘psh h) .η ob c ≡ ηjob c
+                            bar = funExt⁻ eq₂ c
 
                    -- funExt λ G → {!   !} where open NP
 
@@ -284,7 +319,7 @@ module LearnPresheaf {o ℓ} (𝒞 : Category o ℓ) where
             open Category ℓSets renaming (Ob to set ; _⇒_ to _⇒s_ ; _∘_ to _∘s_)
             
             Psh-𝒞^ : (A B : Ob Psh-𝒞) → Ob Psh-𝒞
-            Psh-𝒞^ A B .F₀ c = (𝓨₀ c ×psh A) ⇛ B -- TODO: type-in-type violation here
+            Psh-𝒞^ A B .F₀ c = (𝓨₀ c ×psh A) ⇛ B -- TODO: type-in-type violation here (should this be Hom instead of ⇛?)
             Psh-𝒞^ A B .F₁ {X} {Y} = fmap where 
                 fmap : (f : Y ⇒c X) → ((𝓨₀ X ×psh A) ⇛ B) → ((𝓨₀ Y ×psh A) ⇛ B)
                 fmap y→x nt = Mknt η₃ is-natural₃ where 
@@ -402,7 +437,10 @@ module LearnPresheaf {o ℓ} (𝒞 : Category o ℓ) where
             open Psh-⊤
             open Psh×
             open Psh^
-
+            
+            -- See also the Bachelor's thesis of Mario Garcia
+            -- https://mroman42.github.io/ctlc/ctlc.pdf
+            
             Psh-ccc : CartesianClosedT 
             Psh-ccc .terminal = Psh-term
             Psh-ccc .products = Psh-prod
@@ -455,4 +493,4 @@ module LearnPresheaf {o ℓ} (𝒞 : Category o ℓ) where
         ⦅ U T ⦆val = ⦅ T ⦆cmp
 
         ⦅_⦆cmp = {!   !}        
-         
+           
