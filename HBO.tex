@@ -9,9 +9,17 @@
 \usepackage[dvipsnames]{xcolor}
 \usepackage{cite}
 \usepackage{scalerel}
+\usepackage{tikz-cd}
 \usepackage{oz}
 \def\sq{\mathbin{\scalerel*{\strut\rule[-.5ex]{2ex}{2ex}}{\cdot}}}
 
+
+\DeclareFontFamily{U}{dmjhira}{}
+\DeclareFontShape{U}{dmjhira}{m}{n}{ <-> dmjhira }{}
+
+\DeclareRobustCommand{\yo}{\text{\usefont{U}{dmjhira}{m}{n}\symbol{"48}}}
+
+% for eding diagrams https://tikzcd.yichuanshen.de/
 
 \newcommand{\blue}[1]{\textcolor{blue}{#1}}
 \newcommand\sep{\mathrel{-\mkern-6mu*}}
@@ -25,8 +33,8 @@
 
 \section{Untyped Syntax}
 \begin{bnfgrammar}
-$A$ : value types ::= $X$ 
-| $\mathbf{1}$
+$A$ : value types ::= 
+$\mathbf{1}$
 | $A\; \times \; A$  
 | $A\; * \; A$
 | $U\underline{B}$
@@ -307,10 +315,206 @@ $\equiv$ is a coherence equivalece defined by
     \item Congruence: $\Upsilon \equiv \Upsilon' \implies \Gamma(\Upsilon) \equiv \Gamma(\Upsilon')$
 \end{itemize}
 
-\section{Questions}
-\begin{itemize}
-    \item I've only "bunched" the value context.. the computation context already has a linear restraint on usage.. but do we need to say something about enforcing separation..?
-\end{itemize}
+\section{Semantics}
+Preliminary definitions and constructions
+\subsubsection{Presheaves}
+Let $C$ be a small category. A \textbf{presheaf} on $C$ is a functor $F : C^{op} \rightarrow Set$. $Psh(C)$ denotes the functor category where objects are presheaves on $C$. This category will be used to denote value types. We will want a doubly cartesian closed structure on this category.\\
+\subsection{Terminal Object}
+The terminal object $\top$ is a functor $\top : C^{op} \rightarrow Set$. Have $\top_{0} (X) := \{*\}$ where $\top$ maps all objects of $C^{op}$ to a singleton set. Have $\top_{1} (f : X \rightarrow Y) : {*} \rightarrow {*}$ so $\top$ maps morphisms in $C^{op}$ to the identity function on the singleton set ${*}$. 
+Say $F : C^{op} \rightarrow Set$ is an object in $Psh(C)$ and consider the natural transformation $F \Rightarrow \top$.
+
+\begin{figure}[!h]
+\centering
+    \begin{tikzcd}
+        F(X) \arrow[r, "F(f)"] \arrow[d, "\alpha_X"]
+        & F(Y) \arrow[d, "\alpha_Y"] \\
+        \bot(X) \arrow[r, "id_{\{*\}}"]
+        &  \bot(Y)
+        \end{tikzcd}. 
+\end{figure}
+
+        Any natural transformation from $F$ to $\bot$ is determined by the components, of which there is no choice but the terminal map in $Set$. Thus, $Psh(C)$ has a terminal object.
+
+\subsection{Products}
+Given $F,G$ presheaves on $C$, construct their product object in $[C^{op},Set]$.
+
+    \begin{itemize}
+        \item[] On objects:
+            \begin{align*}
+                (F \times_{Psh(C)} G) (X) &:= F_0 (X) \times_{Set} G_0 (X) 
+            \end{align*}
+        \item[] On morphisms: given $(f : X \rightarrow Y)$\footnote{($f^{op} : Y \rightarrow X)$. Alternatively, we could write something like $\langle F_1 (f) \circ \pi_1, G_1 (f) \circ \pi_2 \rangle$. Being in set, we are abusing notation in the function definition by implicitly abstracting over $(F_0 (X) \times_{Set} G_0 (X))$ and unpacking/repacking products }
+        \begin{align*}
+            (F \times_{Psh(C)} G)(f)&: (F_0 (X) \times_{Set} G_0 (X)) \rightarrow (F_0 (Y) \times_{Set} G_0 (Y)) \\
+            (F \times_{Psh(C)} G)(f)&(Fx ,Gy) := (F_1(f)(Fx) , G_1(f)(Gy))
+        \end{align*} 
+        
+    
+        \item[] Preserves identity (holds pairwise)\footnote{Again I am abusing notation by performing implicit "computation" in Set}
+        \begin{align*}
+            (F \times_{Psh(C)} G)(id_X) =&\; F_1 (id_X) , G_1 (id_X)\\
+            =&\; id_{F_0(X)}, id_{G_0(X)}\\
+            =&\; id_{(F \times_{Psh(C)} G)(X)}
+        \end{align*}
+        \item[] Preserves composition (holds pairwise)
+        \begin{align*}
+            (F \times_{Psh(C)} G)(g \circ f) =&\; F_1 (g \circ f) , G_1 (g \circ f)\\
+            =&\; F_1(g) \circ F_1(f), G_1(g) \circ G_1(f)\\
+        \end{align*}
+    \end{itemize}
+    \newpage
+This describes an object $F \times_{Psh(C)} G \in Psh(C)$. The projection maps $\pi_1, \pi_2$ are natural transformations. Consider $\pi_1 : (F \times G) \Rightarrow F$.
+\begin{figure}[!h]
+\centering
+    \begin{tikzcd}
+        F(X) \times G(X) \arrow[r, "F(f)\times G(f)"] \arrow[d, "\pi_{1-Set}"]
+        & F(Y) \times G(Y) \arrow[d, "\pi_{1-Set}"] \\
+        F(X) \arrow[r, "F(f)"]
+        &  F(Y)
+        \end{tikzcd}
+\end{figure}\\
+The commuting diagram lives in $Set$ and $(F \times G)(X) := (F(X), G(X))$. So the components of $\pi_1$ are the projections maps of products in $Set$. From what we know about $Set$, we know this diagram commutes. What remains is to demonstrate the universal properties for products.
+
+\begin{figure}[!h]
+    \centering
+    \begin{tikzcd}
+      & C \arrow[Rightarrow,ld] \arrow[Rightarrow, rd] \arrow[Rightarrow, d, dotted] &   \\
+    F & F \times G \arrow[Rightarrow, r,"\pi_2"] \arrow[Rightarrow, l ,"\pi_1"]            & G
+    \end{tikzcd}
+\end{figure}
+
+This looks like the usual definition of product except that all the morphism are natural transformations. We can work with functions and sets if consider the underlying components and we fix an arbitrary object $X \in Ob \;C$. We know this commutes because $Set$ has products.
+
+
+\begin{figure}[!h]
+    \centering
+    \begin{tikzcd}
+      & C(X) \arrow[ld, "i"] \arrow[rd,"j"] \arrow[d, dotted, "h"] &   \\
+    F(X) & F(X) \times G(X) \arrow[ r,"\pi_{2-Set}"] \arrow[l ,"\pi_{1-Set}"]            & G
+    \end{tikzcd}
+\end{figure}
+
+\subsection{Exponentials}
+To construct the exponential object for two presheaves $F,G$, we first need to describe the Yoneda embedding.
+\subsubsection{Yonedda Embedding}
+The Yonedda Embedding is a functor $\yo : C \rightarrow Psh(C)$ which maps an object in $C$ to its contravariant hom functor.
+    \begin{align*}
+        &\yo_0(X) := Hom(\_,X) 
+    \end{align*}
+Where 
+Any $Y$ is mapped to the set of maps from $Y$ to $X$.
+    \begin{align*}
+        & Hom(\_,X)_1 (f : B \rightarrow A) : Hom(A,X) \rightarrow Hom(B,X) \\
+        & Hom(\_,X)_1(f):= \_ \circ f
+    \end{align*}
+And the action on morphisms $f^{op} : A \rightarrow B$ is precomposition.
+\newpage
+    \begin{align*}
+        Hom(\_,X)(id_A)(g : A \rightarrow X) &= g \circ id_A \\
+                    &= g                 
+    \end{align*}
+   When written pointfree, $Hom(\_,X)(id) = id_{Hom(A,X)}$. \\Finally, given $f : B \rightarrow A$, $g : C \rightarrow B$
+   \begin{align*}
+       Hom(\_,X)(g \circ^{op} f) \;\;:\;& Hom(A,X) \rightarrow Hom(C,X) \\
+       Hom(\_,X)(g \circ^{op} f)(h) &= h \circ (f \circ g)\\
+                            &= (h \circ f) \circ g\\
+                            &= (Hom(\_,X)(g) \circ Hom(\_,X)(f))(h)
+   \end{align*}
+   $\yo_1$ maps morphisms in $C$ to a natural transformation between hom functors.
+   \begin{align*}
+       \yo_1(f : X \rightarrow Y) : Hom(\_,X) \Rightarrow Hom(\_,Y)
+   \end{align*}
+   With components 
+   \begin{align*}
+       \eta (Z)&: Hom(Z,X) \rightarrow Hom(Z,Y)\\
+       \eta (Z)&= f \circ \_
+   \end{align*}
+   such that for any morphism $g : W \rightarrow V$ in $C$,
+\begin{figure}[!h]
+    \centering
+    \begin{tikzcd}
+     & {Hom(V,X)} \arrow[d, "\eta = f \circ \_"] \arrow[rr, "Hom(g)=\_\circ g"] &  & {Hom(W,X)} \arrow[d, "\eta = f \circ \_"] \\
+                     & {Hom(V,Y)} \arrow[rr, "Hom(g)=\_\circ g"]                                &  & {Hom(W,Y)}                               
+    \end{tikzcd} 
+\end{figure}\\
+Pointwise, the naturality condition is $(f \circ h) \circ g = f \circ (h \circ g)$ which holds by associativity of functions in $Set$. What remains is the preservation of identity and composition.
+\begin{align*}
+    \yo_1(id_X) : Hom(\_,X) \Rightarrow Hom(\_,X)
+\end{align*}
+
+Where, for a morphism $g : W \rightarrow V$,
+
+\begin{figure}[!h]
+    \centering
+    \begin{tikzcd}
+    {Hom(V,X)} \arrow[d, "\eta = id_X \circ \_"'] \arrow[rr, "Hom(g) = \_ \circ g"] &  & {Hom(W,X)} \arrow[d, "\eta = id_X \circ \_"] \\
+    {Hom(V,X)} \arrow[rr, "Hom(g) = \_ \circ g"]                                    &  & {Hom(W,X)}                                  
+    \end{tikzcd}
+\end{figure}
+
+The identity natural transformation where components are the identity function. Both commuting squares boil down to the equation $\_ \circ g = \_ \circ g$.
+
+\begin{figure}[!h]
+    \centering
+    \begin{tikzcd}
+    {Hom(V,X)} \arrow[d, "id"'] \arrow[rr, "Hom(g) = \_ \circ g"] &  & {Hom(W,X)} \arrow[d, "id"] \\
+    {Hom(V,X)} \arrow[rr, "Hom(g) = \_ \circ g"]                  &  & {Hom(W,X)}                
+    \end{tikzcd}
+\end{figure}
+\newpage
+For morphisms $f : A \rightarrow B$, $g : B \rightarrow C$,
+\begin{align*}
+    \yo_1(g \circ f) = \yo_1(g) \circ \yo_1(f)
+\end{align*}
+
+\begin{figure}[!h]
+    \centering
+    \begin{tikzcd}
+    W \arrow[r, "h"]                                                              & V &                                              \\
+    {Hom(V,A)} \arrow[d, "(f \circ g) \circ \_"] \arrow[rr, "Hom(h)= \_ \circ h"] &   & {Hom(W,A)} \arrow[d, "(f \circ g) \circ \_"] \\
+    {Hom(V,C)} \arrow[rr, "Hom(h) = \_ \circ h "]                                 &   & {Hom(W,C)}                                   \\
+    {Hom(V,A)} \arrow[d, "f\circ\_"] \arrow[rr, "\_ \circ h"]                     &   & {Hom(W,A)} \arrow[d, "f\circ\_"]             \\
+    {Hom(V,B)} \arrow[d, "g\circ\_"] \arrow[rr, "\_ \circ h"]                     &   & {Hom(W,B)} \arrow[d, "g\circ\_"]             \\
+    {Hom(V,C)} \arrow[rr, "\_ \circ h"]                                           &   & {Hom(W,C)}                                  
+    \end{tikzcd}
+\end{figure}
+The components of each natural transformations are equal.
+
+\subsubsection{Exponential Object}
+
+Given presheaves $F,G$, the exponential object $G^F$ is also a presheaf. For an object $X$ of $C$, we get a set of natural transformations.
+\begin{align*}
+    G^F_0(X) &:= Hom_{[C^{op},Set]}(\yo_0(X) \times_{psh} F, G)
+\end{align*}
+For a morphism $f : X \rightarrow Y$ of C, we have a function between sets of natural transformations
+\begin{align*}
+    G^F_1(f) & : Hom_{[C^{op},Set]}(\yo_0(Y) \times_{psh} F, G) \rightarrow Hom_{[C^{op},Set]}(\yo_0(X) \times_{psh} F, G)
+\end{align*}
+Say we are given $nt : Hom_{[C^{op},Set]}(\yo_0(Y) \times_{psh} F, G)$ which has components 
+\begin{align*}
+\alpha : (Z : Ob C) \rightarrow (Hom(Z,Y),F(Z)) \rightarrow G(Z) 
+\end{align*}
+We map $nt$ to a natural transformation in $Hom_{[C^{op},Set]}(\yo_0(X) \times_{psh} F, G)$, where the components are defined to be: 
+\begin{align*}
+    \eta&: (Z : Ob C) \rightarrow (Hom(Z,X),F(Z)) \rightarrow G(Z) \\
+    \eta&(Z)(g : Z \rightarrow X, fz : F(Z)) := \alpha(Z)( f \circ g, fz)
+\end{align*}
+Given $g : W \rightarrow V$, a morphism in $C$, the naturality square is of the form:\footnote{note the type of $F_1$ and $G_1$ since the source category is opposite}
+
+
+\begin{figure}[!h]
+    \centering
+    \begin{tikzcd}
+   & F_1(g) : F(V) \rightarrow F(W)                                                                                              & G_1(g) : G(V)\rightarrow G(W) &                                                                                    \\
+                        & {Hom(V,X)\times F(W)} \arrow[d, "\eta_V = \alpha_V(f\circ \_ \times id_{F(X)}) "'] \arrow[rr, "(\_ \circ g) \times F_1(g)"] &                               & {Hom(W,X)\times F(W)} \arrow[d, "\eta_W = \alpha_W(f \circ \_  \times id_{F(X)})"] \\
+                        & G(V) \arrow[rr, "G(g)"]                                                                                                     &                               & G(W)                                                                              
+    \end{tikzcd}
+\end{figure}
+
+From our original natural transformation $nt$, we have the naturality square: 
+
+
+
 \bibliographystyle{acm}
 \bibliography{CBPV-OSum/osumref}
 \end{document}
