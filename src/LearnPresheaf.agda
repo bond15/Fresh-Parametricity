@@ -1,4 +1,4 @@
-{-# OPTIONS --cubical --type-in-type  #-} -- type-in-type for the exponent object in Psh-𝒞.. yeah yeah ... it will dissapear 
+{-# OPTIONS --cubical --type-in-type  --allow-unsolved-metas #-} -- type-in-type for the exponent object in Psh-𝒞.. yeah yeah ... it will dissapear 
 open import CatLib 
 open import Agda.Primitive 
 open import Cubical.Foundations.Prelude hiding(comp)
