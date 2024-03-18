@@ -1,6 +1,6 @@
 {
     // build the docker image in this dir, and tag is with some name
-    "image": "agda-lnl",
+    "image": "agda-research",
     "customizations": {
         // Configure properties specific to VS Code.
         "vscode": {

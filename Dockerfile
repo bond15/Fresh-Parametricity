@@ -18,4 +18,5 @@ RUN mkdir /root/.agda
 RUN echo "/agda-stdlib/standard-library.agda-lib" >> /root/.agda/libraries
 RUN echo "/cubical/cubical.agda-lib" >> /root/.agda/libraries
 
+#may need to update the agda path in the general extensions settings in VS Code
 ENTRYPOINT ["tail", "-f", "/dev/null"]

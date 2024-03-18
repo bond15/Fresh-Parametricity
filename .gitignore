@@ -2,4 +2,4 @@
 *.fls
 *.log
 *.fdb_latexmk
-_build/
+_build/*
