@@ -1,0 +1,337 @@
+
+    module World where
+
+        open import Cubical.Foundations.Prelude
+        open import Cubical.Foundations.Equiv
+        open import Cubical.Data.Bool hiding(_≤_ ; isProp≤ )
+        open import Cubical.Data.Nat
+        open import Cubical.Data.Nat.Order
+        open import Cubical.Data.Sum
+        open import Cubical.Data.Unit
+        open import Cubical.Data.Empty
+        open import Cubical.Data.Sigma
+        open import Cubical.Data.FinSet
+        open import Cubical.Data.FinSet.Constructors
+
+        module _ {ℓ ℓ'} (CaseSym : Type ℓ)(X : Type ℓ') where
+            isDefined : X ⊎ Unit → Type ℓ-zero
+            isDefined (inl _) = Unit
+            isDefined (inr _) = ⊥
+
+            World : Type (ℓ-max ℓ ℓ')
+            World = Σ[ f ∈ (CaseSym → X ⊎ Unit) ]
+                isFinSet (Σ[ s ∈ CaseSym ] isDefined (f s))
+
+            lteb : ℕ → ℕ → Bool 
+            lteb zero _ = true 
+            lteb (suc x) zero = false 
+            lteb (suc x) (suc y) = lteb x y
+
+            record wmap (w1 w2 : World) : Set₀ where
+                constructor _◃_
+                field 
+                    sz : fst (snd w2) ≤ (fst(snd(w1)))
+                    agree : ∀(σ : CaseSym) → fst w1 ≡ fst w2 
+            open wmap
+                    
+           -- opaque 
+           --     _∙_
+            _∘w_ : {w1 w2 w3 : World}(g : wmap w2 w3)(f : wmap w1 w2) → wmap w1 w3 
+            _∘w_ {w1}{w2}{w3} g f = ≤-trans sz₂ sz₁ ◃ λ σ → agree₁ σ ∙ agree₂ σ where 
+                open wmap f renaming(sz to sz₁ ; agree to agree₁)
+                open wmap g renaming(sz to sz₂ ; agree to agree₂)
+
+            -- isProp≤
+            ≡w : {w1 w2 : World} → (f g : wmap w1 w2) → (∀ (σ : CaseSym) → agree f σ ≡ agree g σ )→ f ≡ g
+            ≡w {w1} {w2} f g prf i = {!   !} ◃ (λ σ → prf σ i)
+
+            idw : {w : World} → wmap w w 
+            idw {w} = ((0 , refl)) ◃ (λ σ → refl)
+            
+            idrw : {w1 w2 : World} → (f : wmap w1 w2) → f ∘w idw ≡ f 
+            idrw {fst₁ , snd₁} {fst₂ , snd₂} ((fst₃ , snd₃) ◃ agree) = cong₂ _◃_ {!  !} {!   !}
+
+            open Category
+            Worlds : Category lzero lzero 
+            Worlds .Ob = World
+            Worlds ._⇒_ = wmap
+            Worlds .id {x} = idw
+            Worlds ._∘_ = _∘w_
+            Worlds .idr {w1}{w2}{f} = {!   !}
+            Worlds .idl = {!   !}
+            Worlds .assoc = {!   !}
+
+    module Kworld where   
+        postulate
+            sorryTm : {A : Set₀} → A
+            sorryTy : Set₀  
+            
+        data CaseSym : Set₀ where 
+            σ_bool : CaseSym
+
+        data Type^Syn : Set₀ where 
+            bool unit : Type^Syn
+            _×ty_ : Type^Syn → Type^Syn → Type^Syn
+
+        open import Cubical.Data.Nat
+        open import Cubical.Data.Sigma
+        open import Cubical.Data.Fin
+        open import Cubical.Data.Unit renaming (Unit to ⊤)
+        open import Cubical.Data.Bool
+        open import Cubical.Data.List
+
+        data ⊥ {ℓ}: Set ℓ where
+            -- decidable equality
+        record Dec (T : Set ℓ) : Set ℓ where
+            constructor MkDec 
+            field 
+                eqb : T → T → Bool 
+        open Dec{{...}}
+
+        _∈_ : {T : Set ℓ}{{ _ : Dec T}} → (t : T) → (xs : List T) → Set ℓ
+        _∈_ t [] = Lift ⊥
+        _∈_ t (x ∷ xs) with eqb t x
+        ...             | true  = Lift ⊤
+        ...             | false = t ∈ xs
+            
+        -- A subset of a type with decidable equality
+        sub : {T : Set ℓ}{{_ : Dec T}} → List T → Set ℓ
+        sub {T} xs = Σ[ t ∈ T ] (t ∈ xs)
+
+        data Ulist (X : Set₀)⦃ _ : Dec X ⦄ : Set₀ 
+        nin : {X : Set}⦃ _ : Dec X ⦄ → (x : X) → (xs : Ulist X) → Set₀ 
+        
+        data Ulist X where 
+            Null : Ulist X
+            Cons : (x : X) → (xs : Ulist X) → nin x xs → Ulist X 
+
+        nin x Null = ⊤
+        nin x (Cons y xs _) with eqb x y 
+        ...                 | true = ⊥
+        ...                 | false = nin x xs
+
+        inn : {X : Set}⦃ _ : Dec X ⦄ → (x : X) → (xs : Ulist X) → Set₀
+        inn x Null = ⊥
+        inn x (Cons y xs _) with eqb x y 
+        ...                 | true = ⊤
+        ...                 | false = inn x xs
+
+        usub : {T : Set ℓ}{{_ : Dec T}} → Ulist T → Set ℓ
+        usub {T} xs = Σ[ t ∈ T ] (inn t xs)
+
+        module foo ⦃ _ : Dec CaseSym ⦄ where 
+
+            numdec : Dec ℕ
+            numdec = MkDec mkdec
+                where 
+                    mkdec : ℕ → ℕ → Bool
+                    mkdec zero zero = true
+                    mkdec zero (suc y) = false
+                    mkdec (suc x) zero = false
+                    mkdec (suc x) (suc y) = mkdec x y
+                
+            
+                    
+            _ :  Ulist ℕ {{numdec}}
+            _ = Null
+
+           
+
+            _ : Ulist ℕ {{numdec}}
+            _ = Cons 5 (Cons 4 Null tt) tt 
+            record world : Set₀ where 
+                -- \t 2
+                constructor _◃_
+                field 
+                    dom : List CaseSym
+                    mp : sub dom → Type^Syn
+
+            record world'  : Set₀ where 
+                -- \t 2
+                field 
+                    dom : Ulist CaseSym
+                    mp' : usub dom → Type^Syn
+
+            eqsub : (xs ys : List CaseSym) → Set ℓ 
+            eqsub xs ys = ∀(σ : CaseSym) → σ ∈ xs ≡ σ ∈ ys
+
+            equsub : (xs ys : Ulist CaseSym) → Set ℓ 
+            equsub xs ys = ∀(σ : CaseSym) → inn σ xs ≡ inn σ ys
+            
+            -- when are two worlds equal..
+            -- well the lists part kind of sucks here..
+            -- when the domains (or lists) have the same elements
+            -- and the maps are equal
+            open import Cubical.Foundations.Isomorphism
+
+            inIsProp : (x : CaseSym)(xs : List CaseSym) → isProp (x ∈ xs)
+            inIsProp x [] = λ()
+            inIsProp x (x₁ ∷ xs) with eqb x x₁
+            ...                     | true  = λ{ (lift tt) (lift tt) → refl }
+            ...                     | false = inIsProp x xs
+
+            innIsProp : (x : CaseSym)(xs : Ulist CaseSym) → isProp (inn x xs)
+            innIsProp x Null = λ()
+            innIsProp x (Cons x₁ xs _) with eqb x x₁
+            ...                     | true  = λ { tt tt → refl }
+            ...                     | false = innIsProp x xs
+
+            -- only assume CaseSym isSet
+            -- https://github.com/agda/cubical/blob/c26160bec3e8edf3d83597add765a01cc0bf982b/Cubical/Data/Nat/Properties.agda#L133
+            --postulate caseIsProp : isProp CaseSym 
+
+            open import Cubical.Relation.Nullary renaming(Dec to Decide)
+            open import Cubical.Relation.Nullary.DecidablePropositions
+            open import Cubical.Foundations.HLevels
+            -- get this from being decidable?
+            --https://github.com/agda/cubical/blob/c26160bec3e8edf3d83597add765a01cc0bf982b/Cubical/Relation/Nullary/Base.agda
+
+            postulate caseDiscrete : Discrete CaseSym
+            
+            caseIsSet : isSet CaseSym
+            caseIsSet = Discrete→isSet caseDiscrete
+
+            -- isPropDec : {A.ℓ : Level} {A : Type A.ℓ} → isProp A → isProp (Decide A)
+            --caseIsProp : isProp CaseSym
+            -- caseIsProp = {! isPropDec  !}
+
+            --isPropDec
+            --isDecProp→Dec 
+            
+            --subIsProp : (xs : List CaseSym) → isProp (sub xs)
+            --subIsProp xs x y = Σ≡Prop (λ σ → inIsProp σ xs) (caseIsProp (x .fst) (y .fst)) 
+
+            -- decidable propositions 
+            -- https://github.com/agda/cubical/blob/c26160bec3e8edf3d83597add765a01cc0bf982b/Cubical/Relation/Nullary/DecidablePropositions.agda
+
+
+            innPathIsContr : (xs : Ulist CaseSym)(σ : CaseSym)(x y : inn σ xs) → isContr (x ≡ y)
+            innPathIsContr xs s x y = isProp→isContrPath (innIsProp s xs) x y
+
+
+            usubIsSet : (xs : Ulist CaseSym) → isSet (usub xs)
+            usubIsSet xs = isSetΣSndProp caseIsSet (λ σ → innIsProp σ xs)
+
+            usubPathIsProp : (xs ys : Ulist CaseSym)(p : xs ≡ ys)(w : usub xs)(v : usub ys) → isProp (PathP (λ i → usub (p i)) w v)
+            --isProp(usub xs ≡ usub ys)
+            -- something is wrong here... why is only ys specified in usubIsSet
+            usubPathIsProp xs ys p w v = isOfHLevelPathP' {A = (λ i → usub (p i))} 1 (usubIsSet ys) w v
+
+            
+            -- Discrete→isSet (discreteΣ caseDiscrete (innIsDec xs)) --  Σ≡Set ? ? 
+            --(λ σ → innIsProp σ xs) (caseIsProp (x .fst) (y .fst)) 
+
+            eqdom : (xs ys : List CaseSym) → (∀(σ : CaseSym) →  σ ∈ xs → σ ∈ ys) → (∀(σ : CaseSym) → σ ∈ ys → σ ∈ xs) → sub xs ≡ sub ys
+            eqdom xs ys to fro = isoToPath 
+                    (iso (λ{ (fst₁ , snd₁) → fst₁ , (to fst₁ snd₁) }) 
+                        (λ{ (fst₁ , snd₁) → fst₁ , (fro fst₁ snd₁) }) 
+                        (λ { (fst₁ , snd₁) → Σ≡Prop (λ x → inIsProp x ys) refl }) 
+                        (λ { (fst₁ , snd₁) → Σ≡Prop (λ x → inIsProp x xs) refl })) 
+            
+            eqdom' : (xs ys : List CaseSym) → (eqsub xs ys) → sub xs ≡ sub ys
+            eqdom' xs ys eqmap = isoToPath 
+                    (iso (λ{ (fst₁ , snd₁) → fst₁ , transport (eqmap fst₁) snd₁  }) 
+                        (λ{ (fst₁ , snd₁) → fst₁ , transport (sym (eqmap fst₁)) snd₁}) 
+                        ((λ { (fst₁ , snd₁) → Σ≡Prop (λ x → inIsProp x ys) refl})) 
+                        ((λ { (fst₁ , snd₁) → Σ≡Prop (λ x → inIsProp x xs) refl}))  )
+
+            equdom' : (xs ys : Ulist CaseSym) → (equsub xs ys) → usub xs ≡ usub ys
+            equdom' xs ys eqmap = isoToPath 
+                    (iso (λ{ (fst₁ , snd₁) → fst₁ , transport (eqmap fst₁) snd₁  }) 
+                        (λ{ (fst₁ , snd₁) → fst₁ , transport (sym (eqmap fst₁)) snd₁}) 
+                        ((λ { (fst₁ , snd₁) → Σ≡Prop (λ x → innIsProp x ys) refl})) 
+                        ((λ { (fst₁ , snd₁) → Σ≡Prop (λ x → innIsProp x xs) refl}))  )
+
+            equdom'' : (xs ys : Ulist CaseSym) → (xs ≡ ys) → usub xs ≡ usub ys
+            equdom'' xs ys eqmap = cong usub eqmap
+
+
+            find : (xs : Ulist CaseSym)(x : CaseSym)(prf : inn x xs) → CaseSym 
+            find (Cons x₁ xs x₂) x with eqb x₁ x 
+            ...                         | true = λ f → x
+            ...                         | false = λ f → {!  f !}
+            
+            asdf : (xs ys : Ulist CaseSym) → (equsub xs ys) → xs ≡ ys 
+            asdf xs ys prf = {! isoToPath ? !}
+
+            eqcond : (xs ys : Ulist CaseSym) → Iso ((equsub xs ys)) (xs ≡ ys) 
+            eqcond Null Null = iso (λ _ → refl) (λ _ _ → refl) {!   !} λ a → {!   !} 
+            eqcond Null (Cons x ys x₁) = iso {!   !} {!   !} {!   !} {!   !}
+            eqcond (Cons x xs x₁) ys = {!   !}
+            
+            eqLstTy : (xs ys : Ulist CaseSym)(p : xs ≡ ys) → usub xs ≡ usub ys 
+            eqLstTy xs ys p = isoToPath 
+                (iso (λ{ (fst₁ , snd₁) → fst₁ , {!   !}}) 
+                {!   !} {!   !} {!   !})
+
+
+            remap : {xs ys : Ulist CaseSym}(p : xs ≡ ys)(f : usub ys → CaseSym) → usub xs → CaseSym
+            remap  p f sig = f (subst _ p sig)
+
+            eqmp : (xs ys : Ulist CaseSym)(p : xs ≡ ys)(q : (equsub xs ys))(f : usub xs → CaseSym)(g : usub ys → CaseSym)
+                 → (∀(σ : CaseSym)(prf : inn σ xs ≡ inn σ ys) → f (σ , {! transport prf  !}) ≡ g {!   !}  )  → 
+                 PathP ( λ i → usub (p i) →  CaseSym) f g
+            eqmp xs ys p q f g prf i (fst₁ , snd₁) = {! snd₁   !}
+
+            arg : {A : I → Set₀}{f : A i0 → CaseSym}{g : A i1 → CaseSym} → 
+                (q : A i0 ≡ A i1) → 
+                ((x : A i0)(y : A i1)(p : PathP A x y) → f (p i0) ≡ g (p i1)) → 
+                PathP (λ i → A i → CaseSym) f g
+            arg {A}{f}{g} q prf i sig = {!  SquareP (λ i j → A i → CaseSym) refl  !}
+
+{- 
+funExt : {B : A → I → Type ℓ'}
+  {f : (x : A) → B x i0} {g : (x : A) → B x i1}
+  → ((x : A) → PathP (B x) (f x) (g x))
+  → PathP (λ i → (x : A) → B x i) f g
+funExt p i x = p x i
+-}
+            foo = funExt
+            
+
+           -- eqworld' : (xs ys : List CaseSym)(w1 : world' xs)(w2 : world' ys) → w1 ≡ w2 
+            --eqworld' = {!   !}
+
+            record _≤w_ (w1 w2 : world) : Set₀ where 
+                -- \t 
+                constructor _◂_ 
+                open world w1 renaming (dom to dom₁ ; mp to mp₁)
+                open world w2 renaming (dom to dom₂ ; mp to mp₂)
+                
+                field 
+                    subdom : ∀ (σ : CaseSym) → σ ∈ dom₂ → σ ∈ dom₁
+                    agree : ∀ (σ : sub dom₂) → mp₂ σ  ≡ mp₁ (fst σ , subdom (fst σ) (snd σ))
+            open import Cubical.Foundations.Prelude
+            _≡w_ : {w1 w2 w3 w4 : world}(f : w1 ≤w w2)(g : w3 ≤w w4)(p : w1 ≡ w3)(q : w2 ≡ w4) → PathP (λ i → p i ≤w q i) f g 
+            _≡w_ {w1} {w2} {w3} {w4} f g p q i = (λ σ x → {!   !}) ◂ {! transport  !} 
+                where 
+                    open world
+                    open world w1 renaming (dom to dom₁ ; mp to mp₁)
+                    open world w2 renaming (dom to dom₂ ; mp to mp₂)
+                    open world w3 renaming (dom to dom₃ ; mp to mp₃)
+                    open world w4 renaming (dom to dom₄ ; mp to mp₄)
+                    open _≤w_ f renaming (subdom to subdom₁ ; agree to agree₁)
+                    open _≤w_ g renaming (subdom to subdom₂ ; agree to agree₂)
+
+
+            open Category
+            World : Category lzero lzero 
+            World .Ob = world
+            World ._⇒_ = _≤w_
+            World .id  {x} = (λ σ x → x) ◂ (λ{(fst₁ , snd₁) → refl})
+            _∘_ World {x} {y} {z} (subdom₁ ◂ agree₁) (subdom₂ ◂ agree₂) = 
+                    (λ σ z → subdom₂ σ (subdom₁ σ z)) ◂ λ{(s , a) → 
+                        world.mp z (s , a)           ≡⟨ agree₁ (s , a) ⟩ 
+                        world.mp y (s , subdom₁ s a) ≡⟨ agree₂ (s , subdom₁ s a) ⟩ 
+                        world.mp x (s , subdom₂ s (subdom₁ s a)) ∎ }
+            World .idr {dom ◃ mp} {dom₁ ◃ mp₁} {subdom ◂ agree} = {!   !} 
+            World .idl = {!   !}
+            World .assoc = {!   !}
+
+            {-
+            _⊆_ : (A B : List CaseSym) → Set₀ 
+            A ⊆ B = ∀ (σ  : CaseSym) → σ ∈ A → σ ∈ B
+
+            _≤w_ : world → world → Set₀ 
+            x ≤w y = {!   !}
+            -}

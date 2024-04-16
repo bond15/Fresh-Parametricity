@@ -24,6 +24,13 @@ module Predicator{o ℓ} (𝒞 : Category o ℓ) where
             *id = {!   !} ; 
             *cmp = {!   !} }
 
+    arr : (a b : Ob) → Pred 
+    arr a b = record { 
+                P⟨_⟩ = λ c → {! c × a  !} ;
+                _*_ = {!   !} ; 
+                *id = {!   !} ; 
+                *cmp = {!   !} }
+
     module isPresheaf where 
         open import LearnPresheaf 𝒞 
         open SetCat
@@ -61,25 +68,29 @@ module Predicator{o ℓ} (𝒞 : Category o ℓ) where
 
         open FunctorT P renaming (F₀ to P₀ ; F₁ to P₁)
         yoneda-lemma : ∀ (A : Ob) → Iso (P₀ A) (𝓨₀ A ⇛ P) 
-        yoneda-lemma A = iso to fro {!   !} {!   !} where 
+        yoneda-lemma A = iso to fro s {!   !} where 
+            pred : Pred 
+            pred = inv same P
+                
+            open Pred pred
 
             to : P₀ A → Hom[-, A ] ⇛ P 
             to φ = Mknt η sq where 
-
-
-                pred : Pred 
-                pred = inv same P
-                
-                open Pred pred
-
+            
                 η : (x : Ob) → x ⇒ A → P₀ x
                 η x f = φ * f
 
                 sq : (x y : Ob) (f : y ⇒ x) → (λ g → P₁ (g ∘ f) φ) ≡ (λ g → P₁ f (P₁ g φ)) 
-                sq x y f = funExt λ g → {! *cmp  !}
+                sq x y f = funExt λ g → *cmp φ f g
 
                 
             fro : Hom[-, A ] ⇛ P → P₀ A
             fro nt = η A id where 
                 open _⇛_ nt
  
+            s : section to fro 
+            s nt  = Nat-path _ _  λ x → funExt λ f → {! *id  !} where
+                  --  P₁ f (η A id) ≡⟨ {!   !} ⟩ {! (η A id ) * f  !} where --P₁ f (η A id) ≡ η x f
+                    open _⇛_ nt
+                    open NP
+         

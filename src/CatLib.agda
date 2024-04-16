@@ -331,6 +331,67 @@ module CatLib where
                         {X Y Z : Obᶜ}{f' : X ⇒ᶜ Y}{g' : Y ⇒ᶜ Z}
                     → F₁ (g ∘ᵇ f) (g' ∘ᶜ f') ≡ (F₁ g  g' ∘ᵈ F₁ f f')
 
+
+    module Cowedge {o ℓ}(𝒞 𝒟 : Category o ℓ) where 
+        open import Cubical.Core.Everything
+        open BiFunctor  𝒞  𝒟 (𝒞 ^op)
+        open Category 𝒞 renaming (Ob to Obᶜ; _⇒_ to _⇒ᶜ_; id to idᶜ; _∘_ to _∘ᶜ_)
+        open Category 𝒟 renaming (Ob to Obᵈ; _⇒_ to _⇒ᵈ_; id to idᵈ; _∘_ to _∘ᵈ_)
+
+        record CowedgeT (F : BiFunctorT): Set (ℓ-max o ℓ) where 
+            open BiFunctorT F
+            field 
+                nadir : Obᵈ
+                --\psi
+                ψ : ∀ (c : Obᶜ) → F₀ c c ⇒ᵈ nadir 
+                {- 
+                    for all morphisms f : c ⇒ c' in category C,
+
+                    F₀(c',c)---F₁(id(c'),f)---> F₀(c',c')
+                     |                          |
+                     F₁(f,id(c))               ψ(c')
+                     |                          |
+                    F₀(c,c)---ψ(c)-----------> nadir
+                -}
+                extranatural : ∀{c c' : Obᶜ}→ (f : c ⇒ᶜ c') → (ψ c ∘ᵈ (F₁ f (idᶜ {c}))) ≡ (ψ c' ∘ᵈ F₁ idᶜ f)
+                 
+    module Coend {o ℓ} (𝒞 𝒟 : Category o ℓ) where 
+        -- a universal cowedge
+        open import Cubical.Core.Everything
+        open BiFunctor  𝒞  𝒟 (𝒞 ^op)
+        open Category 𝒞 renaming (Ob to Obᶜ ; _⇒_ to _⇒ᶜ_; id to idᶜ; _∘_ to _∘ᶜ_)
+        open Category 𝒟 renaming (Ob to Obᵈ ; _⇒_ to _⇒ᵈ_; id to idᵈ; _∘_ to _∘ᵈ_)
+        open Cowedge 𝒞 𝒟
+
+
+        {-
+            How is a cowedge universal?
+            Given some cowedge W := (nadir₁ , ψ),
+
+            then for any other cowedge W' := (nadir₂ , ψ)  -- both are cowedges for the same bifunctor F
+            we can factor through a map factor : nadir₁ → nadir₂ 
+         -}
+        open CowedgeT
+        record CoendT (F : BiFunctorT) : Set (ℓ-max o ℓ) where 
+            open BiFunctorT F
+            field 
+                cowedge : CowedgeT F -- (w₁ , ψ₁)
+                factor : (W : CowedgeT F) → cowedge .nadir ⇒ᵈ W .nadir
+                -- given any (w₂ , ψ₂),
+                -- and factor : w₁ → w₂ 
+                -- ∀ (c : Obᶜ),
+                --    ψ₁(c) : F₀(c , c) → w₁
+                --    ψ₂(c) : F₀(c , c) → w₂ 
+                --
+                -- then naturally we want
+                -- F₀(c , c)--ψ₁(c)-->w₁--factor-->w₂ ≡ F₀(c , c)--ψ₂-->w₂
+                commutes : (W : CowedgeT F)(c : Obᶜ) → (factor W ∘ᵈ cowedge .ψ c) ≡ W .ψ c
+                -- uniqueness of factor map?
+                -- any other factor' which also satisfies the commutes property
+                unique : (W : CowedgeT F)(factor' : cowedge .nadir ⇒ᵈ W .nadir) → 
+                            (∀(c : Obᶜ) → (factor' ∘ᵈ cowedge .ψ c) ≡ W .ψ c) → 
+                            factor' ≡ factor W
+
     module Iso{o ℓ} (𝒞 : Category o ℓ) where 
         open Category 𝒞
 

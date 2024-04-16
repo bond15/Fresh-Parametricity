@@ -3,83 +3,13 @@ open import CatLib
 open import Agda.Primitive 
 open import Cubical.Foundations.Prelude hiding(comp)
 
-module LearnPresheaf {o ℓ} (𝒞 : Category o ℓ) where 
-
-
-    
-    module power where
-        open import Cubical.Data.Bool
-        open Category
-
-        -- MCP
-        𝓟 : Set₀ → Set₀ 
-        𝓟 X = X → Bool
-
-        data ⊥ : Set₀ where
-        data ⊤ : Set₀ where
-            tt : ⊤
-
-
-        _∈_ : {X : Set₀} → (× : X) → (s : 𝓟 X) → Set₀
-        x ∈ s with s x 
-        x ∈ s     | true = ⊤
-        x ∈ s     | false = ⊥
-
-
-        _⊆_ : {X : Set₀} → 𝓟 X → 𝓟 X → Set₀
-        X ⊆ Y = ∀ {x} → x ∈ X → x ∈ Y
-
-
-        data W : Set₀ where 
-            w1 w2 w3 w4 w5 : W
-
-        _=?_ : W → W → Bool 
-        w1 =? w1 = true
-        w2 =? w2 = true
-        w3 =? w3 = true
-        w4 =? w4 = true
-        w5 =? w5 = true
-        _ =? _ = false
-
-        singleton : W → 𝓟 W 
-        singleton x = x =?_
-
-        World : Category ℓ-zero ℓ-zero 
-        World .Ob = 𝓟 W   
-        World ._⇒_ X Y = X ⊆ Y
-        World .id x = x
-        World ._∘_ f g z = f (g z)
-        World .idr {f} = refl
-        World .idl {f} = refl
-        World .assoc {f = f} {g} {h}= refl 
-
-        module WorldExample where
-
-            S₁ : 𝓟 W
-            S₁ w2 = true
-            S₁ w3 = true
-            S₁ _  = false
-        
-            S₂ : 𝓟 W
-            S₂ w2 = true
-            S₂ w3 = true
-            S₂ w4 = true
-            S₂ _  = false
-
-            ex₁ : S₁ ⊆ S₂ 
-            ex₁ {w2} tt = tt
-            ex₁ {w3} tt = tt
-
-            -- no : S₂ ⊆ S₁ 
-            -- no {w2} s = tt
-            -- no {w3} s = tt
-            -- no {w4} s = {!   !} -- impossible
+module LearnPresheaf  where 
 
 
     module Psh {o ℓ} (𝒞 : Category o ℓ)  where
-        open Category
+        -- open Category
         open SetCat hiding (Sets)
-
+        open Category
 
         Psh-𝒞 : Category (ℓ-max o (ℓ-suc ℓ)) (o ⊔ ℓ) 
         Psh-𝒞 .Ob = Functor.FunctorT (𝒞 ^op) (ℓSets {ℓ})
@@ -447,6 +377,48 @@ module LearnPresheaf {o ℓ} (𝒞 : Category o ℓ) where
             Psh-ccc .exponentials = Psh-exp
 
 
+    -- simple F algebras for endofunctors on Set
+    module comptypes where
+        open Functor 
+        open SetCat
+        module setalgebras {ℓ : Level}(T : FunctorT (ℓSets {ℓ}) (ℓSets {ℓ})) where
+            open FunctorT T renaming (F₀ to T₀ ; F₁ to fmap)
+            open import Cubical.Data.Prod
+
+            open Category ℓSets
+            record T-algebra : Set ℓ where 
+                constructor ⟪_,_⟫
+                field 
+                    carrier : Ob 
+                    θ : T₀ carrier ⇒ carrier
+                    -- laws
+            open T-algebra
+
+            postulate -- T is also a monad
+                join : ∀ {X : Ob} → T₀ (T₀ X) → T₀ X
+
+            -- singleton 'Set'
+            -- {x}
+            singleton : {ℓ : Level}{X : Set ℓ} → (x : X) → Set ℓ 
+            singleton {X = X} x = Σ X (Path X x)
+            
+            free-T-Alg : (X : Ob) → T-algebra 
+            free-T-Alg X .carrier = T₀ X
+            free-T-Alg X .θ = join
+            
+            -- x : X allowed b/c this is Set (we can peek in object)
+            singleton-T-alg : (X : Ob)(x : X) → T-algebra
+            singleton-T-alg X x .carrier = singleton x
+            singleton-T-alg X x .θ Tc = x , refl
+
+            product-T-alg : (F G : T-algebra) → T-algebra 
+            product-T-alg ⟪ c₁ , θ₁ ⟫ ⟪ c₂ , θ₂ ⟫ .carrier =  c₁ × c₂ 
+            product-T-alg ⟪ c₁ , θ₁ ⟫ ⟪ c₂ , θ₂ ⟫ .θ Tx×y = (θ₁ (fmap proj₁ Tx×y)) , (θ₂ (fmap proj₂ Tx×y))
+
+            exponent-T-alg : (C : T-algebra)(A : Ob) → T-algebra 
+            exponent-T-alg C A . carrier = A → (C .carrier) 
+            exponent-T-alg ⟪ c₁ , θ₁ ⟫ A .θ Ta→c₁ a = θ₁ (fmap (λ f → f a) Ta→c₁)
+
 
     module Syntax where 
 
@@ -466,12 +438,83 @@ module LearnPresheaf {o ℓ} (𝒞 : Category o ℓ) where
 
         data Trm : Set₀ where 
             
-        
-            
-    module Semantics where
+    module dumb where 
         open Category
-        open power using (World)
-        open Psh World
+
+        data Unit : Set₀ where 
+            tt : Unit
+
+        data ⊥ : Set₀ where 
+
+        
+        data Two : Set₀ where 
+            L R : Two
+
+        TwoCat : Category lzero lzero
+        TwoCat .Ob = Two
+        TwoCat ._⇒_ = λ{ L L → Unit
+                         ; L R → ⊥
+                         ; R L → ⊥
+                         ; R R → Unit}
+        TwoCat .id {L} = tt
+        TwoCat .id {R} = tt
+        _∘_ TwoCat {L} {L} {L} tt tt = tt
+        _∘_ TwoCat {L} {L} {R} = λ()
+        _∘_ TwoCat {L} {R} {L} = λ()
+        _∘_ TwoCat {L} {R} {R} tt = λ()
+        _∘_ TwoCat {R} {L} {L} tt = λ()
+        _∘_ TwoCat {R} {R} {L} = λ()
+        _∘_ TwoCat {R} {L} {R} = λ()
+        _∘_ TwoCat {R} {R} {R} tt tt = tt
+        TwoCat .idr {L} {L} {tt} = refl
+        TwoCat .idr {R} {R} {tt} = refl
+        TwoCat .idl {L} {L} {tt} = refl
+        TwoCat .idl {R} {R} {tt} = refl
+        TwoCat .assoc = {!   !}
+
+        open Psh TwoCat
+
+        Psh-Two = Psh-𝒞
+        open Psh-CCC
+        open CartesianClosed Psh-Two
+        open CartesianClosedT Psh-ccc
+        open Exponentials Psh-Two
+        open ExponentialsT exponentials
+        open Terminal.TerminalT
+        open ObjectExponential Psh-Two
+        open ExponentialOb 
+        
+        term : Ob Psh-Two
+        term = terminal .⊤
+
+        postulate X : Ob Psh-Two
+        
+
+        exp : ExponentialOb  term X
+        exp  = exponential {term} {X}
+
+        open import Cubical.Data.Prod
+        expo : Ob Psh-Two 
+        expo = exp .B^A
+        foo = {!   !}
+            where 
+                open Functor.FunctorT
+                postulate XL : F₀ X L
+                thing : expo .F₀ L
+                thing = Mknt (λ{L → λ{ (tt , SetCat.tt) → XL}
+                              ; R → λ{(() , x₁)}}) 
+                              
+                              λ{L L tt → funExt λ{ (tt , SetCat.tt) → {!  !} }
+                              ; L R → λ()
+                              ; R L → λ()
+                              ; R R tt → funExt λ{ (() , x₁) }}
+
+            
+    module Semantics (TySyn : Set) where
+        open Category
+
+        open import world TySyn
+        open Psh WCat
         open Syntax
 
     
@@ -484,6 +527,9 @@ module LearnPresheaf {o ℓ} (𝒞 : Category o ℓ) where
         open Terminal.TerminalT
         open BinaryProducts.BinaryProductsT
 
+        -- no its the monoidal structure from the day convolution
+        --open Monoidal WCat
+
         ⦅_⦆val : VType → Psh-World .Ob
         ⦅_⦆cmp : CType → {!   !} 
         
@@ -492,5 +538,13 @@ module LearnPresheaf {o ℓ} (𝒞 : Category o ℓ) where
         ⦅ T₁ * T₂ ⦆val = {!   !} -- Day convolution?
         ⦅ U T ⦆val = ⦅ T ⦆cmp
 
-        ⦅_⦆cmp = {!   !}        
-           
+        postulate 
+            T : Functor.FunctorT Psh-World Psh-World
+            
+       --  open comptypes.walgebras T
+        ⦅ x ⟶ x₁ ⦆cmp = {! exponent-T-alg ? ?   !}
+        ⦅ x -* x₁ ⦆cmp = {!   !}
+        ⦅ F x ⦆cmp = {!   !}        
+            
+
+
