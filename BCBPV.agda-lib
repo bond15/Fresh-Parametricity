@@ -1,3 +1,4 @@
 name: BCPBV
 include: src 
 depend: cubical , cubical-categorical-logic
+flags: --cubical 
