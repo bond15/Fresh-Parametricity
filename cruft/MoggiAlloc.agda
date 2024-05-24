@@ -23,7 +23,7 @@ module cruft.MoggiAlloc where
     open Category 
     open Functor 
 
-    -- this is the one instantiation of the monad Moggi gives in 
+    -- this is the one instantiation of the monad Moggi gives 
     module AllocFinSet where 
             
         UnitF : FinSet ℓ-zero
