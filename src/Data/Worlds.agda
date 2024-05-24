@@ -1,5 +1,5 @@
 {-# OPTIONS --safe #-}
-module src.Worlds where 
+module src.Data.Worlds where 
     open import Cubical.Foundations.Prelude
     open import Cubical.Foundations.HLevels 
     open import Cubical.Categories.Displayed.Constructions.Comma
@@ -10,7 +10,7 @@ module src.Worlds where
     open import Cubical.Categories.Instances.Terminal
     open import Cubical.Data.FinSet
 
-    open import src.FinSet
+    open import src.Data.FinSet
 
     module _ {ℓS : Level}(T : hSet ℓS) where 
 
