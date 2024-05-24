@@ -1,3 +1,0 @@
-name: template
-include: src
-depend: standard-library, cubical
