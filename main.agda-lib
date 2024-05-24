@@ -1,3 +1,0 @@
-name: template
-include: src src/SolverHacking
-depend: standard-library, cubical
