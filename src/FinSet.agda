@@ -1,6 +1,6 @@
 {-# OPTIONS --safe #-}
 -- category of finite sets and embeddings
-module FinSet where
+module src.FinSet where
     open import Cubical.Categories.Category        
     open import Cubical.Foundations.HLevels hiding (extend)
     open import Cubical.Functions.Embedding
