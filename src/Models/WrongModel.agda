@@ -6,6 +6,7 @@ module src.Models.WrongModel where
     open import Cubical.Functions.Embedding
 
     open import Cubical.Categories.Adjoint.Monad
+    open import Cubical.Categories.Bifunctor.Redundant
     open import Cubical.Categories.Category
     open import Cubical.Categories.Functor
     open import Cubical.Categories.Instances.Discrete
@@ -13,7 +14,10 @@ module src.Models.WrongModel where
     open import Cubical.Categories.Instances.Sets   
     open import Cubical.Categories.Monad.Base
     open import Cubical.Categories.NaturalTransformation
+    open import Cubical.Categories.Presheaf.Base
+    open import Cubical.Categories.Presheaf.Constructions
     open import Cubical.Categories.Presheaf.KanExtension
+    
 
     open import Cubical.Data.Bool 
     open import Cubical.Data.FinSet
@@ -43,17 +47,13 @@ module src.Models.WrongModel where
         |W| = (DiscreteCategory (ob W , isSet→isGroupoid isSetWob))
             
         𝒱 : Category  (ℓ-suc ℓ) ℓ 
-        𝒱 = FUNCTOR (|W| ^op) (SET ℓ)
+        𝒱 = PresheafCategory |W| ℓ
 
         𝒞 : Category (ℓ-suc ℓ) ℓ 
-        𝒞 = FUNCTOR (W ^op) (SET ℓ) 
+        𝒞 = PresheafCategory W ℓ 
         
-        -- being lazy, pull in CCC structure on Psh
         _×P_ : ob 𝒱 → ob 𝒱 → ob 𝒱
-        (P ×P Q) .F-ob w = P .F-ob w .fst × Q .F-ob w .fst , {!   !}
-        (P ×P Q) .F-hom f (Px , Qx) = P .F-hom f Px , Q .F-hom f Qx
-        (P ×P Q) .F-id = {!   !}
-        (P ×P Q) .F-seq = {!   !}
+        (P ×P Q)  = PshProd ⟅ P , Q ⟆b
         
         Inc : Functor |W| W
         Inc = DiscFunc λ x → x
