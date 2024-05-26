@@ -247,4 +247,16 @@ module src.Models.LevyThesisModel where
                 Case_w _ = (inr tt* , lift refl)
 
                 α : N-ob-Type Termᶜ (F ⟅ Case ty ⟆)
-                α w tt* = q[ w' w , w→w' w , Case_w w ]    
+                α w tt* = q[ w' w , w→w' w , Case_w w ] 
+
+            -- simple match
+            match : (ty : SynTy') → 𝒱 [ Case ty ×P OSum , tys ty ]
+            match ty = natTrans {!   !} {!   !}  where 
+                α : N-ob-Type (Case ty ×P OSum) (tys ty)
+                α w ((σ , lift wσ≡ty) , (σ' , e∈ty)) = transport lemma e∈ty where 
+                
+                    assuming : σ ≡ σ'
+                    assuming = {!   !}
+
+                    lemma : (tys (w .snd σ') ⟅ w ⟆) .fst ≡ (tys ty ⟅ w ⟆) .fst
+                    lemma = cong fst (cong₂ _⟅_⟆ (cong tys (snd w σ' ≡⟨ cong₂ _ refl assuming ⟩ snd w σ ≡⟨ wσ≡ty ⟩ ty ∎)) refl)
