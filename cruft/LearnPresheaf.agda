@@ -3,7 +3,7 @@ open import CatLib
 open import Agda.Primitive 
 open import Cubical.Foundations.Prelude hiding(comp)
 
-module LearnPresheaf  where 
+module cruft.LearnPresheaf  where 
 
 
     module Psh {o ℓ} (𝒞 : Category o ℓ)  where
