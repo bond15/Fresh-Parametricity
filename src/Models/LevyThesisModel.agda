@@ -226,13 +226,18 @@ module src.Models.LevyThesisModel where
         module _ where 
         
             injSem : 𝒱 [ (Case b) ×P (tys b) , OSum ]
-            injSem = natTrans α {!   !} where
+            injSem = natTrans α prf where
             
                 α : N-ob-Type (Case b ×P (tys b)) OSum
                 α w ((x , lift wxisb), y) = x , transport eqty y where
 
                     eqty : (tys b ⟅ w ⟆) .fst ≡ (tys (w .snd x) ⟅ w ⟆) .fst
                     eqty = cong fst (cong₂ _⟅_⟆ (cong tys (sym wxisb)) refl) 
+
+                prf : N-hom-Type (Case b ×P Constant ((W ^op) ^op) (SET ℓ) (Lift Bool , isOfHLevelLift 2 isSetBool)) OSum α
+                prf {(((X , Xfin) , tt* ) , w)}
+                    {(((Y , Yfin) , tt* ) , w')}
+                    (((f , femb), _) , Δ )  = funExt λ{((x , lift wx≡b) , lift bval) → {!   !} }
 
             newcase : (ty : SynTy') → 𝒞 [ Termᶜ , F ⟅ Case ty ⟆ ]
             newcase ty = natTrans α {!   !} where 
@@ -259,4 +264,5 @@ module src.Models.LevyThesisModel where
                     assuming = {!   !}
 
                     lemma : (tys (w .snd σ') ⟅ w ⟆) .fst ≡ (tys ty ⟅ w ⟆) .fst
-                    lemma = cong fst (cong₂ _⟅_⟆ (cong tys (snd w σ' ≡⟨ cong₂ _ refl assuming ⟩ snd w σ ≡⟨ wσ≡ty ⟩ ty ∎)) refl)
+                    lemma = {!   !}
+                        --cong fst (cong₂ _⟅_⟆ (cong tys (snd w σ' ≡⟨ cong₂ _ refl assuming ⟩ snd w σ ≡⟨ wσ≡ty ⟩ ty ∎)) refl)
