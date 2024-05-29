@@ -1,10 +1,11 @@
 {-# OPTIONS --allow-unsolved-metas  --lossy-unification #-}
 
-module src.Models.LevyThesisModel where
+module src.Models.FuturePast where
     open import Cubical.Foundations.Prelude
     open import Cubical.Foundations.HLevels hiding (extend)
     open import Cubical.Functions.Embedding
 
+    open import Cubical.Categories.Adjoint
     open import Cubical.Categories.Adjoint.Monad
     open import Cubical.Categories.Bifunctor.Redundant
     open import Cubical.Categories.Category
@@ -17,7 +18,6 @@ module src.Models.LevyThesisModel where
     open import Cubical.Categories.NaturalTransformation
     open import Cubical.Categories.Presheaf.Base
     open import Cubical.Categories.Presheaf.Constructions
-    open import Cubical.Categories.Presheaf.KanExtension
     
     open import Cubical.Data.Bool 
     open import Cubical.Data.FinSet
@@ -31,104 +31,73 @@ module src.Models.LevyThesisModel where
 
     open Category
     open Functor
-    
-    {-
-        This approach follows from Levy's thesis (section 7)
 
-        𝒱 := Set^World  
-        𝒞 := Set^(World ^op)
-
-        An indirect way to get F : F∪nctor 𝒱 𝒞 and U : Functor 𝒞 𝒱 
-        is to use the kan extension module twice and an equivalence of Set^|W| and Set^(|W| ^op)
-
-        probably an easier way to get this adjunction between Set^World and Set^(World ^op)
-        library doesn't have composition of adjucnctions
-    -}
     module Cats {ℓS ℓC ℓC' : Level}(W : Category ℓC ℓC')(isSetWob : isSet (ob W)) where
-        
         ℓ = (ℓ-max (ℓ-max ℓC ℓC') ℓS)
+
 
         |W| : Category ℓC ℓC 
         |W| = (DiscreteCategory (ob W , isSet→isGroupoid isSetWob))
 
         Inc : Functor |W| W
         Inc = DiscFunc λ x → x
-            
-        -- covariant
-        𝒱 : Category (ℓ-suc ℓ) ℓ 
-        𝒱 = PresheafCategory (W ^op) ℓ
 
-        -- contravariant
-        𝒞 : Category (ℓ-suc ℓ) ℓ 
-        𝒞 = PresheafCategory W ℓ
+        Inc^op : Functor |W| (W ^op)
+        Inc^op = DiscFunc λ x → x
+        
+
+        -- since World is already ^op
+        -- this is a covariant presheaf category
+        -- op ^ op ↦ id
+        𝒱 : Category (ℓ-suc ℓ) ℓ
+        𝒱 = PresheafCategory W ℓ
+
+        -- since World is already ^op
+        -- this is a contravariant (normal) presheaf category
+        -- op ^ op ^ op ↦ op
+        𝒞 : Category (ℓ-suc ℓ) ℓ
+        𝒞 = PresheafCategory (W ^op) ℓ
 
         _×P_ : ob 𝒱 → ob 𝒱 → ob 𝒱
         (P ×P Q)  = PshProd ⟅ P , Q ⟆b
 
-        -- functor C → D to a functor PresheafCategory C ℓ → PresheafCategory D ℓ
-        module L = Ran ℓ (Inc ^opF)
-            -- |W|^op -> W^op
-            -- FUNCTOR |W| Set -> FUNCTOR W Set
-        module R = Lan ℓ Inc
-            -- |W| -> W 
-            -- FUNCTOR |W|^op Set -> Functor W^op Set
+        Fam : Category (ℓ-suc ℓ) ℓ
+        Fam = FUNCTOR |W| (SET ℓ)
 
-        Inc* = precomposeF (SET ℓ) (Inc)
-        Inc^op* = precomposeF (SET ℓ) (Inc ^opF)
-
-        -- this nonsense, can be avoided
-        module _ where 
-            cast : {ℓC ℓC' : Level}{C : Category ℓC ℓC'} → Functor |W| C → Functor (|W| ^op) C 
-            cast X .F-ob = X .F-ob
-            cast X .F-hom f = X .F-hom (sym f)
-            cast X .F-id = X .F-id
-            cast X .F-seq f g = {! X .F-seq (sym f) (sym g)  !}
-
-            cast' : {ℓC ℓC' : Level}{C : Category ℓC ℓC'} → Functor (|W| ^op) C → Functor |W| C 
-            cast' X .F-ob = X .F-ob
-            cast' X .F-hom f = X .F-hom (sym f)
-            cast' X .F-id = X .F-id
-            cast' X .F-seq f g = {! X .F-seq (sym f) (sym g)  !}
-
-            castF : Functor (FUNCTOR |W| (SET ℓ)) (FUNCTOR (|W| ^op) (SET ℓ))
-            castF .F-ob = cast
-            castF .F-hom f = natTrans (λ x₁ x₂ → {! x₂  !}) {!   !}
-            castF .F-id = {!   !}
-            castF .F-seq = {!   !}
-
-            castF' : Functor (FUNCTOR (|W| ^op) (SET ℓ)) (FUNCTOR |W| (SET ℓ))
-            castF' .F-ob = cast'
-            castF' .F-hom f = {!   !}
-            castF' .F-id = {!   !}
-            castF' .F-seq = {!   !}
-
-        -- R.Lan is exists future 
-        F : Functor 𝒱 𝒞 
-        F = (R.Lan ∘F castF) ∘F Inc*
-
-        -- L.Ran is forall future (technically forall past, but op fixes direction)
-        U : Functor 𝒞 𝒱
-        U = (L.Ran ∘F castF') ∘F Inc^op*  
-
-        -- observe the action on objects R.Lan (exists future)
-        module _ (G : ob (FUNCTOR (|W| ^op) (SET ℓ))) (w₁ w₂ w₃ : ob W) where 
-
-            _ : (g : W [ w₁ , (Inc ⟅ w₂ ⟆) ] ) (f : |W| [ w₂ , w₃ ])(a : (G ⟅ w₃ ⟆) .fst) →
-                (G R.≈ w₁) (w₃ , g ⋆⟨ W ⟩ (Inc ⟪ f ⟫) , a) (w₂ , g , (G ⟪ f ⟫) a)
-            _ = R._≈_.shift {G}{w₁}{w₂}{w₃}
-
-        -- and the action on objects of L.Ran (forall future)
-        module _ (G : ob (FUNCTOR |W| (SET ℓ))) (w₁ : ob W) where
-
-            _ : L.End G w₁
-            _ = record { fun = m ; coh = λ{ {w₂} {w₃} f g → {!   !} } } where 
-
-                m : (w₂ : ob |W|)(g : W ^op [ w₂ , w₁ ]) → G .F-ob w₂ .fst
-                m = {!   !}
-
-    module Instantiate {ℓS : Level} where 
-        open import src.Data.Worlds hiding (Inc)
+        open import src.Data.Direct
+        module Future = Lan {ℓS = ℓ} (W ^op) isSetWob
+        module Past = Ran {ℓS = ℓ} W isSetWob
+        open UnitCounit
         
+        Inc* : Functor 𝒞 Fam 
+        Inc* = precomposeF (SET ℓ) (Inc)
+
+        Inc^op* : Functor 𝒱 Fam 
+        Inc^op* = precomposeF (SET ℓ) (Inc^op)
+        
+        F' : Functor Fam 𝒞 
+        F' = Future.Lan
+
+        F : Functor 𝒱 𝒞 
+        F = F' ∘F Inc^op*
+
+        adjF : F' ⊣ Inc*
+        adjF = Future.adj
+
+        U' : Functor Fam 𝒱 
+        U' = Past.Ran
+
+        U : Functor 𝒞 𝒱 
+        U = U' ∘F Inc*
+
+        adjU : Inc^op* ⊣ U' 
+        adjU = Past.adj
+
+
+    module Model {ℓS : Level} where 
+        open import src.Data.Worlds hiding (Inc)
+
+
         data SynTy' : Type ℓS where 
             u n b : SynTy'
 
@@ -138,13 +107,48 @@ module src.Models.LevyThesisModel where
         SynTy : hSet ℓS 
         SynTy = SynTy' , SynTyisSet
 
-        -- W has forward top maps
-        W = (World SynTy) ^op
+        -- top maps are op
+        W : Category (ℓ-suc ℓS) ℓS
+        W = World SynTy
 
+
+
+        _ : isSet (Σ[ X ∈ FinSet ℓS ] Unit* → SynTy')
+        _ = isSet→ {A' = SynTy'}{A = Σ[ X ∈ FinSet ℓS ] Unit* } SynTyisSet   
         wset : isSet (ob W)
-        wset = {!   !}
+        wset = isSetΣ (isSetΣ {! isFinSet→isSet !} λ _ → isSetUnit*) λ _ → {!  !}
 
         open Cats {ℓS} W wset
+
+
+        -- observe action of F on objects
+        module _ (A : ob 𝒱)(w₁ : ob W) where 
+            -- must provide
+            -- a future world w₂
+            -- an injection f from w₁ to w₂ 
+            -- and an element at that future world
+            sig : (w₂ : ob W)(f : W [ w₂ , w₁ ])(a : (A ⟅ w₂ ⟆) .fst) → ((F ⟅ A ⟆) ⟅ w₁ ⟆) .fst 
+            sig w₂ f a = w₂ , (f , a)
+            -- action of F ⟅ A ⟆ on morphisms
+            -- just precomposition of w₂↪w₁
+            sigact : (w₂ : ob W)(f : W [ w₁ , w₂ ])→ ((F ⟅ A ⟆) ⟅ w₁ ⟆) .fst → ((F ⟅ A ⟆) ⟅ w₂ ⟆) .fst 
+            sigact w₂ w₂↪w₁ (w₃ , w₁↪w₃ , Aw₃ ) = ((F ⟅ A ⟆)⟪ w₂↪w₁ ⟫) (w₃ , (w₁↪w₃ , Aw₃))
+            
+            
+            
+        -- observe actions of F on morphism
+        module _ (A B : ob 𝒱)(nt : A ⇒ B )(w₁ : ob W) where 
+
+            mor : 𝒞 [ F ⟅ A ⟆ , F ⟅ B ⟆ ]
+            mor = F ⟪ nt ⟫
+
+            open NatTrans
+            -- in some current world w₁ 
+            -- for any past world w₂ of w₁ 
+            -- with injection p from 
+            act : (w₂ : ob W)(p : W [ w₂ , w₁ ])(a : F-ob A w₂ .fst) → ((F ⟅ B ⟆) .F-ob w₁ ).fst
+            act w₂ p a = mor .N-ob w₁ (w₂ , p , a )
+
         -- utilities
         module _ where 
             -- pattern syntax for ob World
@@ -185,7 +189,8 @@ module src.Models.LevyThesisModel where
             OSum .F-hom f (x , elem) = f .fst .fst .fst x , {! elem  !}
             OSum .F-id = {!   !}
             OSum .F-seq = {!   !}
-            
+
+
             Case : (ty : SynTy') → ob 𝒱
             Case ty .F-ob (X ◂ Xfin ◂ w) = (Σ[ σ ∈ X ] Lift ( w σ ≡ ty)) , {!   !}
             Case ty .F-hom 
@@ -197,7 +202,6 @@ module src.Models.LevyThesisModel where
 
                     lemma : Lift (w x ≡ ty) ≡ Lift (w' (f x) ≡ ty)
                     lemma = cong Lift (cong ( _≡ ty ) {!  Δ !})
-                    
             Case ty .F-id = {!   !}
             Case ty .F-seq = {!   !}
 
@@ -208,20 +212,13 @@ module src.Models.LevyThesisModel where
             Termᵛ = Constant _ _ (Unit* , isOfHLevelLift 2 isSetUnit)
 
             ret : {val : ob 𝒱} → 𝒱 [ val , (U ∘F F) ⟅ val ⟆ ]
-            ret {val}= natTrans α {!   !} where 
-
+            ret {val} = natTrans α {! makeNatTransPath ?  !} where 
                 α : N-ob-Type val ((U ∘F F) ⟅ val ⟆)
-                α w Vw = record { fun = fun' ; coh = coh' } where 
-                
-                    fun' : (w' : ob (|W| ^op)) → (W ^op) [ w' , w ]  →  (castF' ⟅ Inc^op* ⟅ F ⟅ val ⟆ ⟆ ⟆) .F-ob w' .fst
-                    fun' w' f = q[ w' , (id W , val .F-hom f Vw) ] 
+                α w Vw = record { fun = λ w2 f → w2 , ((W ^op) .id , val .F-hom f Vw) }
 
-                    coh' : {w₁ w₂ : ob |W|}
-                             (f : |W| [ w₂ ,  w₁ ] ) --w₂ ≡ w₁
-                             (g : W [ w , w₂ ] ) → 
-                             fun' w₁ (((Inc ^opF) ⟪ f ⟫) ⋆⟨ W ^op ⟩ g) ≡ ((castF' ⟅ Inc^op* ⟅ F ⟅ val ⟆ ⟆ ⟆) ⟪ f ⟫) (fun' w₂ g)
-                    coh' f g = {! refl  !}
- 
+                prf : N-hom-Type val ((U ∘F F) ⟅ val ⟆) α
+                prf f = {!  !}
+
         -- denote terms
         module _ where 
         
@@ -234,10 +231,12 @@ module src.Models.LevyThesisModel where
                     eqty : (tys b ⟅ w ⟆) .fst ≡ (tys (w .snd x) ⟅ w ⟆) .fst
                     eqty = cong fst (cong₂ _⟅_⟆ (cong tys (sym wxisb)) refl) 
 
-                prf : N-hom-Type (Case b ×P Constant ((W ^op) ^op) (SET ℓ) (Lift Bool , isOfHLevelLift 2 isSetBool)) OSum α
-                prf {(((X , Xfin) , tt* ) , w)}
-                    {(((Y , Yfin) , tt* ) , w')}
-                    (((f , femb), _) , Δ )  = funExt λ{((x , lift wx≡b) , lift bval) → {!   !} }
+                prf : N-hom-Type (Case b ×P tys b) OSum α
+                prf f = {!   !}
+               -- prf : N-hom-Type (Case b ×P Constant ((W ^op) ^op) (SET ℓ) (Lift Bool , isOfHLevelLift 2 isSetBool)) OSum α
+               -- prf {(((X , Xfin) , tt* ) , w)}
+               --     {(((Y , Yfin) , tt* ) , w')}
+               --     (((f , femb), _) , Δ )  = ? --funExt λ{((x , lift wx≡b) , lift bval) → {!   !} }
 
             newcase : (ty : SynTy') → 𝒞 [ Termᶜ , F ⟅ Case ty ⟆ ]
             newcase ty = natTrans α {!   !} where 
@@ -245,14 +244,14 @@ module src.Models.LevyThesisModel where
                 w' : ob W → ob W
                 w' = extend ty
 
-                w→w' : (w : ob W) → W [ w , w' w ]
+                w→w' : (w : ob W) → (W ^op) [ w , w' w ]
                 w→w' w = (((inl , inlemb) , refl) , refl)
 
                 Case_w : (w : ob W) →  Case ty .F-ob (w' w) .fst
                 Case_w _ = (inr tt* , lift refl)
 
                 α : N-ob-Type Termᶜ (F ⟅ Case ty ⟆)
-                α w tt* = q[ w' w , w→w' w , Case_w w ] 
+                α w tt* = w' w , (w→w' w , Case_w  w)
 
             -- simple match
             match : (ty : SynTy') → 𝒱 [ Case ty ×P OSum , tys ty ]
@@ -267,3 +266,8 @@ module src.Models.LevyThesisModel where
                     lemma = {!   !}
                        --cong fst (cong₂ _⟅_⟆ (cong tys (snd w σ' ≡⟨ cong₂ _ refl assuming ⟩ snd w σ ≡⟨ wσ≡ty ⟩ ty ∎)) refl)
      
+
+
+
+
+ 
