@@ -120,6 +120,12 @@ module src.Models.FuturePast where
 
         open Cats {ℓS} W wset
 
+        open import src.Data.DayConv
+        open MonoidalStructure SynTy hiding (W)
+        _ = {! src.Data.Worlds.MonoidalStructure  !}
+        
+        _⨂ᴰ_ : ob 𝒱 → ob 𝒱 → ob 𝒱
+        A ⨂ᴰ B = _⊗ᴰ_ {MC = strmon} A B 
 
         -- observe action of F on objects
         module _ (A : ob 𝒱)(w₁ : ob W) where 
@@ -221,7 +227,14 @@ module src.Models.FuturePast where
 
         -- denote terms
         module _ where 
-        
+            open import Cubical.HITs.SetCoequalizer.Base
+            conv : 𝒱 [ Case b  ⨂ᴰ Case n , Termᵛ ]
+            conv = natTrans {!   !} {!   !} where 
+                α : N-ob-Type (Case b ⨂ᴰ Case n) Termᵛ
+                α w₀ (SetCoequalizer.inc (((X ◂ _ ◂ wmap) , (Y ◂ _ ◂ wmap')) , (((w₁⊗w₂↪w₀ , ttmap) , Δ) , Case_b_w₁) , Case_n_w₂)) = {!   !}
+                α w (coeq a i) = {!   !}
+                α w (squash x x₁ p q i i₁) = {!   !}
+                
             injSem : 𝒱 [ (Case b) ×P (tys b) , OSum ]
             injSem = natTrans α prf where
             
@@ -268,6 +281,6 @@ module src.Models.FuturePast where
      
 
 
-
+ 
 
  

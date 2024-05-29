@@ -3,6 +3,7 @@ module src.Data.Worlds where
     open import Cubical.Foundations.Prelude
     open import Cubical.Foundations.HLevels 
     open import Cubical.Categories.Displayed.Constructions.Comma
+    open import Cubical.Categories.Presheaf
 
     open import Cubical.Categories.Category
     open import Cubical.Categories.Functor
@@ -30,6 +31,9 @@ module src.Data.Worlds where
         -- so that we have the top maps of the slice homs as injective functions
         World : Category (ℓ-suc ℓS) ℓS
         World = (Comma Inc G) ^op
+
+        ≡world : {!   !}
+        ≡world = {!   !}
 
     module MonoidalStructure {ℓS : Level}(T : hSet ℓS) where 
         open import Cubical.Categories.Monoidal.Base 
@@ -75,7 +79,6 @@ module src.Data.Worlds where
         strmon : StrictMonCategory (ℓ-suc ℓS) ℓS 
         strmon = record { C = W ; sms = mon }
 
-       -- open import Cubical.Categories.Constructions.Day.Base
 
         
-  
+   
