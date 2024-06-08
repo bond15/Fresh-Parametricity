@@ -1,0 +1,603 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{simplebnf}
+\usepackage{bussproofs}
+\usepackage[llbracket,rrbracket]{stmaryrd}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{cite}
+\usepackage{scalerel}
+\usepackage{tikz-cd}
+\usepackage{oz}
+\def\sq{\mathbin{\scalerel*{\strut\rule[-.5ex]{2ex}{2ex}}{\cdot}}}
+\usepackage{kpfonts}
+\usepackage{esint}
+\usepackage{comment}
+\usepackage{float}
+\usepackage{appendix}
+
+
+
+\DeclareFontFamily{U}{dmjhira}{}
+\DeclareFontShape{U}{dmjhira}{m}{n}{ <-> dmjhira }{}
+
+\DeclareRobustCommand{\yo}{\text{\usefont{U}{dmjhira}{m}{n}\symbol{"48}}}
+
+% for eding diagrams https://tikzcd.yichuanshen.de/
+
+\newcommand{\den}[1]{\llbracket #1 \rrbracket}
+\newcommand{\blue}[1]{\textcolor{blue}{#1}}
+\newcommand{\red}[1]{\textcolor{red}{#1}}
+\newcommand\sep{\mathrel{-\mkern-6mu*}}
+\newcommand{\pack}[3]{\textrm{pack}(#1,#2)\textrm{ as }#3}
+\newcommand{\thunk}[1]{\textrm{thunk }#1}
+\newcommand{\injj}[2]{\textrm{inj}_{#1}#2}
+\newcommand{\err}{\mho}
+\newcommand{\print}[1]{\textrm{print }#1}
+\newcommand{\force}[1]{\textrm{force }#1}
+\newcommand{\ret}[1]{\textrm{ret }#1}
+\newcommand{\bind}[3]{#1 \leftarrow #2 ; #3}
+\newcommand{\newcase}[3]{\textrm{newcase}_{#1} \; #2 ; #3}
+\newcommand{\match}[5]{\textrm{match }#1 \textrm{ with }#2 \;\{#3 . #4 | #5\}}
+\newcommand{\unpack}[4]{\textrm{unpack }(#1,#2) = #3 ; #4}
+\newcommand{\lett}[4]{\textrm{let }(#1,#2) = #3 ; #4}
+\newcommand{\lets}[4]{\textrm{let }(#1*#2) = #3 ; #4}
+\newcommand{\ite}[3]{\textrm{if }#1 \textrm{ then }#2 \textrm{ else }#3}
+\newcommand{\at}{\textrm{@}}
+\newcommand{\ttt}{\textrm{tt}}
+\newcommand{\worlds}{\widehat{\mathbf{Worlds}}}
+
+
+
+
+\begin{document}
+\section{Untyped Syntax}
+\begin{bnfgrammar}
+$A$ : value types ::= $\textrm{Unit}$
+| $\textrm{Bool}$
+| $\textrm{Case A}$ 
+| $\textrm{OSum}$
+| $A\; \times \; A$  
+| $A\; * \; A$
+| $U\underline{B}$
+;;
+$B$ : computation types ::= $A \rightarrow \underline{B}$ 
+| $A \sep \underline{B}$
+| $F\;A$
+;;
+$V$ : values ::= $\ttt$
+|$\true$
+| $\false$
+| $x$ : variable
+| $\injj{V}{V}$ : injection into the open sum
+| $(V,V)$
+| $\pi_1 V$
+| $\pi_2 V$
+| $(V*V)$ : separating product
+| $\rho_1 V$
+| $\rho_2 V$
+| $\thunk{M}$
+;;
+$M$ : computations ::= $\err$
+| $\print{V} ; M$
+| $\force{V}$
+| $\ret{V}$
+| $\bind{x}{M}{N}$
+| $M \; N$
+| $M \at N$
+| $\lambda x \colon A . M$
+| $\alpha x \colon A . M$ : separating function
+| $\newcase{A}{x}{M}$ : "allocate" a new case in the open sum
+| $\match{V}{V}{\injj{}{x}}{M}{N}$ : match on open sum
+| $\ite{V}{M}{N}$
+;;
+$\Gamma$ : value typing context ::= $\emptyset$ 
+| $ x \; \colon A$
+| $\Gamma ; \Gamma'$ : cartesian product
+| $\Gamma \fatsemi \Gamma'$ : monoidal product
+;;
+$\Theta$ : stoup ::= $\cdot$ 
+| $\bullet \; \colon B$
+;;
+\end{bnfgrammar}
+\red{stoup forms?}
+\begin{comment}
+    | $\lett{x}{y}{V}{M}$
+| $\lets{x}{y}{V}{M}$
+\end{comment}
+
+\newpage
+\section{Typed Syntax}
+\blue{for (rule airity $>$ 1) non separating connectives, contexts don't need to be appended($\Gamma ; \Delta$)?}
+\subsection{Structural Rules}
+; admits weakening, contraction, and exchange (cartesian closed structure)\\
+$\fatsemi$ admits weakening and exchange (semicartisian symmetric monoidal structure)
+\subsection{Value Typing}
+\subsubsection{Unit}
+
+
+\begin{prooftree}
+\AxiomC{}
+\RightLabel{Intro}
+\UnaryInfC{$\Gamma \vdash_v \ttt : \textrm{Unit}$}
+\end{prooftree}
+
+\subsubsection{Bool}
+\begin{prooftree}
+\AxiomC{}
+\RightLabel{$\textrm{Intro}_1$}
+\UnaryInfC{$\Gamma \vdash_v \true : \textrm{Bool}$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{}
+\RightLabel{$\textrm{Intro}_2$}
+\UnaryInfC{$\Gamma \vdash_v \false  : \textrm{Bool}$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash_v V : \textrm{Bool}$}
+\AxiomC{$\Gamma | \cdot \vdash_c M_1 : B$}
+\AxiomC{$\Gamma | \cdot \vdash_C M_2 : B$}
+\RightLabel{Elim}
+\TrinaryInfC{$\Gamma | \cdot \vdash_c \ite{V}{M_1}{M_2} : B$}
+\end{prooftree}
+
+\subsubsection{Var}
+\begin{prooftree}
+\AxiomC{}
+\RightLabel{Intro}
+\UnaryInfC{$x : \textrm{A}  \vdash_v x : \textrm{A}$}
+\end{prooftree}
+
+\subsubsection{OSum}
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash_v V_c : \textrm{Case A}$}
+\AxiomC{$\Gamma \vdash_v V : A$}
+\RightLabel{Intro}
+\BinaryInfC{$\Gamma \vdash_v \injj{V_c}{V} : \textrm{OSum}$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash_v V_T : \textrm{Case A}$}
+\AxiomC{$\Gamma \vdash_v V : \textrm{OSum}$}
+\AxiomC{$\Gamma ; (x : A)| \cdot \vdash_c M : B$}
+\AxiomC{$\Gamma | \cdot \vdash_c N : B$}
+\RightLabel{Elim}
+\QuaternaryInfC{$\Gamma | \cdot \vdash_c \match{V_T}{V}{\textrm{inj}\;x}{M}{N}$}
+\end{prooftree}
+
+\subsubsection{Value Product}
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash_v N : A_1$}
+\AxiomC{$\Gamma \vdash_v M : A_2$}
+\RightLabel{Intro}
+\BinaryInfC{$\Gamma \vdash_v (N , M) : A_1 \times A_2$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash_v P : A_1 \times A_2$}
+\RightLabel{$\textrm{Elim}_1$}
+\UnaryInfC{$\Gamma \vdash_v \pi_1 P : A_1$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash_v P : A_1 \times A_2$}
+\RightLabel{$\textrm{Elim}_2$}
+\UnaryInfC{$\Gamma \vdash_v \pi_2 P : A_2$}
+\end{prooftree}
+
+\subsubsection{Separating Product}
+\blue{we have these because the monoidal product is semicartesian}
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash_v M : A_1$}
+\AxiomC{$\Delta \vdash_v N : A_2$}
+\RightLabel{Intro}
+\BinaryInfC{$\Gamma \fatsemi \Delta \vdash_v (M * N) : A_1 * A_2$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma \fatsemi \Delta \vdash_v P : A_1 * A_2$}
+\RightLabel{$\textrm{Elim}_1$}
+\UnaryInfC{$\Gamma \vdash_v \rho_1 P : A_1$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma \fatsemi \Delta \vdash_v P : A_1 * A_2$}
+\RightLabel{$\textrm{Elim}_2$}
+\UnaryInfC{$\Delta \vdash_v \rho_2 P : A_2$}
+\end{prooftree}
+
+\subsubsection{Thunk}
+\begin{prooftree}
+\AxiomC{$\Gamma | \cdot \vdash_c M : B$}
+\RightLabel{Intro}
+\UnaryInfC{$\Gamma \vdash_v  \thunk{M} : U B$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash_v V : U B$}
+\RightLabel{Elim}
+\UnaryInfC{$\Gamma | \cdot \vdash_c \force{V} : B$}
+\end{prooftree}
+
+\subsection{Computation Typing}
+\subsubsection{Function}
+\begin{prooftree}
+\AxiomC{$\Gamma ; (x : A) | \cdot \vdash_c V : B$}
+\RightLabel{Intro}
+\UnaryInfC{$\Gamma | \cdot \vdash_c (\lambda x : A . V): A \rightarrow B$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma | \Theta \vdash_c M : A \rightarrow B $}
+\AxiomC{$\Delta \vdash_v N : A $}
+\RightLabel{Elim}
+\BinaryInfC{$\Gamma ; \Delta | \Theta \vdash_c M N : B$}
+\end{prooftree}
+
+\subsubsection{Separating Function}
+\begin{prooftree}
+\AxiomC{$\Gamma \fatsemi (x : A) | \cdot \vdash_c V : B$}
+\RightLabel{Intro}
+\UnaryInfC{$\Gamma | \cdot \vdash_c (\alpha x : A . V): A \sep B$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma | \Theta \vdash_c M : A \sep B $}
+\AxiomC{$\Delta \vdash_v N : A $}
+\RightLabel{Elim}
+\BinaryInfC{$\Gamma \fatsemi \Delta | \Theta \vdash_c M N : B$}
+\end{prooftree}
+
+
+\subsubsection{Return}
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash_v V : A$}
+\RightLabel{Intro}
+\UnaryInfC{$\Gamma | \cdot \vdash_c \ret{V} : FA$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma | \Theta \vdash_c M : F A $}
+\AxiomC{$\Gamma ; (x : A) | \cdot \vdash_c N : B $}
+\RightLabel{Elim}
+\BinaryInfC{$\Gamma | \Theta \vdash_c x \leftarrow M ; N : B$}
+\end{prooftree}
+
+\subsubsection{Error}
+\begin{prooftree}
+\AxiomC{}
+\RightLabel{Intro}
+\UnaryInfC{$\Gamma | \cdot \vdash_c \err : B$}
+\end{prooftree}
+
+\subsubsection{Print}
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash_v V : \textrm{Bool}$}
+\AxiomC{$\Gamma | \cdot \vdash_c M : B $}
+\RightLabel{Intro}
+\BinaryInfC{$\Gamma | \cdot \vdash_c \print{V} ; M : B$}
+\end{prooftree}
+
+\begin{comment}
+
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash $}
+\RightLabel{}
+\UnaryInfC{$\Gamma \vdash$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash $}
+\AxiomC{$\Gamma \vdash $}
+\RightLabel{}
+\BinaryInfC{$\Gamma \vdash$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash $}
+\AxiomC{$\Gamma \vdash $}
+\AxiomC{$\Gamma \vdash $}
+\RightLabel{}
+\TrinaryInfC{$\Gamma \vdash$}
+\end{prooftree}
+
+\end{comment}
+\section{Semantics}
+\begin{bnfgrammar}
+$SynTy$ ::= $Unit$
+| $Bool$
+| $SynTy \times SynTy$
+;;
+\end{bnfgrammar}
+
+\section{(OLD) Semantics}
+We will give a semantics to this CBPV calculus using a simple monad algebra model with printing and error effects.
+\subsection{Value Semantics}
+Normally, the value types in a CBPV would be interpreted as Sets. However, in our case this is insufficient as 
+the interpretation of the extensible sum type, $OSum$, is dependent on what $Cases$ have been "allocated" via newcase. Thus we interpret value types in a presheaf category on a category of worlds where a world is a map from case symbols to syntactic types. Let $Sym$ denote a set of case symbols $Sym = \{\sigma_{Bool} . \sigma_{\times}, ..\}$. Let SynTy be a set of syntactic types that can be used in the OSum Case store.
+\begin{bnfgrammar}
+$Ty$ ::= $Unit$
+| $Bool$
+| $Ty \times Ty$
+;;
+\end{bnfgrammar}
+
+
+The denotation of these syntactic types is independent of what $Cases$ have been allocated. Limiting the extensible sum type to contain only base types and products of base types allows us to temporarily avoid two separate issues. 
+\begin{itemize}
+    \item The first issue has to do with circularity of definitions. If we say a world is a mapping from case symbols to semantic types and that semantic types are presheaves on the category of worlds, then we have tied ourselves in a knot. This issue is pointed out in, among other places, \cite{sterling_denotational_2023}.
+    \begin{align*}
+        World \cong Sym \rightharpoonup_{fin} SemTy \;\;\;\; SemTy \cong [\mathbf{Worlds} , Set]\\
+    \end{align*}
+    
+    \item The second issue is well-foundedness of the interpretation of $OSum$. Consider if we allow the extensible sum type to store the type ($OSum \rightarrow OSum$) and try to recursively interpret $OSum$.
+
+\end{itemize}
+
+ Here we define the category $\worlds$. A $world : Sym \rightharpoonup_{fin} SynTy$ is a finite map from case symbols to syntactic types. We can define an order relation on worlds $w \leq w'$\footnote{Previously, I had maps between worlds as "injections" where the source map was included in the domain map. I've flipped the ordering to make the DCC obviously affine(monoidal unit is isomorphic to cartesian unit).}:
+ \begin{align*}
+     w \leq w' \iff dom(w') \subseteq dom(w) \land \forall (x \in dom(w')), w(x) = w'(x)
+ \end{align*}
+  This order is reflexive and transitive, thus we have a preorder on $worlds$ which can be viewed as a thin category which we will denote $\mathbf{Worlds}$. We take the category of presheaves over $\mathbf{Worlds}$, denoted $\worlds$, to be our "value category". As a presheaf category, $\worlds$ has products, exponents, and coproducts. 
+
+  \subsubsection{Monoidal Structure}
+
+  We need to introduce additional structure on $\worlds$ to interpret the separating connectives $A * B$ and $A\sep B$. For this, we will pull from existing literature on categorical semantics of bunched typing, specifically section 3.1 of \cite{pym_semantics_2002}. In essence, we use the Day convolution \cite{nlabDayConv} to get a monoidal structure on $\worlds$ from a promonoidal structure on $\mathbf{Worlds}$. First, we define an operation $x *_w y'$ on $worlds$. 
+\[ 
+x *_w y  :=\begin{cases} 
+      x \oplus y & dom(x) \cap dom(y) = \emptyset \\
+      undefined & otherwise 
+      \end{cases}
+\]
+\\
+where \[ 
+(x \oplus y)(\sigma)  :=\begin{cases} 
+      x(\sigma) & \sigma \in dom(x) \\
+      y(\sigma) & \sigma \in dom(y)
+      \end{cases}
+\]
+\\
+The unit for this partial monoid structure is the empty map $\lambda()$\footnote{The empty map is also the terminal object in $\mathbf{Worlds}$}.
+Using this operation\footnote{$*_w$ is only a partial operation on worlds, I'm skipping a step where the full promonoidal structure is defined from this}, we define the monoidal product for $\worlds$: 
+\[
+(A \otimes B) X = \int_{}^{Y,Z}\ A(Y) \times B(Z) \times \mathbf{Worlds}[X,Y *_w Z]
+\]
+\\
+The concrete interpretation for this operation is
+
+\[
+(A * B) X = \{[(Y,Z,a \in A(Y), b \in B(Z))] | Y *_w Z \;\textrm{is defined and} X \leq Y *_w Z \}
+\]
+where $[\cdot]$ denotes an equivalence class. $(Y,Z,a \in A(Y), b \in B(Z))$ and $(Y', Z', a' \in A(Y'), b' \in B(Z'))$ are equivalent if they have the same parent in the order determined by
+\[
+(Y,Z,a \in A(Y), b \in B(Z)) \leq (Y', Z', a' \in A(Y'), b' \in B(Z')) \\ \textrm{ if } \\
+ f: Y \leq Y', g: Z \leq Z', a' = A(f)(a), b' = B(g)(b)
+\]
+The monoidal unit is given by: 
+\[ 
+    I(X) = \mathbf{World}[X , \lambda()]
+\]
+And the separating implication is defined by: 
+\[
+(A \sep B) X = \int_{Z}^{}\ \mathbf{Set}[A(Z), B(X *_w Z)] \cong \worlds[A, B(X*_w\_)]
+\]
+
+Additionally we have that the tensor is left adjoint to magic wand $Hom(A \otimes B , C) \cong Hom(A , B \sep C)$. These definitions are standard in the literature on bunched implication with the exception that we specify that our "resources" are a specific kind of finite maps. The bicartesian stucture on $\worlds$ along with the monoidal structure and its right adjoint bundled together has the structure of a bicartesian doubly closed category or BiDCC\footnote{Terrible name, but I'm just following the literature here}.
+
+\subsubsection{Affine BiDCC}
+The concrete model that we are working with has the property that $\mathbf{1} \cong I$\footnote{TODO, work this out in full detail}\footnote{See section 3.3 of \cite{pym_semantics_2002}}. That is, the cartesian unit is isomorphic to the monoidal unit. This property validates weakening for $\fatsemi$. Note that
+\[ 
+    \mathbf{1}(X) = \{*\} \\
+    I(X) = \mathbf{Worlds}[X , \lambda()]
+\]
+$\lambda()$ is terminal in $\mathbf{Worlds}$ and the cardinality of $|\mathbf{Worlds}[\_\;,\lambda()]| \;= 1$.
+\subsection{Effect Monad}
+We need an appropriate monad on $\worlds$ to interpret printing and error effects. First, we define an endofunctor $T$ on $\worlds$.
+\begin{align*}
+    T_0(X) &= Const_E + (X \times Const_{FooBar})\\
+\end{align*}
+where $FooBar$ is a set containing all possible sequences of symbols "foo" and "bar" ($FooBar := \{s | s = (foo | bar)^+\}$) and $Const_{FooBar}$ is the constant presheaf mapping all $worlds$ to set $FooBar$. $E$ is a singleton set representing the "error state".
+\\
+The action on morphisms is define as: 
+\[ 
+T_1(f: X \rightarrow Y)(Z) :=\begin{cases} 
+      Z & Z: E \\
+      (f(x), s) & Z = (x,s)
+      \end{cases}
+\]
+where f is a natural transformation between presheaves (overloading notation here).
+\begin{itemize}
+    \item functor laws
+    \item natural transformations (return and join)
+    \item monad laws
+    \item Show T is strong (define strength nt and show 4 diagrams commute https://ncatlab.org/nlab/show/strong+monad) \red{strength for $\otimes$}
+\end{itemize}
+
+\subsection{Computation Semantics}
+To interpret computation types, we use a free and forgetful adjunction between $\worlds$ and the Eilenberg Moore category of monad $T$ denoted $\mathbf{TAlg}$. $\mathbf{TAlg}$ has all limits which exist in $\worlds$\footnote{https://ncatlab.org/nlab/show/Eilenberg-Moore+category}. Concrete constructions can be found here \cite{forster_call-by-push-value_2019}. The singleton, exponential, product, and free algebra are "given", what remains is to construct the separating implication algebra. 
+\blue{Assuming}\footnote{TODO: show} $T$ is a strong monad on $\otimes$, we have a map $T_{A \otimes B} : A \otimes T(B) \rightarrow T(A \otimes B)$, then the construction of the exponent algebra mirrors that of the separating algebra. I will reproduce the construction here.
+
+Given an object $A : \worlds$ and algebra $\langle B , \theta_B : T(B) \rightarrow B\rangle$, we need to construct an algebra. Set the carrier of the algebra to be $A \sep B$, we then need a map $\theta_{A\sep B} : T(A \sep B) \rightarrow (A \sep B)$. Via the tensor wand adjunction, it suffices to construct a map $T(A \sep B)\otimes A \rightarrow B$.
+% https://tikzcd.yichuanshen.de/#N4Igdg9gJgpgziAXAbVABwnAlgFyxMJZABgBpiBdUkANwEMAbAVxiRABUAKAQQAI4YaXgCEAlLwA6EiHgC28XtxABfUuky58hFACZyVWoxZthKtSAzY8BImR0H6zVog49J0uQrcChY0WfUrLSI9e2pHYxcuMRUDGCgAc3giUAAzACcIWSQAZmocCCQARnCjZxApHAALGBw6AH1TVTTM7MQ9EALc0qc2dnqizhhHeuAfZX9mkAyspDJOwvbqBjoAIxgGAAUNa20QLDBsWBAeyI5RuBx05QDp1rn8xaLlCmUgA
+\begin{figure}[!h]
+\centering
+\begin{tikzcd}
+T(A \sep B) \otimes A \arrow[dd, "T_{str}"] \arrow[rr, "\theta_{A\sep B}"] &  & B                           \\
+                                                                  &  &                             \\
+T(A \otimes (A \sep B)) \arrow[rr, "T_1(eval_{\sep})"]              &  & T(B) \arrow[uu, "\theta_B"]
+\end{tikzcd}
+\end{figure}
+\\
+What remains is to check the T-algebra laws. We call $\langle A \sep B , \theta_{A \sep B}\rangle$ the separating algebra.
+
+\newpage
+\subsection{Interpreting Types}
+With all the categorical structure in place, we now give an interpretation of syntax. We first give an interpretation to syntactic types $SynTy$ via $\llbracket\_\rrbracket_{el} : SynTy \rightarrow \worlds$. We recall that the interpretation of these types is not dependent on what cases have been allocated. $\mathbf{1}$ is the terminal presheaf in $\worlds$ and $+,\times$ come from the bicartesian structure of $\worlds$.
+\begin{align*}
+    \llbracket Unit \rrbracket_{el} &= \mathbf{1}\\
+    \llbracket Bool \rrbracket_{el} &= \mathbf{1}  + \mathbf{1}\\
+    \llbracket A \times B \rrbracket_{el} &= \llbracket A \rrbracket_{el} \times \llbracket B \rrbracket_{el} \\
+\end{align*}
+Next, we interpret the remaining value types in $\worlds$. The separating product is interpreted as the monoidal product from the Day convolution and $| \llbracket B \rrbracket_c |$ is the forgetful functor which returns the carrier of the algebra $\llbracket B \rrbracket_c$. The main definitions of interest are the interpretation of $OSum$ and $Case$. $OSum$ is an extensible sum type where the current world determines the number and type of cases in the extensible sum. $Case \;A$ is interpreted to be the set of allocated case symbols for type $A$ in the current world. Note that syntactic type equality is used in the set comprehension. This means that $\sigma : Case (A \times (B \times C))$ and $\sigma' : Case((A \times B) \times C)$ are distinct elements of two distinct sets. It may be nice to have a more flexible definition $\{ \sigma | \sigma \in dom(\rho) \land \llbracket \rho(\sigma) \rrbracket_{el} \cong \llbracket A \rrbracket_{el}\}$. We would have to be more careful when constructing and destructing elements of $OSum$. Consider $\sigma : Case \;A$ and $\injj{\sigma}{(*,a)}: OSum$. Should this be allowed with $\llbracket A \rrbracket \cong \llbracket Unit \times A \rrbracket$?
+
+
+\begin{align*}
+    \llbracket Unit \rrbracket_v &= \llbracket Unit \rrbracket_{el}\\
+    \llbracket Bool \rrbracket_v &= \llbracket Bool \rrbracket_{el}\\
+    \llbracket A \times B \rrbracket_v &= \llbracket A \times B \rrbracket_{el}\\
+    \llbracket OSum \rrbracket_v (\rho)&= \sum_{\sigma \in dom(\rho)} \llbracket \rho(\sigma) \rrbracket_{el}(\rho)\\
+    \llbracket Case \; A \rrbracket_v(\rho) &= \{ \sigma | \sigma \in dom(\rho) \land \rho(\sigma)= A \} \\
+    \llbracket A * B \rrbracket_v &= \llbracket A \rrbracket_v \otimes \llbracket B \rrbracket_v \\
+    \llbracket U  \underline{B} \rrbracket_v &= \;| \llbracket B \rrbracket_c |
+\end{align*}
+Lastly, we interpret the computation types as their respective algebras in $\mathbf{TAlg}$. 
+\begin{align*}
+    \llbracket A \rightarrow B \rrbracket_c &= expAlg\llbracket A \rrbracket_v \llbracket B \rrbracket_c\\
+    \llbracket A \sep B \rrbracket_c &= sepAlg\llbracket A \rrbracket_v\llbracket B \rrbracket_c\\
+    \llbracket F A \rrbracket_c &= freeAlg\llbracket A \rrbracket_v\\
+\end{align*}
+\subsection{Interpreting Contexts}
+In \textit{regular} type theory, contexts have the structure of a list and are interpreted as an n-ary product in the category used to interpret types. In the bunched type theory we are working with here, there are two connectives for constructing contexts (";" and "$\fatsemi$") and the structure of contexts are "tree-like". We use $;$ to denote the usual context construction operation that is interpreted as a cartesian product and $\fatsemi$ to denote the new context construction operation that is interpreted as the tensor product.
+
+\begin{align*}
+    \llbracket x : A \rrbracket_{ctx} &= \llbracket A \rrbracket_v \\
+    \llbracket \phi \rrbracket_{ctx} &= \mathbf{1} \\
+    \llbracket \Gamma \;; \Gamma \rrbracket_{ctx} &=  \llbracket \Gamma \rrbracket_{ctx} \times \llbracket \Gamma \rrbracket_{ctx}\\
+    \llbracket \varphi \rrbracket_{ctx} &= I \\
+    \llbracket \Gamma \;\fatsemi \Gamma \rrbracket_{ctx} &=  \llbracket \Gamma \rrbracket_{ctx} \otimes \llbracket \Gamma \rrbracket_{ctx} \\
+\end{align*}
+
+The cartesian fragment of the context supports weakening and contraction. The monoidal fragment supports weakening\footnote{consequence of $\mathbf{1} \cong I$ in our model}.
+
+
+\subsection{Interpreting Terms}
+Value terms $\Gamma \vdash M : A$ are interpreted as morphisms $\llbracket \Gamma \rrbracket_{ctx} \xrightarrow{M} \llbracket A \rrbracket_{v}$ in $\worlds$ which are natural transformations from $\mathbf{World^{op}}$ to $\mathbf{Set}$. So for any term $\Gamma \vdash M : A$, we need to provide a family of maps $\forall w ,\; \alpha_w : \llbracket \Gamma \rrbracket(w) \rightarrow \llbracket A \rrbracket(w)$ such that given any morphism $f : w \rightarrow w'$ in $\mathbf{World}$ we have:
+\begin{figure}[!h]
+    \centering
+    \begin{tikzcd}
+    \llbracket \Gamma \rrbracket(w) \arrow[dd , "\alpha_w"] &  & \llbracket \Gamma \rrbracket(w') \arrow[dd, "\alpha_{w'}"] \arrow[ll, "\llbracket \Gamma \rrbracket(f)"] \\
+                       &  &                                \\
+    \llbracket A \rrbracket(w)                &  & \llbracket A \rrbracket(w') \arrow[ll,"\llbracket A \rrbracket(f)"]               
+    \end{tikzcd}
+
+\end{figure}\\
+Here we define the terms as natural transformations by giving the components. \red{check: do we get naturality via parametric polymorphism in this setting?} $w$ is the current world and $\gamma : \llbracket \Gamma \rrbracket(w)$. The base terms are straightforward. 
+\begin{align*}
+    \llbracket  \ttt \rrbracket_{vtm}(w, \gamma) &= *\\
+    \llbracket  \true \rrbracket_{vtm}(w,\gamma) &= inl \;*\\
+    \llbracket  \false \rrbracket_{vtm}(w,\gamma) &= inr \;*\\
+\end{align*}
+
+\begin{comment}
+    
+The denotation of variables is not as simple as composing projection maps since we now have two context constructors with different interpretations. Let's consider the denotation of this term $(x : A ; y : B) \fatsemi z : C \vdash x : A$. The "type" of this morphism is $(\den{A} \times \den{B}) \otimes \den{C} \rightarrow \den{A}$. To understand how to construct this morphism, we need to understand how to "use" the data in the tensor product. Recall the tensor wand adjunction:
+\[ 
+    Hom[A \otimes B , C] \cong Hom[A , B \sep C]
+\]
+For a particular natural transformation $N \in Hom[A , B \sep C]$, we know it's components are of the form
+\[
+    \alpha_x : A(X) \rightarrow (B \sep C)(X)
+\]
+We also know 
+\[
+    (B \sep C)(X) \cong Hom[B , C(X * \_)]
+\]
+with the later having components of the form
+\[
+    \alpha_y : B(Y) \rightarrow C(X * Y)
+\]
+Put together, we get that $Hom[A \otimes B , C]$ is in bijective correspondence with families of functions 
+\[
+    A(X) \times B(Y) \rightarrow C( X * Y)
+\]
+natural in $X$ and $Y$\cite{pym_semantics_2002}(plus a side condition that $X$ and $Y$ are disjoint). \footnote{Or at least it would be as simple as this if we had lifted a monoidal structure on $\mathbf{World}$ to $\worlds$ via the day convolution. Because our operation $w *_w w'$ on worlds is partial, we actually construct a promonoidal structure on $\mathbf{World}$ which we turn into $\otimes$ via the day convolution. Something something go learn more category theory to understand this TODO etc... }
+We can now turn back to the denotation of the term $(x : A ; y : B) \fatsemi z : C \vdash x : A$.
+From
+\[ 
+    (\den{A} \times \den{B}) \otimes \den{C} \rightarrow \den{A}
+\]
+we use the correspondence to get
+\[
+    (\den{A} \times \den{B})(X) \times \den{C}(Y) \rightarrow \den{A}(X * Y)
+\]
+natural in $X,Y$ and simplify to 
+\[
+    (\den{A}(X) \times \den{B}(X)) \times \den{C}(Y) \rightarrow \den{A}(X * Y)
+\]
+which we can construct by projecting out $x:A$ from the context as we normally would, yielding $\den{A}(X)$, and the use the map $\pi_X^* : X * Y \rightarrow X$ in $\mathbf{World}$ to "project to the correct world".
+\begin{figure}[!h]
+    \centering
+    \begin{tikzcd}
+    (\den{A}(X) \times \den{B}(X)) \times \den{C}(Y) \arrow[d, "\pi_1 \circ \pi_1"] \arrow[rr] &  & \den{A}(X * Y) \\
+    \den{A}(X) \arrow[rru, "\den{A}(\pi_X^*)"']            &  &           
+    \end{tikzcd}
+\end{figure}
+\end{comment}
+
+\blue{Deleted whole page, becase our monoidal product is affine, we have projections} \cite{JACOBS199473}(Definition 2.1.ii) We can use this process (call it $lookup$) to construct the proper denotation for variables.
+\begin{align*}
+    \llbracket  x \rrbracket_{vtm} &= lookup(x) \\
+\end{align*}
+\\
+For case symbols, we'd like a natural transformation $\den{\sigma} : \den{\Gamma} \rightarrow \den{Case \;A}$ where components are defined as so:\\
+
+\begin{figure}[!h]
+    \centering
+    \begin{tikzcd}
+    \den{\Gamma}(w) \arrow[rr] \arrow[d, "!"] &  & \{ \sigma | w(\sigma) = A \} \\
+    \mathbf{1}(w) \arrow[rru, "select_{\sigma}"']       &  &    
+    \end{tikzcd}
+\end{figure}
+which is definable as long as long as $\sigma \mapsto A \in w$. \red{Consider the empty map $\lambda() \in Obj(\mathbf{Worlds})$,  $\;\alpha_{\lambda()} : \den{\Gamma}(\lambda()) \rightarrow \emptyset$. This seems problematic..}
+\begin{align*}
+    \llbracket  \sigma \rrbracket_{vtm}(w) &= select_{\sigma} \;\circ\; !\\
+\end{align*}
+
+For injection of values into the open sum type, we can assume we already have $\den{\Gamma} \xrightarrow{\sigma} \den{Case \; A}$ and $\den{\Gamma} \xrightarrow{V} \den{A}$. We then want to construct $\den{\injj{\sigma}{V}} : \den{\Gamma} \rightarrow \den{OSum}$. First, lets consider the partially applied term $\den{\injj \sigma } : \den{A} \rightarrow \den{OSum}$. Consider the subset $\{ \alpha_w | w \;s.t.\; \sigma \mapsto A \in w \}$ of components of $\den{\injj \sigma }$. These components will be of the form $\alpha_w = (inl | inr) \circ inr^*$ which will inject a value of type $\den{A}$ into the open sum type at world $w$. \blue{$\den{\Gamma} \xrightarrow{\sigma, V} \den{Case \; A} \times \den{A} \xrightarrow{\injj \sigma , id} \den{OSum}^{\den{A}} \times \den{A} \xrightarrow{eval} \den{OSum}$}
+\begin{align*}
+    \llbracket  \injj{\sigma}{V}\rrbracket_{vtm} &= \red{?}\\
+\end{align*}
+The denotation of product and separating product are both akin to contructing bilinear maps.
+\begin{align*}
+    \llbracket  (V_1, V_2)\rrbracket_{vtm} &= \den{V_1} , \den{V_2}\\
+    \llbracket  (V_1 * V_2)\rrbracket_{vtm} &= \den{V_1} * \den{V_2}\\
+\end{align*}
+And finally, the interpretation of $\thunk{M}$ is given by the forgetful functor which projects out the carrier of the algebra $\den{M}_{ctm}$.
+\begin{align*}
+    \llbracket  \thunk{M}\rrbracket_{vtm} &= Forget(\den{M}_{ctm})\\
+\end{align*}
+
+The interpretation of computation terms 
+\begin{figure}[h!]
+    \centering
+    \begin{tikzcd}
+    \worlds \arrow[rr, "Free", bend left] &  & \mathbf{TAlg} \arrow[ll, "Forget"', bend left]
+    \end{tikzcd}
+\end{figure}
+\begin{align*}
+    \llbracket \err \rrbracket_{ctm} &= \\
+    \llbracket \print{V} \rrbracket_{ctm} &= \\
+    \llbracket \force{V} \rrbracket_{ctm} &= \den{V}_{vtm}\\
+    \llbracket \ret{V} \rrbracket_{ctm} &= Free(\den{V}_{vtm})\\
+    \llbracket \bind{x}{M}{N} \rrbracket_{ctm} &= \\
+    \llbracket M \; N \rrbracket_{ctm} &= \langle eval(|\den{M}_{ctm}|)(\den{N}_{vtm}), \; \blue{\theta_{\den{M}_{ctm}}\den{N}_{vtm}}\rangle\\
+    \llbracket M \at N \rrbracket_{ctm} &= \langle eval^*(|\den{M}_{ctm}|)(\den{N}_{vtm}), \; \blue{\theta_{\den{M}_{ctm}}\den{N}_{vtm}}\rangle\\
+    \llbracket \lambda x : A . M \rrbracket_{ctm}(e : \den{\Gamma}_{v}) &= \langle \lambda a : \den{A}_v. |\den{M}_{ctm}(e , a)|,\; \blue{\theta} \rangle \\
+    \llbracket \alpha x : A . M \rrbracket_{ctm}(e : \den{\Gamma}_{v}) &= \langle \alpha a : \den{A}_v. |\den{M}_{ctm}(e * a)|,\; \blue{\theta} \rangle\\
+    \llbracket \newcase{A}{\sigma}{M} \rrbracket_{ctm} &= \red{\textrm{updated world and value environment?}}\\
+    \llbracket \match{V_1}{V_2}{x}{M}{N}\rrbracket_{ctm} &= \\
+    \llbracket \lett{x}{y}{V}{M}\rrbracket_{ctm} &= \\
+    \llbracket \lets{x}{y}{V}{M}\rrbracket_{ctm} &= \\
+    \llbracket \ite{V}{M}{N} \rrbracket_{ctm} &= \\
+\end{align*}
+
+
+\appendix 
+\section{}
+
+\bibliographystyle{acm}
+\bibliography{CBPV-OSum/osumref}
+\end{document}
