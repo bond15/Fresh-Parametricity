@@ -1,0 +1,16 @@
+{
+    // build the docker image in this dir, and tag is with some name
+    "image": "vsc-latex",
+    "customizations": {
+      "vscode": {
+          "extensions": [
+              "james-yu.latex-workshop",
+              "nickfode.latex-formatter",
+              "mathematic.vscode-latex",
+              "ms-azuretools.vscode-docker",
+              "meezilla.json",
+              "valentjn.vscode-ltex"
+          ]
+      }
+  }
+}

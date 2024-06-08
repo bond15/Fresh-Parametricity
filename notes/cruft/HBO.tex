@@ -1,0 +1,660 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{simplebnf}
+\usepackage{bussproofs}
+\usepackage[llbracket,rrbracket]{stmaryrd}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{cite}
+\usepackage{scalerel}
+\usepackage{tikz-cd}
+\usepackage{oz}
+\def\sq{\mathbin{\scalerel*{\strut\rule[-.5ex]{2ex}{2ex}}{\cdot}}}
+\usepackage{kpfonts}
+\usepackage{esint}
+\usepackage{comment}
+\usepackage{float}
+
+
+\DeclareFontFamily{U}{dmjhira}{}
+\DeclareFontShape{U}{dmjhira}{m}{n}{ <-> dmjhira }{}
+
+\DeclareRobustCommand{\yo}{\text{\usefont{U}{dmjhira}{m}{n}\symbol{"48}}}
+
+% for eding diagrams https://tikzcd.yichuanshen.de/
+
+\newcommand{\blue}[1]{\textcolor{blue}{#1}}
+\newcommand\sep{\mathrel{-\mkern-6mu*}}
+\newcommand{\pack}[3]{\text{pack}(#1,#2)\text{ as }#3}
+\newcommand{\thunk}[1]{\text{thunk }#1}
+\newcommand{\injj}[2]{\text{inj}_{#1}#2}
+\newcommand{\err}{\mho}
+\newcommand{\force}[1]{\text{force }#1}
+\newcommand{\ret}[1]{\text{ret }#1}
+\newcommand{\bind}[3]{#1 \leftarrow #2 ; #3}
+\newcommand{\newcase}[3]{\text{newcase}_{#1} \; #2 ; #3}
+\newcommand{\match}[5]{\text{match }#1 \text{ with }#2 \{#3 . #4 | #5\}}
+\newcommand{\unpack}[4]{\text{unpack }(#1,#2) = #3 ; #4}
+\newcommand{\lett}[4]{\text{let }(#1,#2) = #3 ; #4}
+\newcommand{\lets}[4]{\text{let }(#1*#2) = #3 ; #4}
+\newcommand{\ite}[3]{\text{if }#1 \text{ then }#2 \text{ else }#3}
+\newcommand{\at}{\text{@}}
+
+\title{Honey Bunches of OSum}
+\author{Eric Bond}
+\date{January 2024}
+
+\begin{document}
+\maketitle
+\newpage
+\section{Untyped Syntax}
+\begin{bnfgrammar}
+$A$ : value types ::= $Bool$
+| $X$ : type variables
+| $Case A$ 
+| $OSum$
+| $A\; \times \; A$  
+| $\blue{A\; * \; A}$
+| $\exists X . A$
+| $U\underline{B}$
+;;
+$B$ : computation types ::= $A \rightarrow \underline{B}$ 
+| $\blue{A \sep \underline{B}}$
+| $\forall X. \underline{B}$
+| $F\;A$
+;;
+$V$ : values ::= $\true$
+| $\false$
+| $x$ : variable
+| $\sigma$ : type tag
+| $\injj{V}{V}$
+| $(V,V)$
+| $\blue{(V*V)}$
+| $\pack{A}{V}{\exists X .A}$
+| $\thunk{M}$
+;;
+$M$ : computations ::= $\err$
+| $\force{V}$
+| $\ret{V}$
+| $\bind{x}{M}{N}$
+| $M \; N$
+| $\blue{M \at N}$
+| $\lambda x \colon A . M$
+| $\blue{\alpha x \colon A . M}$
+| $\newcase{A}{x}{M}$
+| $\match{V}{V}{\injj{}{x}}{M}{N}$
+| $\lett{x}{y}{V}{M}$
+| $\blue{\lets{x}{y}{V}{M}}$
+| $\Lambda X . M$
+| $M[A]$
+| $\ite{V}{M}{N}$
+;;
+$\Gamma$ : value typing context ::= $x\; \colon A$ 
+| $\phi$ : additive unit
+| $\Gamma ; \Gamma$ : additive combination (product)
+| $\varphi$ : multiplicative unit
+| $\Gamma \fatsemi \Gamma$ : multiplicative combination (tensor)
+;;
+
+$\Delta$ : stoup ::= $\cdot$ 
+| $\bullet$
+;;
+\end{bnfgrammar}
+
+\section{Typed Syntax}
+This mostly follows from Figure 10.13 with modified rules for the context. ($\Sigma;\Delta;\Gamma , x : A$ becomes $\Sigma;\Delta;(\Gamma ; x : A)$, replacing $','$ with $';'$). The additional rules for the new connectives are below.
+
+Normally, separation logic would partition the value context. In this case, we have a type context and a case store. Here, it seems we don't care about partitioning the type variable context. The case store is a bit trickier.. The typing rules for the original CBPV OSum in figure 10.13 demonstrate that the case store is not updated in the typing. This is also true for the cast calculus, PolyC, which introduced the type tag store for its operational semantics (see figure 10.11). The CBPV OSum typing show that the newcase term updates the value context, and it should also update the case store in the operational semantics of CPBV Osum. \blue{Thus for typing purposes, we only require the value contexts to be distinct.}
+\begin{prooftree}
+\AxiomC{$\Sigma , \Delta , \Gamma_1  \vdash V_1 : A_1$}
+\AxiomC{$\Sigma, \Delta , \Gamma_2  \vdash V_2 : A_2$}
+\RightLabel{$* Intro$}
+\BinaryInfC{$\Sigma , \Delta ,( \Gamma_1 \fatsemi \Gamma_2 )\vdash V_1 * V_2 : A_1 * A_2$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Sigma , \Delta , \Gamma_1(x : A \fatsemi y : B) | \cdot \vdash N : C $}
+\AxiomC{$\Sigma , \Delta , \Gamma_2 \vdash M : A * B$}
+\RightLabel{$*Elim$}
+\BinaryInfC{$\Sigma , \Delta, \Gamma_1(\Gamma_2) | \cdot \vdash \mathbf{let} (x,y) = M \; \mathbf{in} \; N : C$}
+\end{prooftree}
+
+
+\begin{prooftree}
+\AxiomC{$\Delta \vdash A$}
+\AxiomC{$\Sigma , \Delta , (\Gamma \fatsemi (x : A)) | \cdot \vdash  M : \underline{B}$}
+\RightLabel{$\sep Intro$}
+\BinaryInfC{$\Sigma , \Delta ,\Gamma | \cdot \vdash (\alpha x : A .\; M) : A \sep \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Sigma , \Delta, \Gamma_1 | \Theta \vdash  M : A \sep \underline{B} $}
+\AxiomC{$\Sigma, \Delta, \Gamma_2 \vdash V : A$}
+\RightLabel{$\sep Elim$}
+\BinaryInfC{$\Sigma, \Delta, (\Gamma_1 \fatsemi \Gamma_2) | \Theta \vdash M  \textit{@} V : \underline{B}$}
+\end{prooftree}
+
+\blue{reconsider the rules with $\_ : Case \_$ }
+\section{Type and Environment Translation}
+Here lies the motivation for this exercise. But to make sense of this, we need to check that the cast calculus can be faithfully translated. 
+
+
+\begin{figure}[H]
+
+\begin{align*} 
+ \llbracket \Sigma , \Gamma \vdash \exists^v X . A \rrbracket &=  \exists X . U(Case X \blue{\sep}  F \llbracket \Sigma , \Gamma, X \vdash A \rrbracket) \\ 
+  \llbracket \Sigma , \Gamma \vdash \forall^v X . A \rrbracket&= U(\forall X . Case X \blue{\sep} F\llbracket \Sigma , \Gamma , X \vdash A \rrbracket)
+\end{align*}
+    \caption{Type Translation Fragment}
+    \label{fig:enter-label}
+
+\end{figure}
+
+First, consider the environment translation. For the following equations, assume $\llbracket \Sigma \vdash \Gamma \rrbracket = \Delta' ; \Gamma'$.
+\begin{align*}
+    \llbracket \Sigma \vdash \cdot \rrbracket &= \cdot ; \cdot \\
+    \llbracket \Sigma \vdash \Gamma , x : A \rrbracket &= \Delta' ; (\Gamma' ; x : \llbracket \Sigma ; \Gamma \vdash A \rrbracket) \\
+    \llbracket \Sigma \vdash \Gamma , X \rrbracket &= \Delta' , X ; \blue{(\Gamma' \fatsemi c_x : Case X)} \\
+    \llbracket \Sigma \vdash \Gamma , X \cong A \rrbracket &= \Delta' ; \blue{(\Gamma' \fatsemi c_x : Case \llbracket \Sigma ; \Gamma \vdash A \rrbracket)}
+\end{align*}
+
+
+\begin{comment}
+\subsection{Var}
+\begin{prooftree}
+\AxiomC{}
+\RightLabel{$Id_v$}
+\UnaryInfC{$x : A \vdash x : A$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{}
+\RightLabel{$Id_c$}
+\UnaryInfC{$\Gamma | \bullet : \underline{B} \vdash \bullet : \underline{B}$}
+\end{prooftree}
+
+\subsection{One}
+\begin{prooftree}
+\AxiomC{}
+\RightLabel{$\mathbf{1} Intro$}
+\UnaryInfC{$\Gamma \vdash^v () : \mathbf{1}$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash^v M : \mathbf{1}$}
+\RightLabel{$\mathbf{1} \eta$}
+\UnaryInfC{$\Gamma \vdash^v ()  = M: \mathbf{1}$}
+\end{prooftree}
+
+\subsection{Product}
+\begin{prooftree}
+\AxiomC{$\Gamma_1  \vdash^v V_1 : A_1$}
+\AxiomC{$\Gamma_2  \vdash^v V_2 : A_2$}
+\RightLabel{$\times Intro$}
+\BinaryInfC{$ \Gamma_1 ; \Gamma_2 \vdash^v (V_1,V_2) : A_1 \times A_2$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash^v M : A_1 \times A_2 $}
+\RightLabel{$\times Elim_i$}
+\UnaryInfC{$\Gamma \vdash^v \pi_i M : A_i$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash^v M_1 : A_1 $}
+\AxiomC{$\Gamma \vdash^v M_2 : A_2$}
+\RightLabel{$\times \beta_i$}
+\BinaryInfC{$\Gamma \vdash^v \pi_i (M_1,M_2)  = M_i : A_i$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash^v M : A_1 \times A_2 $}
+\RightLabel{$\times \eta$}
+\UnaryInfC{$\Gamma \vdash^v M = (\pi_1 M , \pi_2 M) : A_1 \times A_2$}
+\end{prooftree}
+
+\subsection{Sep Product}
+\begin{prooftree}
+\AxiomC{$\Gamma_1  \vdash^v V_1 : A_1$}
+\AxiomC{$\Gamma_2  \vdash^v V_2 : A_2$}
+\RightLabel{$* Intro$}
+\BinaryInfC{$ \Gamma_1 \fatsemi \Gamma_2 \vdash^v V_1 * V_2 : A_1 * A_2$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma_1(x : A \fatsemi y : B) \vdash^v N : C $}
+\AxiomC{$\Gamma_2 \vdash^v M : A * B$}
+\RightLabel{$*Elim$}
+\BinaryInfC{$\Gamma_1(\Gamma_2) \vdash^v \mathbf{let} (x,y) = M \; \mathbf{in} \; N : C$}
+\end{prooftree}
+
+
+\begin{prooftree}
+\AxiomC{$\Gamma_1 \vdash^v M_1 : A$}
+\AxiomC{$\Gamma_2 \vdash^v M_2 : B $}
+\AxiomC{$\Gamma_3(x : A \fatsemi y : B) \vdash^v N : C $}
+\RightLabel{$* \beta$}\footnote{beta eta from page 21 of \cite{Semantics-Proof-Theory-Bunched-Implications}}
+\TrinaryInfC{$\blue{\Gamma?} \vdash^v (\mathbf{let} (x,y) = (M_1 * M_2) \; \mathbf{in}\; N) = N[M_1/x,M_2/y] : C$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash^v  M : A_1 * A_2 $}
+\RightLabel{$* \eta $}
+\UnaryInfC{$\Gamma \vdash^v (\mathbf{let} (x,y) = M\; \mathbf{in}\; x * y) = M : A_1 * A_2$}
+\end{prooftree}
+
+
+\subsection{U}
+
+\begin{prooftree}
+\AxiomC{$\Gamma | \cdot \vdash^c M : \underline{B}$}
+\RightLabel{$\mathbf{tf} \; Intro$}
+\UnaryInfC{$\Gamma \vdash^v \mathbf{thunk} M : U \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash^v V : U \underline{B}$}
+\RightLabel{$\mathbf{tf} \; Elim$}
+\UnaryInfC{$\Gamma | \cdot \vdash^c \mathbf{force} V : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma | \cdot \vdash^c M  : \underline{B}$}
+\RightLabel{$\mathbf{tf} \; \beta$}
+\UnaryInfC{$\Gamma | \cdot \vdash^c \mathbf{force}\; (\mathbf{thunk}\; M) = M : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash^v V : U \underline{B}$}
+\RightLabel{$\mathbf{tf}\; \eta$}
+\UnaryInfC{$\Gamma \vdash^v V = \mathbf{thunk}\; (\mathbf{force}\; V) : U\underline{B}$}
+\end{prooftree}
+
+
+\subsection{"Normal" functions}
+This is where things get tricky..
+
+\begin{prooftree}
+\AxiomC{$\Gamma ; (x : A) | \underline{\Delta} \vdash^c  M : \underline{B}$}
+\RightLabel{$\rightarrow Intro$}
+\UnaryInfC{$\Gamma | \underline{\Delta}\vdash^c (\lambda x : A .\; M) : A \rightarrow \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma_1 | \underline{\Delta} \vdash^c  M : A \rightarrow \underline{B} $}
+\AxiomC{$\Gamma_2 \vdash^v V : A$}
+\RightLabel{$\rightarrow Elim$}
+\BinaryInfC{$\Gamma_1 ; \Gamma_2 | \underline{\Delta} \vdash^c M V : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma_1 ; (x : A) | \underline{\Delta} \vdash^c  M : \underline{B}$}
+\AxiomC{$\Gamma_2  \vdash^v N : A$}
+\RightLabel{$\rightarrow \beta$}
+\BinaryInfC{$\Gamma_1 ; \Gamma_2 | \underline{\Delta} \vdash^c (\lambda x : A.\; M) N = M[N/x] : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma ; (x : A) | \underline{\Delta} \vdash^c  M : \underline{B}$}
+\AxiomC{$x \notin FV(M)$}
+\RightLabel{$\rightarrow \eta$}
+\BinaryInfC{$\Gamma | \underline{\Delta} \vdash^c (\lambda x : A.\; M x) = M : A \rightarrow \underline{B}$}
+\end{prooftree}
+
+
+
+
+\subsection{Wand}
+This is the same as $\rightarrow$, just "alpha renamed" symbols ($\fatsemi, \textit{@},\alpha, \sep$).
+\begin{prooftree}
+\AxiomC{$\Gamma \fatsemi (x : A) | \underline{\Delta} \vdash^c  M : \underline{B}$}
+\RightLabel{$\sep Intro$}
+\UnaryInfC{$\Gamma | \underline{\Delta}\vdash^c (\alpha x : A .\; M) : A \sep \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma_1 | \underline{\Delta} \vdash^c  M : A \sep \underline{B} $}
+\AxiomC{$\Gamma_2 \vdash^v V : A$}
+\RightLabel{$\sep Elim$}
+\BinaryInfC{$\Gamma_1 \fatsemi \Gamma_2 | \underline{\Delta} \vdash^c M  \textit{@} V : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma_1 \fatsemi (x : A) | \underline{\Delta} \vdash^c  M : \underline{B}$}
+\AxiomC{$\Gamma_2  \vdash^v N : A$}
+\RightLabel{$\sep \beta$}
+\BinaryInfC{$\Gamma_1 \fatsemi \Gamma_2 | \underline{\Delta} \vdash^c (\alpha x : A.\; M) \textit{@} N = M[N/x] : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma \fatsemi (x : A) | \underline{\Delta} \vdash^c  M : \underline{B}$}
+\AxiomC{$x \notin FV(M)$}
+\RightLabel{$\sep \eta$}
+\BinaryInfC{$\Gamma | \underline{\Delta} \vdash^c (\alpha x : A.\; M \textit{@} \;x) = M : A \sep \underline{B}$}
+\end{prooftree}
+
+
+\subsection{F}\footnote{following \cite{Max-CT-W23}}
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash^v M : A$}
+\RightLabel{$\textbf{ret} Intro$}
+\UnaryInfC{$\Gamma | \cdot \vdash^c : \textbf{ret} M : F \underline{A}$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma_1 | \underline{\Delta} \vdash^c M : F A$}
+\AxiomC{$\Gamma_2 ; x : A | \cdot \vdash^c N : \underline{B}$}
+\RightLabel{$\textbf{ret} Elim(;)$}
+\BinaryInfC{$\blue{\Gamma_1 ; \Gamma_2} | \underline{\Delta} \vdash^c x \leftarrow M ; N : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma_1 | \underline{\Delta} \vdash^c M : F A$}
+\AxiomC{$\Gamma_2 \fatsemi x : A | \cdot \vdash^c N : \underline{B}$}
+\RightLabel{$\textbf{ret} Elim(\fatsemi)$}
+\BinaryInfC{$\blue{\Gamma_1 \fatsemi \Gamma_2} | \underline{\Delta} \vdash^c x \leftarrow M ; N : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma_1 \vdash^v V : A$}
+\AxiomC{$\Gamma_2 ; x : A | \cdot \vdash^c M : \underline{B}$}
+\RightLabel{$\mathbf{ret} \; \beta(;)$}
+\BinaryInfC{$\blue{\Gamma_1 ; \Gamma_2}  | \cdot \vdash^c (x \leftarrow \mathbf{ret} V ; M) = M[V/x] : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma_1 \vdash^v V : A$}
+\AxiomC{$\Gamma_2 \fatsemi x : A | \cdot \vdash^c M : \underline{B}$}
+\RightLabel{$\mathbf{ret} \; \beta(\fatsemi)$}
+\BinaryInfC{$\blue{\Gamma_1 \fatsemi \Gamma_2}  | \cdot \vdash^c (x \leftarrow \mathbf{ret} V ; M) = M[V/x] : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+\AxiomC{$\Gamma | \underline{\Delta} \vdash^c N : F A$}
+\AxiomC{$\Gamma | \bullet : F A \vdash^c M : \underline{B}$}
+\RightLabel{$\mathbf{ret} \; \eta$}
+\BinaryInfC{$\Gamma | \underline{\Delta} \vdash^c M[N] = (x \leftarrow N ; M[\mathbf{ret}x]) : \underline{B}$}
+\end{prooftree}
+
+\section{Structural rules}
+see page 20 of  https://link.springer.com/book/10.1007/978-94-017-0091-7
+
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash^v M : A$}
+\AxiomC{$\Upsilon(x : A) \vdash^v N : B$}
+\RightLabel{$Cut$}
+\BinaryInfC{$\Upsilon(\Gamma) \vdash^v N[M/x] : B$}
+\end{prooftree}
+is this $\string^$ needed?
+
+\begin{prooftree}
+\AxiomC{$\Gamma(\Upsilon) \vdash^v M : A$}
+\RightLabel{$Weakening\;$(for $;$)}
+\UnaryInfC{$\Gamma(\Upsilon \;; \Upsilon') \vdash^v M : A$}
+\end{prooftree}
+
+
+
+\begin{prooftree}
+\AxiomC{$\Gamma(\Upsilon \; ; \Upsilon') \vdash^v M : A$}
+\RightLabel{$(\Upsilon' \cong \Upsilon) Contraction\;$(for $;$)}
+\UnaryInfC{$\Gamma(\Upsilon) \vdash^v M[i(\Upsilon)/i(\Upsilon')] : A$}
+\end{prooftree}
+\\
+$\cong$ is isomorphism of bunches
+\\
+$i(\Upsilon)$ denote an in order traversal of the identifiers in $\Upsilon$
+    
+\begin{prooftree}
+\AxiomC{$\Gamma \vdash^v M : A$}
+\RightLabel{(where $\Gamma \equiv \Upsilon) Exchange$}
+\UnaryInfC{$\Upsilon \vdash^v M : A$}
+\end{prooftree}
+\\
+$\equiv$ is a coherence equivalece defined by 
+\begin{itemize}
+    \item Commutative monoid equations for $;$
+    \item Commutative monoid equations for $\fatsemi$
+    \item Congruence: $\Upsilon \equiv \Upsilon' \implies \Gamma(\Upsilon) \equiv \Gamma(\Upsilon')$
+\end{itemize}
+
+\end{comment}
+\section{Semantics}
+Preliminary definitions and constructions
+\subsection{Presheaves}
+\blue{Redo using the presentation of Presheaves as "Predicators"}
+
+Let $C$ be a small category. A \textbf{presheaf} on $C$ is a functor $F : C^{op} \rightarrow Set$. $Psh(C)$ denotes the functor category where objects are presheaves on $C$. This category will be used to denote value types. We will want a doubly cartesian closed structure on this category.\\
+\subsubsection{Terminal Object}
+The terminal object $\top$ is a functor $\top : C^{op} \rightarrow Set$. Have $\top_{0} (X) := \{*\}$ where $\top$ maps all objects of $C^{op}$ to a singleton set. Have $\top_{1} (f : X \rightarrow Y) : {*} \rightarrow {*}$ so $\top$ maps morphisms in $C^{op}$ to the identity function on the singleton set ${*}$. 
+Say $F : C^{op} \rightarrow Set$ is an object in $Psh(C)$ and consider the natural transformation $F \Rightarrow \top$.
+
+\begin{figure}[!h]
+\centering
+    \begin{tikzcd}
+        F(X) \arrow[r, "F(f)"] \arrow[d, "\alpha_X"]
+        & F(Y) \arrow[d, "\alpha_Y"] \\
+        \bot(X) \arrow[r, "id_{\{*\}}"]
+        &  \bot(Y)
+        \end{tikzcd}. 
+\end{figure}
+
+        Any natural transformation from $F$ to $\bot$ is determined by the components, of which there is no choice but the terminal map in $Set$. Thus, $Psh(C)$ has a terminal object.
+
+\subsubsection{Products}
+Given $F,G$ presheaves on $C$, construct their product object in $[C^{op},Set]$.
+
+    \begin{itemize}
+        \item[] On objects:
+            \begin{align*}
+                (F \times_{Psh(C)} G) (X) &:= F_0 (X) \times_{Set} G_0 (X) 
+            \end{align*}
+        \item[] On morphisms: given $(f : X \rightarrow Y)$\footnote{($f^{op} : Y \rightarrow X)$. Alternatively, we could write something like $\langle F_1 (f) \circ \pi_1, G_1 (f) \circ \pi_2 \rangle$. Being in set, we are abusing notation in the function definition by implicitly abstracting over $(F_0 (X) \times_{Set} G_0 (X))$ and unpacking/repacking products }
+        \begin{align*}
+            (F \times_{Psh(C)} G)(f)&: (F_0 (X) \times_{Set} G_0 (X)) \rightarrow (F_0 (Y) \times_{Set} G_0 (Y)) \\
+            (F \times_{Psh(C)} G)(f)&(Fx ,Gy) := (F_1(f)(Fx) , G_1(f)(Gy))
+        \end{align*} 
+        
+    
+        \item[] Preserves identity (holds pairwise)\footnote{Again I am abusing notation by performing implicit "computation" in Set}
+        \begin{align*}
+            (F \times_{Psh(C)} G)(id_X) =&\; F_1 (id_X) , G_1 (id_X)\\
+            =&\; id_{F_0(X)}, id_{G_0(X)}\\
+            =&\; id_{(F \times_{Psh(C)} G)(X)}
+        \end{align*}
+        \item[] Preserves composition (holds pairwise)
+        \begin{align*}
+            (F \times_{Psh(C)} G)(g \circ f) =&\; F_1 (g \circ f) , G_1 (g \circ f)\\
+            =&\; F_1(g) \circ F_1(f), G_1(g) \circ G_1(f)\\
+        \end{align*}
+    \end{itemize}
+    \newpage
+This describes an object $F \times_{Psh(C)} G \in Psh(C)$. The projection maps $\pi_1, \pi_2$ are natural transformations. Consider $\pi_1 : (F \times G) \Rightarrow F$.
+\begin{figure}[!h]
+\centering
+    \begin{tikzcd}
+        F(X) \times G(X) \arrow[r, "F(f)\times G(f)"] \arrow[d, "\pi_{1-Set}"]
+        & F(Y) \times G(Y) \arrow[d, "\pi_{1-Set}"] \\
+        F(X) \arrow[r, "F(f)"]
+        &  F(Y)
+        \end{tikzcd}
+\end{figure}\\
+The commuting diagram lives in $Set$ and $(F \times G)(X) := (F(X), G(X))$. So the components of $\pi_1$ are the projections maps of products in $Set$. From what we know about $Set$, we know this diagram commutes. What remains is to demonstrate the universal properties for products.
+
+\begin{figure}[!h]
+    \centering
+    \begin{tikzcd}
+      & C \arrow[Rightarrow,ld] \arrow[Rightarrow, rd] \arrow[Rightarrow, d, dotted] &   \\
+    F & F \times G \arrow[Rightarrow, r,"\pi_2"] \arrow[Rightarrow, l ,"\pi_1"]            & G
+    \end{tikzcd}
+\end{figure}
+
+This looks like the usual definition of product except that all the morphism are natural transformations. We can work with functions and sets if consider the underlying components and we fix an arbitrary object $X \in Ob \;C$. We know this commutes because $Set$ has products.
+
+
+\begin{figure}[!h]
+    \centering
+    \begin{tikzcd}
+      & C(X) \arrow[ld, "i"] \arrow[rd,"j"] \arrow[d, dotted, "h"] &   \\
+    F(X) & F(X) \times G(X) \arrow[ r,"\pi_{2-Set}"] \arrow[l ,"\pi_{1-Set}"]            & G
+    \end{tikzcd}
+\end{figure}
+
+\subsubsection{Exponentials}
+
+To construct the exponential object for two presheaves $F,G$, we first need to describe the Yoneda embedding.
+\subsubsection{Yonedda Embedding}
+The Yonedda Embedding is a functor $\yo : C \rightarrow Psh(C)$ which maps an object in $C$ to its contravariant hom functor.
+    \begin{align*}
+        &\yo_0(X) := Hom(\_,X) 
+    \end{align*}
+Where 
+Any $Y$ is mapped to the set of maps from $Y$ to $X$.
+    \begin{align*}
+        & Hom(\_,X)_1 (f : B \rightarrow A) : Hom(A,X) \rightarrow Hom(B,X) \\
+        & Hom(\_,X)_1(f):= \_ \circ f
+    \end{align*}
+And the action on morphisms $f^{op} : A \rightarrow B$ is precomposition.
+\newpage
+    \begin{align*}
+        Hom(\_,X)(id_A)(g : A \rightarrow X) &= g \circ id_A \\
+                    &= g                 
+    \end{align*}
+   When written pointfree, $Hom(\_,X)(id) = id_{Hom(A,X)}$. \\Finally, given $f : B \rightarrow A$, $g : C \rightarrow B$
+   \begin{align*}
+       Hom(\_,X)(g \circ^{op} f) \;\;:\;& Hom(A,X) \rightarrow Hom(C,X) \\
+       Hom(\_,X)(g \circ^{op} f)(h) &= h \circ (f \circ g)\\
+                            &= (h \circ f) \circ g\\
+                            &= (Hom(\_,X)(g) \circ Hom(\_,X)(f))(h)
+   \end{align*}
+   $\yo_1$ maps morphisms in $C$ to a natural transformation between hom functors.
+   \begin{align*}
+       \yo_1(f : X \rightarrow Y) : Hom(\_,X) \Rightarrow Hom(\_,Y)
+   \end{align*}
+   With components 
+   \begin{align*}
+       \eta (Z)&: Hom(Z,X) \rightarrow Hom(Z,Y)\\
+       \eta (Z)&= f \circ \_
+   \end{align*}
+   such that for any morphism $g : W \rightarrow V$ in $C$,
+\begin{figure}[!h]
+    \centering
+    \begin{tikzcd}
+     & {Hom(V,X)} \arrow[d, "\eta = f \circ \_"] \arrow[rr, "Hom(g)=\_\circ g"] &  & {Hom(W,X)} \arrow[d, "\eta = f \circ \_"] \\
+                     & {Hom(V,Y)} \arrow[rr, "Hom(g)=\_\circ g"]                                &  & {Hom(W,Y)}                               
+    \end{tikzcd} 
+\end{figure}\\
+Pointwise, the naturality condition is $(f \circ h) \circ g = f \circ (h \circ g)$ which holds by associativity of functions in $Set$. What remains is the preservation of identity and composition.
+\begin{align*}
+    \yo_1(id_X) : Hom(\_,X) \Rightarrow Hom(\_,X)
+\end{align*}
+
+Where, for a morphism $g : W \rightarrow V$,
+
+\begin{figure}[!h]
+    \centering
+    \begin{tikzcd}
+    {Hom(V,X)} \arrow[d, "\eta = id_X \circ \_"'] \arrow[rr, "Hom(g) = \_ \circ g"] &  & {Hom(W,X)} \arrow[d, "\eta = id_X \circ \_"] \\
+    {Hom(V,X)} \arrow[rr, "Hom(g) = \_ \circ g"]                                    &  & {Hom(W,X)}                                  
+    \end{tikzcd}
+\end{figure}
+
+The identity natural transformation where components are the identity function. Both commuting squares boil down to the equation $\_ \circ g = \_ \circ g$.
+
+\begin{figure}[!h]
+    \centering
+    \begin{tikzcd}
+    {Hom(V,X)} \arrow[d, "id"'] \arrow[rr, "Hom(g) = \_ \circ g"] &  & {Hom(W,X)} \arrow[d, "id"] \\
+    {Hom(V,X)} \arrow[rr, "Hom(g) = \_ \circ g"]                  &  & {Hom(W,X)}                
+    \end{tikzcd}
+\end{figure}
+\newpage
+For morphisms $f : A \rightarrow B$, $g : B \rightarrow C$,
+\begin{align*}
+    \yo_1(g \circ f) = \yo_1(g) \circ \yo_1(f)
+\end{align*}
+
+\begin{figure}[!h]
+    \centering
+    \begin{tikzcd}
+    W \arrow[r, "h"]                                                              & V &                                              \\
+    {Hom(V,A)} \arrow[d, "(f \circ g) \circ \_"] \arrow[rr, "Hom(h)= \_ \circ h"] &   & {Hom(W,A)} \arrow[d, "(f \circ g) \circ \_"] \\
+    {Hom(V,C)} \arrow[rr, "Hom(h) = \_ \circ h "]                                 &   & {Hom(W,C)}                                   \\
+    {Hom(V,A)} \arrow[d, "f\circ\_"] \arrow[rr, "\_ \circ h"]                     &   & {Hom(W,A)} \arrow[d, "f\circ\_"]             \\
+    {Hom(V,B)} \arrow[d, "g\circ\_"] \arrow[rr, "\_ \circ h"]                     &   & {Hom(W,B)} \arrow[d, "g\circ\_"]             \\
+    {Hom(V,C)} \arrow[rr, "\_ \circ h"]                                           &   & {Hom(W,C)}                                  
+    \end{tikzcd}
+\end{figure}
+The components of each natural transformations are equal.
+
+\subsubsection{Exponential Object}
+
+Given presheaves $F,G$, the exponential object $G^F$ is also a presheaf. For an object $X$ of $C$, we get a set of natural transformations.
+\begin{align*}
+    G^F_0(X) &:= Hom_{[C^{op},Set]}(\yo_0(X) \times_{psh} F, G)
+\end{align*}
+For a morphism $f : X \rightarrow Y$ of C, we have a function between sets of natural transformations
+\begin{align*}
+    G^F_1(f) & : Hom_{[C^{op},Set]}(\yo_0(Y) \times_{psh} F, G) \rightarrow Hom_{[C^{op},Set]}(\yo_0(X) \times_{psh} F, G)
+\end{align*}
+Say we are given $nt : Hom_{[C^{op},Set]}(\yo_0(Y) \times_{psh} F, G)$ which has components 
+\begin{align*}
+\alpha : (Z : Ob C) \rightarrow (Hom(Z,Y),F(Z)) \rightarrow G(Z) 
+\end{align*}
+We map $nt$ to a natural transformation in $Hom_{[C^{op},Set]}(\yo_0(X) \times_{psh} F, G)$, where the components are defined to be: 
+\begin{align*}
+    \eta&: (Z : Ob C) \rightarrow (Hom(Z,X),F(Z)) \rightarrow G(Z) \\
+    \eta&(Z)(g : Z \rightarrow X, fz : F(Z)) := \alpha(Z)( f \circ g, fz)
+\end{align*}
+Given $g : W \rightarrow V$, a morphism in $C$, the naturality square is of the form:\footnote{note the type of $F_1$ and $G_1$ since the source category is opposite}
+
+
+\begin{figure}[!h]
+    \centering
+    \begin{tikzcd}
+   & F_1(g) : F(V) \rightarrow F(W)                                                                                              & G_1(g) : G(V)\rightarrow G(W) &                                                                                    \\
+                        & {Hom(V,X)\times F(W)} \arrow[d, "\eta_V = \alpha_V(f\circ \_ \times id_{F(X)}) "'] \arrow[rr, "(\_ \circ g) \times F_1(g)"] &                               & {Hom(W,X)\times F(W)} \arrow[d, "\eta_W = \alpha_W(f \circ \_  \times id_{F(X)})"] \\
+                        & G(V) \arrow[rr, "G(g)"]                                                                                                     &                               & G(W)                                                                              
+    \end{tikzcd}
+\end{figure}
+
+From our original natural transformation $nt$, we have the naturality square: 
+
+\subsection{Day Convolution}
+The Day convolution is used to model our separating connectives $\_*\_$ and $\_\sep\_$. First, we define the category of $\mathbf{Worlds}$ and a partial monoidal structure on $\mathbf{Worlds}$. Let $N$ be a finite set. Take the objects of $\mathbf{Worlds}$ to be subsets of $N$ and the morphisms to be set inclusion. Define separation on the subsets of $N$ as:
+\[ 
+X * Y  :=\begin{cases} 
+      X \cup Y & X \cap Y = \emptyset \\
+      undefined & otherwise 
+      \end{cases}
+\]
+This ensures that $X * Y$ is only defined when $X$ and $Y$ are disjoint subsets of $N$. $(N,\emptyset,*)$ is a partial commutative monoid. When both sides of the equations are defined, we get the usual commutative monoid structure on $(N,\emptyset,\cup)$. \\
+
+To "lift" this to a bifunctor, $\_*\_$ is the action on objects.(\blue{but the operation is only partial... make N a pointed set?}). Given $(X*Y)$, $f : X \subseteq X'$, and $g : Y \subseteq Y'$, produce $(X' * Y')$ \blue{not target may not exist.. something seems to be missing?}
+
+The Day convolution take the monoidal structure on $World$ to a monoidal structure on $\widehat{World}$. 
+\[
+(A * B) X = \int_{}^{Y,Z}\ A(Y) \times B(Z) \times World^{op}[X,Y * Z]
+\]
+The concrete interpretation for this model is
+\[
+(A * B) X = \{[(Y,Z,a \in A(Y), b \in B(Z))] | Y * Z \;\text{is defined and} Y * Z \subseteq X\}
+\]
+where $[\cdot]$ denotes an equivalence class. $(Y,Z,a \in A(Y), b \in B(Z))$ and $(Y', Z', a' \in A(Y'), b' \in B(Z'))$ are equivalent if they have the same parent in the order determined by
+\[
+(Y,Z,a \in A(Y), b \in B(Z)) \leq (Y', Z', a' \in A(Y'), b' \in B(Z')) \\ \text{ if } \\
+ f: Y \subseteq Y', g: Z \subseteq Z', a' = A(f) a, b' = B(g)b
+\]
+
+And for the "magic wand"
+\[
+(A \sep B) X = \int_{Z}^{}\ Set^{World^{op}}[A(Z), B(X * Z)] \cong Set^{World^{op}}[A, B(X*\_)]
+\]
+
+
+
+
+\bibliographystyle{acm}
+\bibliography{CBPV-OSum/osumref}
+\end{document}
