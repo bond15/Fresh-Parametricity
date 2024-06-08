@@ -1,6 +1,9 @@
 *.aux
 *.fls
 *.log
+*.dvi
+*.bbl
+*.out
 *.synctex.gz
 *.fdb_latexmk
 _build/*
