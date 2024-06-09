@@ -439,7 +439,11 @@ This property validates weakening for $\fatsemi$. Note that
 \]
 
 $\lambda()$ is terminal in $\mathbf{Worlds}$ and the cardinality of $|\mathbf{Worlds}[\_\;,\lambda()]| \;= 1$.
+\\
+\red{!!!Disregard everything below this point !!!}
+
 \subsection{Effect Monad}
+
 We need an appropriate monad on $\worlds$ to interpret printing and error effects. First, we define an endofunctor $T$ on $\worlds$.
 \begin{align*}
     T_0(X) &= Const_E + (X \times Const_{FooBar})\\
@@ -462,7 +466,7 @@ where f is a natural transformation between presheaves (overloading notation her
 \end{itemize}
 \red{\cite{gabbayNewApproachAbstract2002} point to section 7, specifically 
 the note about how the notion of finite support does not exist in the presheaf category, but does in the
-full subcategory of pullback preserving functors. Additionally that the shanuel topos models 
+full subcategory of pullback preserving functors. Additionally, the Shanuel topos models 
 classical HOL rather than intuitionistic HOL}
 
 \subsection{Computation Semantics}
