@@ -280,8 +280,8 @@ $\fatsemi$ admits weakening and exchange (semicartisian symmetric monoidal struc
 \subsection{Equations}
 \blue{for effects (but also computation rules)}
 \subsubsection{Allocation}
-\blue{CITE}
-The following are from Ian Stark's Categorial Models for Local Names
+
+The following are from Ian Stark's Categorial Models for Local Names \cite{starkCategoricalModelsLocal1996}
 \begin{enumerate}
     \item swap - allocation swap
     \item drop - (\red{our monad might not support this)}
@@ -339,20 +339,20 @@ us to temporarily avoid two separate issues.
     the category of worlds, then we have tied ourselves in a knot. This issue is pointed 
     out in, among other places, \cite{sterling_denotational_2023}.
     \begin{align*}
-        World \cong X \rightharpoonup_{fin} SemTy \;\;\;\; SemTy \cong [\mathbf{Worlds} , Set]\\
+        World \cong X \rightarrow SemTy \;\;\;\; SemTy \cong [\mathbf{Worlds} , Set]\\
     \end{align*}
     
     \item The second issue is well-foundedness of the interpretation of $OSum$. Consider if we allow the extensible sum type to store the type ($OSum \rightarrow OSum$) and try to recursively interpret $OSum$.
 
 \end{itemize}
 
-\blue{similar constructions: HeapV \cite{SIMPSON-Independence}, Stirling univalent reference 
-(or den), Variable binding, nominal sets book?}
- Here we define the category $\world$\footnote{Similar categories: $HeapV$ \cite{SIMPSON-Independence}, $IFam_X$ \cite{sterlingFreeTheoremsUnivalent}}. A $world : X \rightharpoonup_{fin} 
- SynTy$ is a finite map of syntactic types. Morphisms $f : X \rightarrow Y$ 
+
+ Here we define the category $\world$\footnote{Similar categories: $HeapV$ \cite{SIMPSON-Independence}, 
+ $IFam_X$ \cite{sterlingFreeTheoremsUnivalent}, polymorphic algebraic theories \cite{fioreMultiversalPolymorphicAlgebraic2013}}. 
+ A $world : X \rightarrow SynTy$ is a map from a finite set into the set of syntactic types. Morphisms $f : X \rightarrow Y$ 
  in $\world$ are injective functions $i : Y \hookrightarrow X$ such that the 
  following triangle commutes. The finite sets here represent a finite 
- collection of case symbols and the injective map $i$ represents "renaming".
+ collection of case symbols and the injective map $i$ represents \textit{renaming}.
  \footnote{Formalized 
  \href{https://github.com/bond15/Bunched-CBPV/blob/68f8b4d006edc9df1d830d7f9cc63822ec77a379/src/Data/Worlds.agda#L33}{here} 
  as $\world := (Inc \downarrow SynTy)^{op}$, where $Inc$ is the inclusion
@@ -363,7 +363,7 @@ us to temporarily avoid two separate issues.
 \begin{figure}[!ht]
     \centering
     \begin{tikzcd}
-X \arrow[rdd, "w"', harpoon] &       & Y \arrow[ldd, "w'", harpoon'] \arrow[ll, "i"', hook'] \\
+X \arrow[rdd, "w"'] &       & Y \arrow[ldd, "w'"] \arrow[ll, "i"', hook'] \\
               &       &                                \\
               & SynTy &                               
 \end{tikzcd}
@@ -371,7 +371,7 @@ X \arrow[rdd, "w"', harpoon] &       & Y \arrow[ldd, "w'", harpoon'] \arrow[ll, 
  
  
 \begin{comment}
-Previously, I had maps between worlds as "injections" where the source map was 
+Previously, I had maps between worlds as injections where the source map was 
 included in the domain map. I've flipped the ordering to make the DCC obviously 
 affine(monoidal unit is isomorphic to cartesian unit).    
 \end{comment}
@@ -393,8 +393,18 @@ affine(monoidal unit is isomorphic to cartesian unit).
   is given by defining the top injection via $map : (A \rightarrow C) \rightarrow 
   (B \rightarrow D) \rightarrow A + B \rightarrow C + D$,
   which is injective, and the commuting triangles still hold. 
-  The unit for this monoid structure is the empty map $\lambda()$
-\footnote{The empty map is also the terminal object in $\mathbf{Worlds}$}.
+  The unit for this monoid structure is the empty map $\lambda()$ 
+  \footnote{The empty map is also the terminal object in $\mathbf{Worlds}$}.
+  
+\begin{figure}[!ht]
+    \centering
+    \begin{tikzcd}
+        W + Z \arrow[rdd, "rec\; w_3 \; w_4"'] &       & X + Y \arrow[ldd, "rec\; w_1 \;w_2"] \arrow[ll, "map \; i \; j"', hook] \\
+                                               &       &                                                                         \\
+                                               & SynTy &                                                                        
+        \end{tikzcd}
+\end{figure}
+
 \\
 Using this operation, we define the monoidal product for $\worlds$: 
 \[
@@ -420,7 +430,7 @@ $Hom(A \otimes B , C) \cong Hom(A , B \sep C)$.
 
 These definitions 
 are standard in the literature on bunched implication with the 
-exception that we specify that our "resources" are a specific kind 
+exception that we specify that our \textit{resources} are a specific kind 
 of finite maps. The bicartesian stucture on $\worlds$ along with 
 the monoidal structure and its right adjoint bundled together 
 has the structure of a bicartesian doubly closed category or 
