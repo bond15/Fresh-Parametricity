@@ -46,9 +46,10 @@
 \newcommand{\ite}[3]{\textrm{if }#1 \textrm{ then }#2 \textrm{ else }#3}
 \newcommand{\at}{\textrm{@}}
 \newcommand{\ttt}{\textrm{tt}}
-\newcommand{\worlds}{\widehat{\mathbf{Worlds}}}
+\newcommand{\pworld}{\widehat{\mathbf{World}}}
 \newcommand{\world}{{\mathbf{World}}}
 \newcommand{\calculus}{\operatorname{-calculus}}
+
 
 
 
@@ -321,16 +322,21 @@ The following are from Ian Stark's Categorial Models for Local Names \cite{stark
 \section{Semantics}
 \subsection{Worlds}
 Normally, the value types in a CBPV would be interpreted as Sets. However, in our case this is insufficient as 
-the interpretation of the extensible sum type, $OSum$, is dependent on what $Cases$ have been "allocated" via newcase. Thus we interpret value types in a presheaf category on a category of worlds where objects are a map from a finite set to syntactic types. Let $SynTy$ be a set of syntactic types that can be used in the OSum Case store.
+the interpretation of the extensible sum type, Osum, is dependent on what Cases have been "allocated" via 
+newcase. Thus we interpret value types in a presheaf category on a category of worlds where objects are a map 
+from a finite set to syntactic types. Let SynTy be a set of syntactic types that can be used in the OSum Case store.
 
+\begin{figure}[!ht]
+\centering    
 \begin{bnf}
-$SynTy$ ::= $Unit$
-| $Bool$
-| $SynTy \times SynTy$
+$\textrm{SynTy}$ ::= $\textrm{Unit}$
+| $\textrm{Bool}$
+| $\textrm{SynTy} \times \textrm{SynTy}$
 ;;
 \end{bnf}
+\end{figure}
 
-The denotation of these syntactic types is independent of what $Cases$ have been allocated.
+The denotation of these syntactic types is independent of what Cases have been allocated.
 Limiting the extensible sum type to contain only base types and products of base types allows 
 us to temporarily avoid two separate issues. 
 \begin{itemize}
@@ -339,25 +345,26 @@ us to temporarily avoid two separate issues.
     the category of worlds, then we have tied ourselves in a knot. This issue is pointed 
     out in, among other places, \cite{sterling_denotational_2023}.
     \begin{align*}
-        World \cong X \rightarrow SemTy \;\;\;\; SemTy \cong [\mathbf{Worlds} , Set]\\
+        \textrm{world} \cong X \rightarrow \textrm{SemTy} \;\;\;\; \textrm{SemTy} \cong [\world , \mathbf{Set}]\\
     \end{align*}
     
-    \item The second issue is well-foundedness of the interpretation of $OSum$. Consider if we allow the extensible sum type to store the type ($OSum \rightarrow OSum$) and try to recursively interpret $OSum$.
+    \item The second issue is well-foundedness of the interpretation of OSum. Consider if we allow the extensible 
+    sum type to store the type ($\textrm{OSum} \rightarrow \textrm{OSum}$) and try to recursively interpret $\textrm{OSum}$.
 
 \end{itemize}
 
 
  Here we define the category $\world$\footnote{Similar categories: $HeapV$ \cite{SIMPSON-Independence}, 
- $IFam_X$ \cite{sterlingFreeTheoremsUnivalent}, polymorphic algebraic theories \cite{fioreMultiversalPolymorphicAlgebraic2013}}. 
- A $world : X \rightarrow SynTy$ is a map from a finite set into the set of syntactic types. Morphisms $f : X \rightarrow Y$ 
- in $\world$ are injective functions $i : Y \hookrightarrow X$ such that the 
- following triangle commutes. The finite sets here represent a finite 
- collection of case symbols and the injective map $i$ represents \textit{renaming}.
+ $IFam_X$ \cite{sterlingFreeTheoremsUnivalent}, polymorphic algebraic theories \cite{fioreMultiversalPolymorphicAlgebraic2013}}
  \footnote{Formalized 
  \href{https://github.com/bond15/Bunched-CBPV/blob/68f8b4d006edc9df1d830d7f9cc63822ec77a379/src/Data/Worlds.agda#L33}{here} 
- as $\world := (Inc \downarrow SynTy)^{op}$, where $Inc$ is the inclusion
-  functor from the category of fininte sets and injections into the category 
-  $\mathbf{Set}$ and $SynTy$ is a constant functor. }
+ as $\world := (Inc \downarrow \textrm{SynTy})^{op}$, where $Inc$ is the inclusion functor from the category of fininte sets 
+ and injections into the category $\mathbf{Set}$ and SynTy is a constant functor.}. 
+ A world $: X \rightarrow \testrm{SynTy}$ is a map from a finite set into the set of syntactic types. Morphisms $f : X \rightarrow Y$ 
+ in $\world$ are injective functions $i : Y \hookrightarrow X$ such that the 
+ following triangle commutes. The finite sets here represent a finite 
+ collection of case symbols and the injective map $i$ represents \textit{renaming}. We may denote a world $X \xrightarrow{w} \textrm{SynTy}$ 
+ by $w$.
  
 
 \begin{figure}[!ht]
@@ -365,8 +372,9 @@ us to temporarily avoid two separate issues.
     \begin{tikzcd}
 X \arrow[rdd, "w"'] &       & Y \arrow[ldd, "w'"] \arrow[ll, "i"', hook'] \\
               &       &                                \\
-              & SynTy &                               
+              & \textrm{SynTy} &                               
 \end{tikzcd}
+\caption{Morphisms in $\world$}
 \end{figure}
  
  
@@ -385,126 +393,80 @@ affine(monoidal unit is isomorphic to cartesian unit).
   from existing literature on categorical semantics of bunched typing, 
   specifically \cite{ohearnResourceInterpretationsBunched1999} and section 3.1 of \cite{pym_semantics_2002}. 
   We use the Day convolution \cite{nlabDayConv} to get a monoidal structure on 
-  $\worlds$ from a monoidal structure on $\world$. First, we define an 
-  operation $x \otimes_w y'$ on $worlds$ by taking the set coproduct of 
-  their domains\footnote{This is not the coproduct in FinSet\_mono \cite{SE-FinSetMonoCoprod}} 
+  $\pworld$\footnote{$\mathbf{Set}^{(\world^{op})}$; contravariant presheaves on $\world$} 
+  from a monoidal structure on $\world$. First, we define an operation $w \otimes_w w'$ on $worlds$ by taking 
+  the set coproduct of their domains\footnote{This is not the coproduct in FinSet\_mono \cite{SE-FinSetMonoCoprod}} 
   and using the recursor $X + Y \xrightarrow{rec \; w \; w'} SynTy$ 
   to define a map into syntactic types. The action on morphisms 
   is given by defining the top injection via $map : (A \rightarrow C) \rightarrow 
-  (B \rightarrow D) \rightarrow A + B \rightarrow C + D$,
-  which is injective, and the commuting triangles still hold. 
+  (B \rightarrow D) \rightarrow A + B \rightarrow C + D$ and the commuting triangles still hold. 
   The unit for this monoid structure is the empty map $\lambda()$ 
   \footnote{The empty map is also the terminal object in $\mathbf{Worlds}$}.
-  
+
 \begin{figure}[!ht]
     \centering
     \begin{tikzcd}
-        W + Z \arrow[rdd, "rec\; w_3 \; w_4"'] &       & X + Y \arrow[ldd, "rec\; w_1 \;w_2"] \arrow[ll, "map \; i \; j"', hook] \\
+        W + Z \arrow[rdd, "rec\; w_3 \; w_4"'] &       & X + Y \arrow[ldd, "rec\; w_1 \;w_2"] \arrow[ll, "map \; i \; j"', hook'] \\
                                                &       &                                                                         \\
                                                & SynTy &                                                                        
         \end{tikzcd}
+    \caption{$\otimes_w$ action on morphisms}
 \end{figure}
 
-\\
-Using this operation, we define the monoidal product for $\worlds$: 
+
+Using this operation, we define the monoidal product for $\pworld$. The action on objects being: 
 \[
-(A \otimes B) X = \int_{}^{Y,Z}\ A(Y) \times B(Z) \times \mathbf{Worlds}[X,Y \otimes_w Z]
+(A \otimes B) X = \int_{}^{Y,Z}\ A(Y) \times B(Z) \times \world[X,Y \otimes_w Z]
 \]
-\\
 The monoidal unit is given by: 
 \[ 
     I(X) = \mathbf{World}[X , \lambda()]
 \]
-And the separating implication is defined by: 
+The separating function is defined by: 
 \[
-(A \sep B) X = \int_{Z}^{}\ \mathbf{Set}[A(Z), B(X *_w Z)] \cong \worlds[A, B(X*_w\_)]
+(A \sep B) X = \int_{Z}^{}\ \mathbf{Set}[A(Z), B(X \otimes_w Z)] \cong \pworld[A, B(X\otimes_w\_)]
+\]
+Finally, we have that:
+\[
+\textrm{Hom}(A \otimes B , C) \cong \textrm{Hom}(A , B \sep C) 
 \]
 
-Additionally, we have that the tensor is left adjoint to magic wand 
-$Hom(A \otimes B , C) \cong Hom(A , B \sep C)$. 
-
-
-
-
-
-
-These definitions 
-are standard in the literature on bunched implication with the 
-exception that we specify that our \textit{resources} are a specific kind 
-of finite maps. The bicartesian stucture on $\worlds$ along with 
-the monoidal structure and its right adjoint bundled together 
-has the structure of a bicartesian doubly closed category or 
-BiDCC\footnote{Terrible name, but I'm just following the literature here}.
+These definitions are standard in the literature on bunched implication with the 
+exception that our \textit{resources} are finite maps specifying typing of allocated
+case symbols. The bicartesian stucture on $\pworld$ along with 
+the monoidal structure ($\otimes$) and its right adjoint ($\sep$) bundled together 
+gives us the structure of a bicartesian doubly closed category or BiDCC.
 
 \subsubsection{Affine BiDCC}
 The concrete model that we are working with has the property 
-that $\mathbf{1} \cong I$\footnote{TODO, work this out in 
-full detail}\footnote{See section 3.3 of \cite{pym_semantics_2002}}. 
+that $\mathbf{1} \cong I$ \footnote{See section 3.3 of \cite{pym_semantics_2002}}. 
 That is, the cartesian unit is isomorphic to the monoidal unit. 
-This property validates weakening for $\fatsemi$. Note that
+This property validates weakening for $\fatsemi$. Note that:
 
 \[ 
     \mathbf{1}(X) = \{*\} \\
-    I(X) = \mathbf{Worlds}[X , \lambda()]
+    I(X) = \world[X , \lambda()]
 \]
 
-$\lambda()$ is terminal in $\mathbf{Worlds}$ and the cardinality of $|\mathbf{Worlds}[\_\;,\lambda()]| \;= 1$.
+$\lambda()$ is terminal in $\world$ and the cardinality of $|\world[\_\;,\lambda()]| \;= 1$.
 \\
-\red{!!!Disregard everything below this point !!!}
+\subsection{Allocation Monad}
 
-\subsection{Effect Monad}
-
-We need an appropriate monad on $\worlds$ to interpret printing and error effects. First, we define an endofunctor $T$ on $\worlds$.
-\begin{align*}
-    T_0(X) &= Const_E + (X \times Const_{FooBar})\\
-\end{align*}
-where $FooBar$ is a set containing all possible sequences of symbols "foo" and "bar" ($FooBar := \{s | s = (foo | bar)^+\}$) and $Const_{FooBar}$ is the constant presheaf mapping all $worlds$ to set $FooBar$. $E$ is a singleton set representing the "error state".
-\\
-The action on morphisms is define as: 
-\[ 
-T_1(f: X \rightarrow Y)(Z) :=\begin{cases} 
-      Z & Z: E \\
-      (f(x), s) & Z = (x,s)
-      \end{cases}
-\]
-where f is a natural transformation between presheaves (overloading notation here).
-\begin{itemize}
-    \item functor laws
-    \item natural transformations (return and join)
-    \item monad laws
-    \item Show T is strong (define strength nt and show 4 diagrams commute https://ncatlab.org/nlab/show/strong+monad) \red{strength for $\otimes$}
-\end{itemize}
-\red{\cite{gabbayNewApproachAbstract2002} point to section 7, specifically 
+\begin{comment}
+    \cite{gabbayNewApproachAbstract2002} point to section 7, specifically 
 the note about how the notion of finite support does not exist in the presheaf category, but does in the
 full subcategory of pullback preserving functors. Additionally, the Shanuel topos models 
-classical HOL rather than intuitionistic HOL}
+classical HOL rather than intuitionistic HOL (because it is a boolean topos? see Larrian note)}
+\end{comment}
 
-\subsection{Computation Semantics}
-To interpret computation types, we use a free and forgetful adjunction between $\worlds$ and the Eilenberg Moore category of monad $T$ denoted $\mathbf{TAlg}$. $\mathbf{TAlg}$ has all limits which exist in $\worlds$\footnote{https://ncatlab.org/nlab/show/Eilenberg-Moore+category}. Concrete constructions can be found here \cite{forster_call-by-push-value_2019}. The singleton, exponential, product, and free algebra are "given", what remains is to construct the separating implication algebra. 
-\blue{Assuming}\footnote{TODO: show} $T$ is a strong monad on $\otimes$, we have a map $T_{A \otimes B} : A \otimes T(B) \rightarrow T(A \otimes B)$, then the construction of the exponent algebra mirrors that of the separating algebra. I will reproduce the construction here.
-
-Given an object $A : \worlds$ and algebra $\langle B , \theta_B : T(B) \rightarrow B\rangle$, we need to construct an algebra. Set the carrier of the algebra to be $A \sep B$, we then need a map $\theta_{A\sep B} : T(A \sep B) \rightarrow (A \sep B)$. Via the tensor wand adjunction, it suffices to construct a map $T(A \sep B)\otimes A \rightarrow B$.
-% https://tikzcd.yichuanshen.de/#N4Igdg9gJgpgziAXAbVABwnAlgFyxMJZABgBpiBdUkANwEMAbAVxiRABUAKAQQAI4YaXgCEAlLwA6EiHgC28XtxABfUuky58hFACZyVWoxZthKtSAzY8BImR0H6zVog49J0uQrcChY0WfUrLSI9e2pHYxcuMRUDGCgAc3giUAAzACcIWSQAZmocCCQARnCjZxApHAALGBw6AH1TVTTM7MQ9EALc0qc2dnqizhhHeuAfZX9mkAyspDJOwvbqBjoAIxgGAAUNa20QLDBsWBAeyI5RuBx05QDp1rn8xaLlCmUgA
-\begin{figure}[!ht]
-\centering
-\begin{tikzcd}
-T(A \sep B) \otimes A \arrow[dd, "T_{str}"] \arrow[rr, "\theta_{A\sep B}"] &  & B                           \\
-                                                                  &  &                             \\
-T(A \otimes (A \sep B)) \arrow[rr, "T_1(eval_{\sep})"]              &  & T(B) \arrow[uu, "\theta_B"]
-\end{tikzcd}
-\end{figure}
-\\
-What remains is to check the T-algebra laws. We call $\langle A \sep B , \theta_{A \sep B}\rangle$ the separating algebra.
-
-\newpage
 \subsection{Interpreting Types}
-With all the categorical structure in place, we now give an interpretation of syntax. We first give an interpretation to syntactic types $SynTy$ via $\llbracket\_\rrbracket_{el} : SynTy \rightarrow \worlds$. We recall that the interpretation of these types is not dependent on what cases have been allocated. $\mathbf{1}$ is the terminal presheaf in $\worlds$ and $+,\times$ come from the bicartesian structure of $\worlds$.
+With all the categorical structure in place, we now give an interpretation of syntax. We first give an interpretation to syntactic types $SynTy$ via $\llbracket\_\rrbracket_{el} : SynTy \rightarrow \pworld$. We recall that the interpretation of these types is not dependent on what cases have been allocated. $\mathbf{1}$ is the terminal presheaf in $\pworld$ and $+,\times$ come from the bicartesian structure of $\pworld$.
 \begin{align*}
     \llbracket Unit \rrbracket_{el} &= \mathbf{1}\\
     \llbracket Bool \rrbracket_{el} &= \mathbf{1}  + \mathbf{1}\\
     \llbracket A \times B \rrbracket_{el} &= \llbracket A \rrbracket_{el} \times \llbracket B \rrbracket_{el} \\
 \end{align*}
-Next, we interpret the remaining value types in $\worlds$. The separating product is interpreted as the monoidal product from the Day convolution and $| \llbracket B \rrbracket_c |$ is the forgetful functor which returns the carrier of the algebra $\llbracket B \rrbracket_c$. The main definitions of interest are the interpretation of $OSum$ and $Case$. $OSum$ is an extensible sum type where the current world determines the number and type of cases in the extensible sum. $Case \;A$ is interpreted to be the set of allocated case symbols for type $A$ in the current world. Note that syntactic type equality is used in the set comprehension. This means that $\sigma : Case (A \times (B \times C))$ and $\sigma' : Case((A \times B) \times C)$ are distinct elements of two distinct sets. It may be nice to have a more flexible definition $\{ \sigma | \sigma \in dom(\rho) \land \llbracket \rho(\sigma) \rrbracket_{el} \cong \llbracket A \rrbracket_{el}\}$. We would have to be more careful when constructing and destructing elements of $OSum$. Consider $\sigma : Case \;A$ and $\injj{\sigma}{(*,a)}: OSum$. Should this be allowed with $\llbracket A \rrbracket \cong \llbracket Unit \times A \rrbracket$?
+Next, we interpret the remaining value types in $\pworld$. The separating product is interpreted as the monoidal product from the Day convolution and $| \llbracket B \rrbracket_c |$ is the forgetful functor which returns the carrier of the algebra $\llbracket B \rrbracket_c$. The main definitions of interest are the interpretation of $OSum$ and $Case$. $OSum$ is an extensible sum type where the current world determines the number and type of cases in the extensible sum. $Case \;A$ is interpreted to be the set of allocated case symbols for type $A$ in the current world. Note that syntactic type equality is used in the set comprehension. This means that $\sigma : Case (A \times (B \times C))$ and $\sigma' : Case((A \times B) \times C)$ are distinct elements of two distinct sets. It may be nice to have a more flexible definition $\{ \sigma | \sigma \in dom(\rho) \land \llbracket \rho(\sigma) \rrbracket_{el} \cong \llbracket A \rrbracket_{el}\}$. We would have to be more careful when constructing and destructing elements of $OSum$. Consider $\sigma : Case \;A$ and $\injj{\sigma}{(*,a)}: OSum$. Should this be allowed with $\llbracket A \rrbracket \cong \llbracket Unit \times A \rrbracket$?
 
 
 \begin{align*}
@@ -537,7 +499,7 @@ The cartesian fragment of the context supports weakening and contraction. The mo
 
 
 \subsection{Interpreting Terms}
-Value terms $\Gamma \vdash M : A$ are interpreted as morphisms $\llbracket \Gamma \rrbracket_{ctx} \xrightarrow{M} \llbracket A \rrbracket_{v}$ in $\worlds$ which are natural transformations from $\mathbf{World^{op}}$ to $\mathbf{Set}$. So for any term $\Gamma \vdash M : A$, we need to provide a family of maps $\forall w ,\; \alpha_w : \llbracket \Gamma \rrbracket(w) \rightarrow \llbracket A \rrbracket(w)$ such that given any morphism $f : w \rightarrow w'$ in $\mathbf{World}$ we have:
+Value terms $\Gamma \vdash M : A$ are interpreted as morphisms $\llbracket \Gamma \rrbracket_{ctx} \xrightarrow{M} \llbracket A \rrbracket_{v}$ in $\pworld$ which are natural transformations from $\mathbf{World^{op}}$ to $\mathbf{Set}$. So for any term $\Gamma \vdash M : A$, we need to provide a family of maps $\forall w ,\; \alpha_w : \llbracket \Gamma \rrbracket(w) \rightarrow \llbracket A \rrbracket(w)$ such that given any morphism $f : w \rightarrow w'$ in $\mathbf{World}$ we have:
 \begin{figure}[!ht]
     \centering
     \begin{tikzcd}
@@ -576,7 +538,7 @@ Put together, we get that $Hom[A \otimes B , C]$ is in bijective correspondence 
 \[
     A(X) \times B(Y) \rightarrow C( X * Y)
 \]
-natural in $X$ and $Y$\cite{pym_semantics_2002}(plus a side condition that $X$ and $Y$ are disjoint). \footnote{Or at least it would be as simple as this if we had lifted a monoidal structure on $\mathbf{World}$ to $\worlds$ via the day convolution. Because our operation $w *_w w'$ on worlds is partial, we actually construct a promonoidal structure on $\mathbf{World}$ which we turn into $\otimes$ via the day convolution. Something something go learn more category theory to understand this TODO etc... }
+natural in $X$ and $Y$\cite{pym_semantics_2002}(plus a side condition that $X$ and $Y$ are disjoint). \footnote{Or at least it would be as simple as this if we had lifted a monoidal structure on $\mathbf{World}$ to $\pworld$ via the day convolution. Because our operation $w *_w w'$ on worlds is partial, we actually construct a promonoidal structure on $\mathbf{World}$ which we turn into $\otimes$ via the day convolution. Something something go learn more category theory to understand this TODO etc... }
 We can now turn back to the denotation of the term $(x : A ; y : B) \fatsemi z : C \vdash x : A$.
 From
 \[ 
@@ -637,7 +599,7 @@ The interpretation of computation terms
 \begin{figure}[!ht]
     \centering
     \begin{tikzcd}
-    \worlds \arrow[rr, "Free", bend left] &  & \mathbf{TAlg} \arrow[ll, "Forget"', bend left]
+    \pworld \arrow[rr, "Free", bend left] &  & \mathbf{TAlg} \arrow[ll, "Forget"', bend left]
     \end{tikzcd}
 \end{figure}
 \begin{align*}
