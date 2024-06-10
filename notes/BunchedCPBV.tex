@@ -355,7 +355,8 @@ us to temporarily avoid two separate issues.
 
 
  Here we define the category $\world$\footnote{Similar categories: $HeapV$ \cite{SIMPSON-Independence}, 
- $IFam_X$ \cite{sterlingFreeTheoremsUnivalent}, polymorphic algebraic theories \cite{fioreMultiversalPolymorphicAlgebraic2013}}
+ $IFam_X$ \cite{sterlingFreeTheoremsUnivalent}, polymorphic algebraic theories \cite{fioreMultiversalPolymorphicAlgebraic2013},
+ \cite{sterlingSyntaxSemanticsAbstract2016}}
  \footnote{Formalized 
  \href{https://github.com/bond15/Bunched-CBPV/blob/68f8b4d006edc9df1d830d7f9cc63822ec77a379/src/Data/Worlds.agda#L33}{here} 
  as $\world := (Inc \downarrow \textrm{SynTy})^{op}$, where $Inc$ is the inclusion functor from the category of fininte sets 
@@ -435,7 +436,7 @@ These definitions are standard in the literature on bunched implication with the
 exception that our \textit{resources} are finite maps specifying typing of allocated
 case symbols. The bicartesian stucture on $\pworld$ along with 
 the monoidal structure ($\otimes$) and its right adjoint ($\sep$) bundled together 
-gives us the structure of a bicartesian doubly closed category or BiDCC.
+gives us the structure of a bicartesian doubly closed category or BiDCC. 
 
 \subsubsection{Affine BiDCC}
 The concrete model that we are working with has the property 
@@ -450,6 +451,27 @@ This property validates weakening for $\fatsemi$. Note that:
 
 $\lambda()$ is terminal in $\world$ and the cardinality of $|\world[\_\;,\lambda()]| \;= 1$.
 \\
+\subsubsection{Concrete Separating Connectives}
+It may be possible for us to have an alternative interpretation of the separating product if we work in a 
+full subcategory of $\pworld$. O'Hearn has affine models\cite{ohearnResourceInterpretationsBunched1999}
+\cite{ohearn_bunched_2003} for his $\alpha\lambda\calculus$ \footnote{And an extension with commands, 
+memory cells, and assignment called he calls SCI+ which is based on Reynold's Syntactic Control of Interference} 
+using a presheaf category on $\mathbf{FinSet}_{\textrm{mono}}$. He shows that(section 4 , \cite{ohearnModelSyntacticControl1993}}) 
+the full subcategory of $\mathbf{Set}^{\mathbf{FinSet}_{\textrm{mono}}^{op}}$ which consists of pullback preserving 
+functors lets you ask for the \textit{smallest} world that any $a \in A(X)$ comes form, aka $support(a)$(Section 9.2,
+ \cite{ohearn_bunched_2003}). With this notion of support, you can define non-interference as:
+\[ 
+    a \# b \iff (support(a) \cap support(b) = \emptyset)
+\]
+With non-interference, $A * B$ can be directly interpreted as:
+\[ 
+    (A * B) X = \{ (a , b) \in A(X) \times B(X) | a \# b\}\\
+    (A * B) f (a , b) = (A(f)(a), B(f)(b))
+\]
+It should be noted that the full subcategory mentioned above is equivalent to the Shanuel topos (Remark 6.9 \cite{Pitts_2013}).
+It seems this would extend to our \textit{multisorted} scenario\footnote{The Schanuel topos models classical HOL, is this problematic?} \cite{sterlingSyntaxSemanticsAbstract2016}
+\cite{gabbayNewApproachAbstract2002}. 
+
 \subsection{Allocation Monad}
 
 \begin{comment}
@@ -460,6 +482,10 @@ classical HOL rather than intuitionistic HOL (because it is a boolean topos? see
 \end{comment}
 
 \subsection{Interpreting Types}
+We will take $\pworld$ to be the value category in our model. 
+
+\\
+
 With all the categorical structure in place, we now give an interpretation of syntax. We first give an interpretation to syntactic types $SynTy$ via $\llbracket\_\rrbracket_{el} : SynTy \rightarrow \pworld$. We recall that the interpretation of these types is not dependent on what cases have been allocated. $\mathbf{1}$ is the terminal presheaf in $\pworld$ and $+,\times$ come from the bicartesian structure of $\pworld$.
 \begin{align*}
     \llbracket Unit \rrbracket_{el} &= \mathbf{1}\\
