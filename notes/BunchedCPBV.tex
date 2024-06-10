@@ -469,11 +469,19 @@ With non-interference, $A * B$ can be directly interpreted as:
     (A * B) f (a , b) = (A(f)(a), B(f)(b))
 \]
 It should be noted that the full subcategory mentioned above is equivalent to the Shanuel topos (Remark 6.9 \cite{Pitts_2013}).
-It seems this would extend to our \textit{multisorted} scenario\footnote{The Schanuel topos models classical HOL, is this problematic?} \cite{sterlingSyntaxSemanticsAbstract2016}
-\cite{gabbayNewApproachAbstract2002}. 
+It seems this would extend to our \textit{multisorted} scenario\footnote{The Schanuel topos models classical HOL, is this problematic?} 
+\cite{sterlingSyntaxSemanticsAbstract2016}\cite{gabbayNewApproachAbstract2002}. 
 
 \subsection{Allocation Monad}
+To model allocation of case symbols, we can use a modified version of the indexed state monad \cite{plotkinNotionsComputationDetermine2001}
+\cite{CBPV-Book}. 
 
+\subsubsection{Limitations}
+There are plenty of limitations with our current approach to modeling the dynamic type. Leveraging the analogy with state
+\footnote{Using Jon's breakdown \cite{sterlingFreeTheoremsUnivalent}}, our model supports \textit{dynamic} allocation of cases but only 
+for \textit{ground} types and allocation is \textit{globally} observable. We can adapt Sterling's model\cite{sterling_denotational_2023}
+to store semantic types instead of syntactic types. Kammar has a candidate for local store\cite{kammarMonadFullGround2017}. 
+It is unclear to me if local store with rich semantic types exists yet.
 
 \subsection{Interpreting Types}
 We will take $\pworld$ to be the value category in our model. 
