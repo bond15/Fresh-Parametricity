@@ -322,7 +322,7 @@ The following are from Ian Stark's Categorial Models for Local Names \cite{stark
 \section{Semantics}
 \subsection{Worlds}
 Normally, the value types in a CBPV would be interpreted as Sets. However, in our case this is insufficient as 
-the interpretation of the extensible sum type, Osum, is dependent on what Cases have been "allocated" via 
+the interpretation of the extensible sum type, OSum, is dependent on what Cases have been "allocated" via 
 newcase. Thus we interpret value types in a presheaf category on a category of worlds where objects are a map 
 from a finite set to syntactic types. Let SynTy be a set of syntactic types that can be used in the OSum Case store.
 
@@ -493,7 +493,7 @@ Given a functor $F : C \rightarrow D$ between two categories, it induces a funct
 We instantiate this construction twice
 \footnote{code \href{https://github.com/bond15/Bunched-CBPV/blob/899a80968c055f086069b409b1f85ffb5a9d9aa5/src/Models/FuturePast.agda#L35}{here}}
 , using the inclusion functor from the discrete category $Inc : \lvert\world\rvert \rightarrow \world$ 
-and its opposite $Inc^{op}$. This yeilds a monad on our value category, contravariant presheaves on $\world$, by composing the top maps with
+and its opposite $Inc^{op}$. This yields a monad on our value category, contravariant presheaves on $\world$, by composing the top maps with
 the bottom maps\footnote{The usual presentation of the indexed state monad has covariant presheaves for the value category. ours is flipped 
 to accomodate the definition of $\world$}. 
 
@@ -524,111 +524,103 @@ to store semantic types instead of syntactic types. Kammar has a candidate monad
 It is unclear to me if local store with rich semantic types exists yet.
 
 \subsection{Interpreting Types}
-We will take $\pworld$ to be the value category in our model. 
-
-\\
-
-With all the categorical structure in place, we now give an interpretation of syntax. We first give an interpretation to syntactic types $SynTy$ via $\llbracket\_\rrbracket_{el} : SynTy \rightarrow \pworld$. We recall that the interpretation of these types is not dependent on what cases have been allocated. $\mathbf{1}$ is the terminal presheaf in $\pworld$ and $+,\times$ come from the bicartesian structure of $\pworld$.
+Taking contravariant presheaves on $\world$ as our value category and covariant presheaves on $\world$ as our computation category,
+we can give a denotation of the syntax. Interpretation of syntactic types $\llbracket\_\rrbracket_{el} : \textrm{SynTy} \rightarrow \pworld$ 
+is not dependent on what cases have been allocated. $\mathbf{1}$ is the terminal presheaf in $\pworld$ and $+,\times$ come from the 
+bicartesian structure of $\pworld$.
 \begin{align*}
     \llbracket Unit \rrbracket_{el} &= \mathbf{1}\\
     \llbracket Bool \rrbracket_{el} &= \mathbf{1}  + \mathbf{1}\\
     \llbracket A \times B \rrbracket_{el} &= \llbracket A \rrbracket_{el} \times \llbracket B \rrbracket_{el} \\
 \end{align*}
-Next, we interpret the remaining value types in $\pworld$. The separating product is interpreted as the monoidal product from the Day convolution and $| \llbracket B \rrbracket_c |$ is the forgetful functor which returns the carrier of the algebra $\llbracket B \rrbracket_c$. The main definitions of interest are the interpretation of $OSum$ and $Case$. $OSum$ is an extensible sum type where the current world determines the number and type of cases in the extensible sum. $Case \;A$ is interpreted to be the set of allocated case symbols for type $A$ in the current world. Note that syntactic type equality is used in the set comprehension. This means that $\sigma : Case (A \times (B \times C))$ and $\sigma' : Case((A \times B) \times C)$ are distinct elements of two distinct sets. It may be nice to have a more flexible definition $\{ \sigma | \sigma \in dom(\rho) \land \llbracket \rho(\sigma) \rrbracket_{el} \cong \llbracket A \rrbracket_{el}\}$. We would have to be more careful when constructing and destructing elements of $OSum$. Consider $\sigma : Case \;A$ and $\injj{\sigma}{(*,a)}: OSum$. Should this be allowed with $\llbracket A \rrbracket \cong \llbracket Unit \times A \rrbracket$?
+Next, we interpret the remaining value types in $\pworld$. The main definitions of interest are the interpretation of OSum and Case. 
+OSum is an extensible sum type where the current world determines the number and type of cases in the extensible sum. 
+Case $A$ is interpreted to be the set of allocated case symbols for type $A$ in the current world. Note that syntactic type equality
+\footnote{Although, I currently use the 
+\href{https://github.com/bond15/Bunched-CBPV/blob/1538ee3b3e1da806ec44bf635b35a5284ebb4924/src/Models/FuturePast.agda#L201}{usual path type} 
+in the Agda development. We might want Sterling's univalent reference types \cite{sterlingFreeTheoremsUnivalent}} is used in the set comprehension. 
 
+\begin{comment}
+    
+
+This means that $\sigma : \testrm{Case} (A \times (B \times C))$ and $\sigma' : \textrm{Case}((A \times B) \times C)$ are distinct elements 
+of two distinct sets. 
+It may be nice to have a more flexible definition 
+$\{ \sigma | \sigma \in dom(\rho) \land \llbracket \rho(\sigma) \rrbracket_{el} \cong \llbracket A \rrbracket_{el}\}$. 
+We would have to be more careful when constructing and destructing elements of $OSum$. 
+Consider $\sigma : Case \;A$ and $\injj{\sigma}{(*,a)}: OSum$. 
+Should this be allowed with $\llbracket A \rrbracket \cong \llbracket Unit \times A \rrbracket$?
+\end{comment}
 
 \begin{align*}
     \llbracket Unit \rrbracket_v &= \llbracket Unit \rrbracket_{el}\\
     \llbracket Bool \rrbracket_v &= \llbracket Bool \rrbracket_{el}\\
     \llbracket A \times B \rrbracket_v &= \llbracket A \times B \rrbracket_{el}\\
-    \llbracket OSum \rrbracket_v (\rho)&= \sum_{\sigma \in dom(\rho)} \llbracket \rho(\sigma) \rrbracket_{el}(\rho)\\
-    \llbracket Case \; A \rrbracket_v(\rho) &= \{ \sigma | \sigma \in dom(\rho) \land \rho(\sigma)= A \} \\
+    \llbracket OSum \rrbracket_v (w)&= \sum_{\sigma \in dom(w)} \llbracket w(\sigma) \rrbracket_{el}(w)\\
+    \llbracket Case \; A \rrbracket_v(w) &= \{ \sigma | \sigma \in dom(w) \land w(\sigma)= A \} \\
     \llbracket A * B \rrbracket_v &= \llbracket A \rrbracket_v \otimes \llbracket B \rrbracket_v \\
-    \llbracket U  \underline{B} \rrbracket_v &= \;| \llbracket B \rrbracket_c |
+    \llbracket U  \underline{B} \rrbracket_v &= \; U \llbracket B \rrbracket_c 
 \end{align*}
-Lastly, we interpret the computation types as their respective algebras in $\mathbf{TAlg}$. 
+Lastly, we interpret the computation types
+\footnote{The denotation for the regular function type is somewhat surprising. 
+See section 7.1 of Levy's thesis (or 6.7.3 of the CBPV book). Levy's model for cell generation has \\
+$\llbracket A \rightarrow B \rrbracket_c(w)= \llbracket A \rrbracket(w) \rightarrow\llbracket B \rrbracket(w)$.
+From O'Hearn's affine $\alpha\lambda\calculus$, we can expect \\
+$\llbracket A \rightarrow B \rrbracket(w)= Hom_{Set^{\world}}[ \llbracket A \rrbracket(w \otimes_w \_) ,
+\rightarrow\llbracket B \rrbracket(w \otimes_w \_)]$}
+\footnote{need to work on $\sep$}
+.
 \begin{align*}
-    \llbracket A \rightarrow B \rrbracket_c &= expAlg\llbracket A \rrbracket_v \llbracket B \rrbracket_c\\
-    \llbracket A \sep B \rrbracket_c &= sepAlg\llbracket A \rrbracket_v\llbracket B \rrbracket_c\\
-    \llbracket F A \rrbracket_c &= freeAlg\llbracket A \rrbracket_v\\
+    \llbracket A \rightarrow B \rrbracket_c &= \blue{\llbracket A \rrbracket_v \rightarrow\llbracket B \rrbracket_v}?\\
+    \llbracket A \sep B \rrbracket_c &= \red{\llbracket A \rrbracket_v \sep \llbracket B \rrbracket_v?}\\
+    \llbracket F A \rrbracket_c &= F\llbracket A \rrbracket_v\\
 \end{align*}
 \subsection{Interpreting Contexts}
-In \textit{regular} type theory, contexts have the structure of a list and are interpreted as an n-ary product in the category used to interpret types. In the bunched type theory we are working with here, there are two connectives for constructing contexts (";" and "$\fatsemi$") and the structure of contexts are "tree-like". We use $;$ to denote the usual context construction operation that is interpreted as a cartesian product and $\fatsemi$ to denote the new context construction operation that is interpreted as the tensor product.
+In \textit{regular} type theory, contexts have the structure of a list and are interpreted as an n-ary product in the category used 
+to interpret types. In the bunched type theory we are working with here, there are two connectives for constructing contexts 
+(";" and "$\fatsemi$") and the structure of contexts are \textit{tree-like}. We use $;$ to denote the usual context construction operation 
+that is interpreted as a cartesian product and $\fatsemi$ to denote the new context construction operation that is interpreted as the 
+tensor product.
 
 \begin{align*}
     \llbracket x : A \rrbracket_{ctx} &= \llbracket A \rrbracket_v \\
-    \llbracket \phi \rrbracket_{ctx} &= \mathbf{1} \\
+    \llbracket \emptyset \rrbracket_{ctx} &= \mathbf{1} \\
     \llbracket \Gamma \;; \Gamma \rrbracket_{ctx} &=  \llbracket \Gamma \rrbracket_{ctx} \times \llbracket \Gamma \rrbracket_{ctx}\\
-    \llbracket \varphi \rrbracket_{ctx} &= I \\
     \llbracket \Gamma \;\fatsemi \Gamma \rrbracket_{ctx} &=  \llbracket \Gamma \rrbracket_{ctx} \otimes \llbracket \Gamma \rrbracket_{ctx} \\
 \end{align*}
 
-The cartesian fragment of the context supports weakening and contraction. The monoidal fragment supports weakening\footnote{consequence of $\mathbf{1} \cong I$ in our model}.
+The cartesian fragment of the context supports weakening and contraction. The monoidal fragment supports weakening
+\footnote{consequence of $\mathbf{1} \cong I$ in our model}.
 
 
 \subsection{Interpreting Terms}
-Value terms $\Gamma \vdash M : A$ are interpreted as morphisms $\llbracket \Gamma \rrbracket_{ctx} \xrightarrow{M} \llbracket A \rrbracket_{v}$ in $\pworld$ which are natural transformations from $\mathbf{World^{op}}$ to $\mathbf{Set}$. So for any term $\Gamma \vdash M : A$, we need to provide a family of maps $\forall w ,\; \alpha_w : \llbracket \Gamma \rrbracket(w) \rightarrow \llbracket A \rrbracket(w)$ such that given any morphism $f : w \rightarrow w'$ in $\mathbf{World}$ we have:
+Value terms $\Gamma \vdash M : A$ are interpreted as morphisms 
+$\llbracket \Gamma \rrbracket_{ctx} \xrightarrow{M} \llbracket A \rrbracket_{v}$ in $\pworld$ which are natural transformations 
+from $\mathbf{World^{op}}$ to $\mathbf{Set}$. So for any term $\Gamma \vdash M : A$, we need to provide a family of maps 
+$\forall w ,\; \alpha_w : \llbracket \Gamma \rrbracket(w) \rightarrow \llbracket A \rrbracket(w)$ such that given any morphism 
+$f : w \rightarrow w'$ in $\mathbf{World^{op}}$ we have:
 \begin{figure}[!ht]
     \centering
     \begin{tikzcd}
-    \llbracket \Gamma \rrbracket(w) \arrow[dd , "\alpha_w"] &  & \llbracket \Gamma \rrbracket(w') \arrow[dd, "\alpha_{w'}"] \arrow[ll, "\llbracket \Gamma \rrbracket(f)"] \\
-                       &  &                                \\
-    \llbracket A \rrbracket(w)                &  & \llbracket A \rrbracket(w') \arrow[ll,"\llbracket A \rrbracket(f)"]               
-    \end{tikzcd}
+        \llbracket \Gamma \rrbracket(w) 
+        \arrow[dd, "\alpha_w"] 
+        \arrow[rr, "\llbracket \Gamma \rrbracket(f)"'] &  & 
+        \llbracket \Gamma \rrbracket(w') 
+        \arrow[dd, "\alpha_{w'}"] \\ &  & \\
+        \llbracket A \rrbracket(w) 
+        \arrow[rr, "\llbracket A \rrbracket(f)"'] &  & 
+        \llbracket A \rrbracket(w')                               
+        \end{tikzcd}
 
 \end{figure}\\
-Here we define the terms as natural transformations by giving the components. \red{check: do we get naturality via parametric polymorphism in this setting?} $w$ is the current world and $\gamma : \llbracket \Gamma \rrbracket(w)$. The base terms are straightforward. 
+Here we define the terms as natural transformations by giving the components. $w$ is the current world and $\gamma : \llbracket \Gamma \rrbracket(w)$. 
 \begin{align*}
     \llbracket  \ttt \rrbracket_{vtm}(w, \gamma) &= *\\
     \llbracket  \true \rrbracket_{vtm}(w,\gamma) &= inl \;*\\
     \llbracket  \false \rrbracket_{vtm}(w,\gamma) &= inr \;*\\
 \end{align*}
 
-\begin{comment}
-    
-The denotation of variables is not as simple as composing projection maps since we now have two context constructors with different interpretations. Let's consider the denotation of this term $(x : A ; y : B) \fatsemi z : C \vdash x : A$. The "type" of this morphism is $(\den{A} \times \den{B}) \otimes \den{C} \rightarrow \den{A}$. To understand how to construct this morphism, we need to understand how to "use" the data in the tensor product. Recall the tensor wand adjunction:
-\[ 
-    Hom[A \otimes B , C] \cong Hom[A , B \sep C]
-\]
-For a particular natural transformation $N \in Hom[A , B \sep C]$, we know it's components are of the form
-\[
-    \alpha_x : A(X) \rightarrow (B \sep C)(X)
-\]
-We also know 
-\[
-    (B \sep C)(X) \cong Hom[B , C(X * \_)]
-\]
-with the later having components of the form
-\[
-    \alpha_y : B(Y) \rightarrow C(X * Y)
-\]
-Put together, we get that $Hom[A \otimes B , C]$ is in bijective correspondence with families of functions 
-\[
-    A(X) \times B(Y) \rightarrow C( X * Y)
-\]
-natural in $X$ and $Y$\cite{pym_semantics_2002}(plus a side condition that $X$ and $Y$ are disjoint). \footnote{Or at least it would be as simple as this if we had lifted a monoidal structure on $\mathbf{World}$ to $\pworld$ via the day convolution. Because our operation $w *_w w'$ on worlds is partial, we actually construct a promonoidal structure on $\mathbf{World}$ which we turn into $\otimes$ via the day convolution. Something something go learn more category theory to understand this TODO etc... }
-We can now turn back to the denotation of the term $(x : A ; y : B) \fatsemi z : C \vdash x : A$.
-From
-\[ 
-    (\den{A} \times \den{B}) \otimes \den{C} \rightarrow \den{A}
-\]
-we use the correspondence to get
-\[
-    (\den{A} \times \den{B})(X) \times \den{C}(Y) \rightarrow \den{A}(X * Y)
-\]
-natural in $X,Y$ and simplify to 
-\[
-    (\den{A}(X) \times \den{B}(X)) \times \den{C}(Y) \rightarrow \den{A}(X * Y)
-\]
-which we can construct by projecting out $x:A$ from the context as we normally would, yielding $\den{A}(X)$, and the use the map $\pi_X^* : X * Y \rightarrow X$ in $\mathbf{World}$ to "project to the correct world".
-\begin{figure}[!ht]
-    \centering
-    \begin{tikzcd}
-    (\den{A}(X) \times \den{B}(X)) \times \den{C}(Y) \arrow[d, "\pi_1 \circ \pi_1"] \arrow[rr] &  & \den{A}(X * Y) \\
-    \den{A}(X) \arrow[rru, "\den{A}(\pi_X^*)"']            &  &           
-    \end{tikzcd}
-\end{figure}
-\end{comment}
+
 
 \blue{Deleted whole page, becase our monoidal product is affine, we have projections} \cite{JACOBS199473}(Definition 2.1.ii) We can use this process (call it $lookup$) to construct the proper denotation for variables.
 \begin{align*}
