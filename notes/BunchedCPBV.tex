@@ -562,17 +562,32 @@ Should this be allowed with $\llbracket A \rrbracket \cong \llbracket Unit \time
     \llbracket U  \underline{B} \rrbracket_v &= \; U \llbracket B \rrbracket_c 
 \end{align*}
 Lastly, we interpret the computation types
-\footnote{The denotation for the regular function type is somewhat surprising. 
-See section 7.1 of Levy's thesis (or 6.7.3 of the CBPV book). Levy's model for cell generation has \\
-$\llbracket A \rightarrow B \rrbracket_c(w)= \llbracket A \rrbracket(w) \rightarrow\llbracket B \rrbracket(w)$.
-From O'Hearn's affine $\alpha\lambda\calculus$, we can expect \\
-$\llbracket A \rightarrow B \rrbracket(w)= Hom_{Set^{\world}}[ \llbracket A \rrbracket(w \otimes_w \_) ,
-\rightarrow\llbracket B \rrbracket(w \otimes_w \_)]$}
-\footnote{need to work on $\sep$}
-.
+
+
+\blue{
+I just noticed this (6-11), I naively thought the function type would map to an exponential but no.
+The denotation for the regular function type is somewhat surprising. 
+See section 7.1 of Levy's thesis (or 6.7.3 of the CBPV book). Levy's model for cell generation has:
+\[
+    \den{A \rightarrow B}_c(w)= \mathbf{Set} [ \den{A}_v(w) , \den{B}_c(w) ]
+\]
+That is, the denotation of the computational function type is given pointwise where $A$ is a covariant presheaf, and $B$ is a
+contravariant presheaf and the result should be a contravariant presheaf. TODO our situation is oped, check this. From O'Hearn's affine 
+$\alpha\lambda\calculus$, we would expect
+\[
+    \den{A \rightarrow B}(w)= \mathbf{Set^{\world}}[ \den{A}_v(w \otimes_w \_) , \den{B}_c(w \otimes_w \_)]
+\]
+however, the situation is now more complicated because those monoidal operations exist in two different categories!
+(need to check this!)
+For the separating function, we should expect
+\[
+    \den{A \rightarrow B}(w)= \mathbf{Set^{\world}}[ \den{A}_v , \den{B}_c(w \otimes_w \_)]
+\]
+}
+
 \begin{align*}
-    \llbracket A \rightarrow B \rrbracket_c &= \blue{\llbracket A \rrbracket_v \rightarrow\llbracket B \rrbracket_v}?\\
-    \llbracket A \sep B \rrbracket_c &= \red{\llbracket A \rrbracket_v \sep \llbracket B \rrbracket_v?}\\
+    \llbracket A \rightarrow B \rrbracket_c &= \\
+    \llbracket A \sep B \rrbracket_c &= \\
     \llbracket F A \rrbracket_c &= F\llbracket A \rrbracket_v\\
 \end{align*}
 \subsection{Interpreting Contexts}
@@ -649,13 +664,14 @@ The denotation of product and separating product are both akin to contructing bi
     \llbracket  (V_1 * V_2)\rrbracket_{vtm} &= \den{V_1} * \den{V_2}\\
 \end{align*}
 TODO projection maps\\
-And finally, the interpretation of $\thunk{M}$ is given by the forgetful functor.
+And finally, the interpretation of $\thunk{M}$.
 \begin{align*}
-    \llbracket  \thunk{M}\rrbracket_{vtm} &= U(\den{M}_{ctm})\\
+    \llbracket  \thunk{M}\rrbracket_{vtm} &= \\
 \end{align*}
 
 \subsubsection{Computation Terms}
-
+\red{the computation judgments in Levy's model are not required to satifsy naturality..? It seems the problem is the store type
+.. which we don't have (section 6.7.2 paragraph 2 \cite{CBPV-Book})}
 \begin{align*}
     \llbracket \err \rrbracket_{ctm} &= \red{\textrm{add error to alloc monad}}\\
     \llbracket \force{V} \rrbracket_{ctm} &= \\
@@ -663,8 +679,8 @@ And finally, the interpretation of $\thunk{M}$ is given by the forgetful functor
     \llbracket \bind{x}{M}{N} \rrbracket_{ctm} &= \\
     \llbracket M \; N \rrbracket_{ctm} &= \\
     \llbracket M \at N \rrbracket_{ctm} &= \\
-    \llbracket \lambda x : A . M \rrbracket_{ctm}(e : \den{\Gamma}_{v}) &=  \\
-    \llbracket \alpha x : A . M \rrbracket_{ctm}(e : \den{\Gamma}_{v}) &= \\
+    \llbracket \lambda x : A . M \rrbracket_{ctm} &=  \\
+    \llbracket \alpha x : A . M \rrbracket_{ctm} &= \\
     \llbracket \newcase{A}{\sigma}{M} \rrbracket_{ctm} &= \\
     \llbracket \match{V_1}{V_2}{x}{M}{N}\rrbracket_{ctm} &= \\
     \llbracket \ite{V}{M}{N} \rrbracket_{ctm} &= \\
