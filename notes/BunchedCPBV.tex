@@ -474,13 +474,53 @@ It seems this would extend to our \textit{multisorted} scenario\footnote{The Sch
 
 \subsection{Allocation Monad}
 To model allocation of case symbols, we can use a modified version of the indexed state monad \cite{plotkinNotionsComputationDetermine2001}
-\cite{CBPV-Book}. 
+\cite{CBPV-Book}. This monad is a special case of a general construction\footnote{https://ncatlab.org/nlab/show/geometric+morphism#BetweenPresheafToposes}.
+Given a functor $F : C \rightarrow D$ between two categories, it induces a functor on presheaf categories $F^* : [D^{op} , Set] 
+\rightarrow [C^{op} , Set]$ via precomposition of $F$ which has both a left and right adjoint given by Kan extensions.
+
+\begin{figure}[!ht]
+    \centering
+    \begin{tikzcd}
+        {[D^{op},Set]} \arrow[rr, "F^*" description] &  & {[C^{op},Set]} 
+        \arrow[ll, "\Sigma" description, bend right, shift right=3] 
+        \arrow[ll, "\forall" description, bend left, shift left=3] 
+        \arrow[ll, "\dashv" rotate=-90, phantom, bend left, shift right] 
+        \arrow[ll, "\dashv" rotate=-90, phantom, bend right, shift left]
+    \end{tikzcd}
+    \caption{essential geometric morphism between presheaf topoi}
+\end{figure}
+
+We instantiate this construction twice
+\footnote{code \href{https://github.com/bond15/Bunched-CBPV/blob/899a80968c055f086069b409b1f85ffb5a9d9aa5/src/Models/FuturePast.agda#L35}{here}}
+, using the inclusion functor from the discrete category $Inc : \lvert\world\rvert \rightarrow \world$ 
+and its opposite $Inc^{op}$. This yeilds a monad on our value category, contravariant presheaves on $\world$, by composing the top maps with
+the bottom maps\footnote{The usual presentation of the indexed state monad has covariant presheaves for the value category. ours is flipped 
+to accomodate the definition of $\world$}. 
+
+\begin{figure}[!ht]
+    \centering
+    \begin{tikzcd}
+        {[\world^{op},Set]} 
+        \arrow[rr, "Inc^{*op}" description, bend left] &  & {[\lvert\world\rvert,Set]} 
+        \arrow[ll, "\forall", bend left, shift left] 
+        \arrow[ll, "\dashv" rotate=-90, phantom] 
+        \arrow[rr, "\Sigma" description, bend left] &  & {[\world,Set]} 
+        \arrow[ll, "Inc^*", bend left] 
+        \arrow[ll, "\dashv" rotate=-90, phantom]
+    \end{tikzcd}
+    \caption{our allocation monad}
+\end{figure}
+The concrete interpretation for this monad's action on some object $X$ at some world $w_1$ is: 
+forall future worlds $w_2$ reachable by $w_1$, there exists some yet future world $w_3$ reachable from $w_2$ with a value $X(w_3)$.
+\[
+    T(X)(w_1) = \forall_{w_2}\forall_{w_1 \rightarrow w_2}\Sigma_{w_3}\Sigma_{w_2 \rightarrow w_3}X(w_3)
+\]
 
 \subsubsection{Limitations}
 There are plenty of limitations with our current approach to modeling the dynamic type. Leveraging the analogy with state
 \footnote{Using Jon's breakdown \cite{sterlingFreeTheoremsUnivalent}}, our model supports \textit{dynamic} allocation of cases but only 
 for \textit{ground} types and allocation is \textit{globally} observable. We can adapt Sterling's model\cite{sterling_denotational_2023}
-to store semantic types instead of syntactic types. Kammar has a candidate for local store\cite{kammarMonadFullGround2017}. 
+to store semantic types instead of syntactic types. Kammar has a candidate monad for local store\cite{kammarMonadFullGround2017}. 
 It is unclear to me if local store with rich semantic types exists yet.
 
 \subsection{Interpreting Types}
