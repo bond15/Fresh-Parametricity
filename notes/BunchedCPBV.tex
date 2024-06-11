@@ -102,7 +102,7 @@ $\Theta$ : stoup ::= $\cdot$
 | $\bullet \; \colon B$
 ;;
 \end{bnf}
-\red{stoup forms?}
+\red{stoup forms?} could add computation products
 \begin{comment}
     | $\lett{x}{y}{V}{M}$
 | $\lets{x}{y}{V}{M}$
@@ -613,69 +613,60 @@ $f : w \rightarrow w'$ in $\mathbf{World^{op}}$ we have:
         \end{tikzcd}
 
 \end{figure}\\
-Here we define the terms as natural transformations by giving the components. $w$ is the current world and $\gamma : \llbracket \Gamma \rrbracket(w)$. 
+\subsubsection{Value Terms}
+Here we define the terms as natural transformations by giving the components. $w$ is the current world and 
+$\gamma : \llbracket \Gamma \rrbracket(w)$. 
 \begin{align*}
     \llbracket  \ttt \rrbracket_{vtm}(w, \gamma) &= *\\
     \llbracket  \true \rrbracket_{vtm}(w,\gamma) &= inl \;*\\
     \llbracket  \false \rrbracket_{vtm}(w,\gamma) &= inr \;*\\
 \end{align*}
 
+Extracting a variable from the context is a matter of using the correct cartesian and monoidal projections
+\footnote{monoidal projections given by a bilinear map $! \otimes id$ composed with the monoidal identity laws 
+\cite{JACOBS199473}(Definition 2.1.ii)}. We can use this process (call it $lookup$) to construct the proper 
+denotation for variables.
 
-
-\blue{Deleted whole page, becase our monoidal product is affine, we have projections} \cite{JACOBS199473}(Definition 2.1.ii) We can use this process (call it $lookup$) to construct the proper denotation for variables.
 \begin{align*}
     \llbracket  x \rrbracket_{vtm} &= lookup(x) \\
 \end{align*}
-\\
-For case symbols, we'd like a natural transformation $\den{\sigma} : \den{\Gamma} \rightarrow \den{Case \;A}$ where components are defined as so:\\
 
-\begin{figure}[!ht]
-    \centering
-    \begin{tikzcd}
-    \den{\Gamma}(w) \arrow[rr] \arrow[d, "!"] &  & \{ \sigma | w(\sigma) = A \} \\
-    \mathbf{1}(w) \arrow[rru, "select_{\sigma}"']       &  &    
-    \end{tikzcd}
-\end{figure}
-which is definable as long as long as $\sigma \mapsto A \in w$. \red{Consider the empty map $\lambda() \in Obj(\mathbf{Worlds})$,  $\;\alpha_{\lambda()} : \den{\Gamma}(\lambda()) \rightarrow \emptyset$. This seems problematic..}
+For injection of values into the open sum type, we can assume we already have 
+$\den{\Gamma} \xrightarrow{\sigma} \den{\textrm{Case} \; A}$ and $\den{\Gamma} \xrightarrow{V} \den{A}$.
+ We then want to construct $\den{\injj{\sigma}{V}} : \den{\Gamma} \rightarrow \den{\textrm{OSum}}$. 
+It suffices to construct $\den{\textrm{Case} A \times A} \rightarrow \den{\textrm{OSum}}$
+\footnote{It is morally $\textrm{transport} \; p \; a$ in the 
+\href{https://github.com/bond15/Bunched-CBPV/blob/a2da10ec10f7bedcce8ded4aea6646b3a184d0b4/src/Models/FuturePast.agda#L264}
+{formalization} }.
+
 \begin{align*}
-    \llbracket  \sigma \rrbracket_{vtm}(w) &= select_{\sigma} \;\circ\; !\\
+    \llbracket  \injj{\sigma}{V}\rrbracket_{vtm}(w, ((x , p : w(x)=A), a)) &= (x , a )\\
 \end{align*}
 
-For injection of values into the open sum type, we can assume we already have $\den{\Gamma} \xrightarrow{\sigma} \den{Case \; A}$ and $\den{\Gamma} \xrightarrow{V} \den{A}$. We then want to construct $\den{\injj{\sigma}{V}} : \den{\Gamma} \rightarrow \den{OSum}$. First, lets consider the partially applied term $\den{\injj \sigma } : \den{A} \rightarrow \den{OSum}$. Consider the subset $\{ \alpha_w | w \;s.t.\; \sigma \mapsto A \in w \}$ of components of $\den{\injj \sigma }$. These components will be of the form $\alpha_w = (inl | inr) \circ inr^*$ which will inject a value of type $\den{A}$ into the open sum type at world $w$. \blue{$\den{\Gamma} \xrightarrow{\sigma, V} \den{Case \; A} \times \den{A} \xrightarrow{\injj \sigma , id} \den{OSum}^{\den{A}} \times \den{A} \xrightarrow{eval} \den{OSum}$}
-\begin{align*}
-    \llbracket  \injj{\sigma}{V}\rrbracket_{vtm} &= \red{?}\\
-\end{align*}
 The denotation of product and separating product are both akin to contructing bilinear maps.
 \begin{align*}
     \llbracket  (V_1, V_2)\rrbracket_{vtm} &= \den{V_1} , \den{V_2}\\
     \llbracket  (V_1 * V_2)\rrbracket_{vtm} &= \den{V_1} * \den{V_2}\\
 \end{align*}
-And finally, the interpretation of $\thunk{M}$ is given by the forgetful functor which projects out the carrier of the algebra $\den{M}_{ctm}$.
+TODO projection maps\\
+And finally, the interpretation of $\thunk{M}$ is given by the forgetful functor.
 \begin{align*}
-    \llbracket  \thunk{M}\rrbracket_{vtm} &= Forget(\den{M}_{ctm})\\
+    \llbracket  \thunk{M}\rrbracket_{vtm} &= U(\den{M}_{ctm})\\
 \end{align*}
 
-The interpretation of computation terms 
-\begin{figure}[!ht]
-    \centering
-    \begin{tikzcd}
-    \pworld \arrow[rr, "Free", bend left] &  & \mathbf{TAlg} \arrow[ll, "Forget"', bend left]
-    \end{tikzcd}
-\end{figure}
+\subsubsection{Computation Terms}
+
 \begin{align*}
-    \llbracket \err \rrbracket_{ctm} &= \\
-    \llbracket \print{V} \rrbracket_{ctm} &= \\
-    \llbracket \force{V} \rrbracket_{ctm} &= \den{V}_{vtm}\\
-    \llbracket \ret{V} \rrbracket_{ctm} &= Free(\den{V}_{vtm})\\
+    \llbracket \err \rrbracket_{ctm} &= \red{\textrm{add error to alloc monad}}\\
+    \llbracket \force{V} \rrbracket_{ctm} &= \\
+    \llbracket \ret{V} \rrbracket_{ctm} &= \\
     \llbracket \bind{x}{M}{N} \rrbracket_{ctm} &= \\
-    \llbracket M \; N \rrbracket_{ctm} &= \langle eval(|\den{M}_{ctm}|)(\den{N}_{vtm}), \; \blue{\theta_{\den{M}_{ctm}}\den{N}_{vtm}}\rangle\\
-    \llbracket M \at N \rrbracket_{ctm} &= \langle eval^*(|\den{M}_{ctm}|)(\den{N}_{vtm}), \; \blue{\theta_{\den{M}_{ctm}}\den{N}_{vtm}}\rangle\\
-    \llbracket \lambda x : A . M \rrbracket_{ctm}(e : \den{\Gamma}_{v}) &= \langle \lambda a : \den{A}_v. |\den{M}_{ctm}(e , a)|,\; \blue{\theta} \rangle \\
-    \llbracket \alpha x : A . M \rrbracket_{ctm}(e : \den{\Gamma}_{v}) &= \langle \alpha a : \den{A}_v. |\den{M}_{ctm}(e * a)|,\; \blue{\theta} \rangle\\
-    \llbracket \newcase{A}{\sigma}{M} \rrbracket_{ctm} &= \red{\textrm{updated world and value environment?}}\\
+    \llbracket M \; N \rrbracket_{ctm} &= \\
+    \llbracket M \at N \rrbracket_{ctm} &= \\
+    \llbracket \lambda x : A . M \rrbracket_{ctm}(e : \den{\Gamma}_{v}) &=  \\
+    \llbracket \alpha x : A . M \rrbracket_{ctm}(e : \den{\Gamma}_{v}) &= \\
+    \llbracket \newcase{A}{\sigma}{M} \rrbracket_{ctm} &= \\
     \llbracket \match{V_1}{V_2}{x}{M}{N}\rrbracket_{ctm} &= \\
-    \llbracket \lett{x}{y}{V}{M}\rrbracket_{ctm} &= \\
-    \llbracket \lets{x}{y}{V}{M}\rrbracket_{ctm} &= \\
     \llbracket \ite{V}{M}{N} \rrbracket_{ctm} &= \\
 \end{align*}
 
