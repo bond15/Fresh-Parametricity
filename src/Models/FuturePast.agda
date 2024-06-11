@@ -228,6 +228,16 @@ module src.Models.FuturePast where
         -- denote terms
         module _ where 
             open import Cubical.HITs.SetCoequalizer.Base
+            
+            -- is this an issue though..?
+            _ : 𝒱 [ Termᵛ , Case b ]
+            _ = natTrans {!   !} {!   !} where 
+                α : N-ob-Type Termᵛ (Case b)
+                α w tt* = {!   !} , {!   !}
+                -- for an arbitrary X --w--> SynTy
+                -- can't choose an x : X for which w(x) ≡ b
+
+            
             conv : 𝒱 [ Case b  ⨂ᴰ Case n , Termᵛ ]
             conv = natTrans {!   !} {!   !} where 
                 α : N-ob-Type (Case b ⨂ᴰ Case n) Termᵛ
@@ -235,21 +245,33 @@ module src.Models.FuturePast where
                 α w (coeq a i) = {!   !}
                 α w (squash x x₁ p q i i₁) = {!   !}
                 
-            injSem : 𝒱 [ (Case b) ×P (tys b) , OSum ]
-            injSem = natTrans α prf where
-            
-                α : N-ob-Type (Case b ×P (tys b)) OSum
-                α w ((x , lift wxisb), y) = x , transport eqty y where
+            -- given 
+            -- m : 𝒱 [ Γ , Case b ]
+            -- p : 𝒱 [ Γ , tys b ]
+            -- construct
+            -- 𝒱 [ Γ , OSum ]
 
-                    eqty : (tys b ⟅ w ⟆) .fst ≡ (tys (w .snd x) ⟅ w ⟆) .fst
-                    eqty = cong fst (cong₂ _⟅_⟆ (cong tys (sym wxisb)) refl) 
+            injSem' : {Γ : ob 𝒱} → 𝒱 [ Γ , Case b ] → 𝒱 [ Γ , tys b ] → 𝒱 [ Γ , OSum ]
+            injSem' {Γ} m p  = ctx ⋆⟨ 𝒱 ⟩ injSem where 
 
-                prf : N-hom-Type (Case b ×P tys b) OSum α
-                prf f = {!   !}
-               -- prf : N-hom-Type (Case b ×P Constant ((W ^op) ^op) (SET ℓ) (Lift Bool , isOfHLevelLift 2 isSetBool)) OSum α
-               -- prf {(((X , Xfin) , tt* ) , w)}
-               --     {(((Y , Yfin) , tt* ) , w')}
-               --     (((f , femb), _) , Δ )  = ? --funExt λ{((x , lift wx≡b) , lift bval) → {!   !} }
+                ctx : 𝒱 [ Γ  , (Case b) ×P (tys b) ]
+                ctx = natTrans (λ w γ → (m ⟦ w ⟧)(γ) , (p ⟦ w ⟧)(γ)) {!   !}
+
+                injSem : 𝒱 [ (Case b) ×P (tys b) , OSum ]
+                injSem = natTrans α prf where
+                
+                    α : N-ob-Type (Case b ×P (tys b)) OSum
+                    α w ((x , lift wxisb), y) = x , transport eqty y where
+
+                        eqty : (tys b ⟅ w ⟆) .fst ≡ (tys (w .snd x) ⟅ w ⟆) .fst
+                        eqty = cong fst (cong₂ _⟅_⟆ (cong tys (sym wxisb)) refl) 
+
+                    prf : N-hom-Type (Case b ×P tys b) OSum α
+                    prf f = {!   !}
+                -- prf : N-hom-Type (Case b ×P Constant ((W ^op) ^op) (SET ℓ) (Lift Bool , isOfHLevelLift 2 isSetBool)) OSum α
+                -- prf {(((X , Xfin) , tt* ) , w)}
+                --     {(((Y , Yfin) , tt* ) , w')}
+                --     (((f , femb), _) , Δ )  = ? --funExt λ{((x , lift wx≡b) , lift bval) → {!   !} }
 
             newcase : (ty : SynTy') → 𝒞 [ Termᶜ , F ⟅ Case ty ⟆ ]
             newcase ty = natTrans α {!   !} where 
