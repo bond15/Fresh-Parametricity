@@ -47,13 +47,13 @@ module src.Models.FuturePast where
         
 
         -- since World is already ^op
-        -- this is a covariant presheaf category
+        -- this is morally a covariant presheaf category
         -- op ^ op ↦ id
         𝒱 : Category (ℓ-suc ℓ) ℓ
         𝒱 = PresheafCategory W ℓ
 
         -- since World is already ^op
-        -- this is a contravariant (normal) presheaf category
+        -- this is morally a contravariant (normal) presheaf category
         -- op ^ op ^ op ↦ op
         𝒞 : Category (ℓ-suc ℓ) ℓ
         𝒞 = PresheafCategory (W ^op) ℓ
@@ -150,7 +150,7 @@ module src.Models.FuturePast where
 
             open NatTrans
             -- in some current world w₁ 
-            -- for any past world w₂ of w₁ 
+            -- for any future world w₂ of w₁ 
             -- with injection p from 
             act : (w₂ : ob W)(p : W [ w₂ , w₁ ])(a : F-ob A w₂ .fst) → ((F ⟅ B ⟆) .F-ob w₁ ).fst
             act w₂ p a = mor .N-ob w₁ (w₂ , p , a )
@@ -165,7 +165,7 @@ module src.Models.FuturePast where
             UnitF = Unit* , {! !}
 
             inlemb : {ℓ : Level}{A B : Type ℓ} → isEmbedding (inl {ℓ}{ℓ}{A}{B})
-            inlemb = {!   !}
+            inlemb = λ w x → record { equiv-proof = λ y → ({!   !} , {!   !}) , (λ y₁ → {!   !}) }
             
             inc : FinSet ℓS → FinSet ℓS
             inc X = ((X .fst ⊎ Unit*) , isFinSet⊎ X UnitF)
@@ -220,10 +220,10 @@ module src.Models.FuturePast where
             ret : {val : ob 𝒱} → 𝒱 [ val , (U ∘F F) ⟅ val ⟆ ]
             ret {val} = natTrans α {! makeNatTransPath ?  !} where 
                 α : N-ob-Type val ((U ∘F F) ⟅ val ⟆)
-                α w Vw = record { fun = λ w2 f → w2 , ((W ^op) .id , val .F-hom f Vw) }
+                α w Vw = record { fun = λ w2 f →  w2 , ((W ^op) .id , val .F-hom f Vw) }
 
                 prf : N-hom-Type val ((U ∘F F) ⟅ val ⟆) α
-                prf f = {!  !}
+                prf f = {! makeNatTransPath ? !}
 
         -- denote terms
         module _ where 
