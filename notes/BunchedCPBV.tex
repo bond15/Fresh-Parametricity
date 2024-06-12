@@ -572,21 +572,22 @@ See section 7.1 of Levy's thesis (or 6.7.3 of the CBPV book). Levy's model for c
     \den{A \rightarrow B}_c(w)= \mathbf{Set} [ \den{A}_v(w) , \den{B}_c(w) ]
 \]
 That is, the denotation of the computational function type is given pointwise where $A$ is a covariant presheaf, and $B$ is a
-contravariant presheaf and the result should be a contravariant presheaf. TODO our situation is oped, check this. From O'Hearn's affine 
-$\alpha\lambda\calculus$, we would expect
+contravariant presheaf and the result should be a contravariant presheaf(stuff is oped in our case). 
+This functor does work in our situation. However, from O'Hearn's affine $\alpha\lambda\calculus$, we would expect this to also work:
 \[
     \den{A \rightarrow B}(w)= \mathbf{Set^{\world}}[ \den{A}_v(w \otimes_w \_) , \den{B}_c(w \otimes_w \_)]
 \]
-however, the situation is now more complicated because those monoidal operations exist in two different categories!
-(need to check this!)
+The situation is now more complicated because those monoidal operations exist in two different categories!
+(need to check this!) Additionally, this doesn't type check since the homset is taking objects from different categories.
 For the separating function, we should expect
 \[
-    \den{A \rightarrow B}(w)= \mathbf{Set^{\world}}[ \den{A}_v , \den{B}_c(w \otimes_w \_)]
+    \den{A \sep B}(w)= \mathbf{Set^{\world}}[ \den{A}_v , \den{B}_c(w \otimes_w \_)]
 \]
 }
 
+
 \begin{align*}
-    \llbracket A \rightarrow B \rrbracket_c &= \\
+    \llbracket A \rightarrow B \rrbracket_c(w) &= \mathbf{Set}[ \den{A}_v(w) , \den{B}_c(w) ]\\
     \llbracket A \sep B \rrbracket_c &= \\
     \llbracket F A \rrbracket_c &= F\llbracket A \rrbracket_v\\
 \end{align*}
@@ -670,8 +671,9 @@ And finally, the interpretation of $\thunk{M}$.
 \end{align*}
 
 \subsubsection{Computation Terms}
-\red{the computation judgments in Levy's model are not required to satifsy naturality..? It seems the problem is the store type
-.. which we don't have (section 6.7.2 paragraph 2 \cite{CBPV-Book})}
+\blue{The computation judgments in Levy's model are not required to satisfy naturality? It seems the problem is the store type
+.. which we don't have (section 6.7.2 paragraph 2 \cite{CBPV-Book}). Their problem is that the store "type" is not covariant or 
+contravariant in world morphisms. It is a functor from the discrete category on worlds.}
 \begin{align*}
     \llbracket \err \rrbracket_{ctm} &= \red{\textrm{add error to alloc monad}}\\
     \llbracket \force{V} \rrbracket_{ctm} &= \\
