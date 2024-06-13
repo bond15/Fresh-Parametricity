@@ -470,7 +470,8 @@ With non-interference, $A * B$ can be directly interpreted as:
 \]
 It should be noted that the full subcategory mentioned above is equivalent to the Shanuel topos (Remark 6.9 \cite{Pitts_2013}).
 It seems this would extend to our \textit{multisorted} scenario\footnote{The Schanuel topos models classical HOL, is this problematic?} 
-\cite{sterlingSyntaxSemanticsAbstract2016}\cite{gabbayNewApproachAbstract2002}. 
+\cite{sterlingSyntaxSemanticsAbstract2016}\cite{gabbayNewApproachAbstract2002}. See Biering's masters thesis 
+\cite{bieringLogicBunchedImplications}(section 4.4) for a note on when the day tensor does have a right adjoint in the subcategory of sheaves.
 
 \subsection{Allocation Monad}
 To model allocation of case symbols, we can use a modified version of the indexed state monad \cite{plotkinNotionsComputationDetermine2001}
@@ -582,6 +583,11 @@ The situation is now more complicated because those monoidal operations exist in
 For the separating function, we should expect
 \[
     \den{A \sep B}(w)= \mathbf{Set^{\world}}[ \den{A}_v , \den{B}_c(w \otimes_w \_)]
+\]
+We'll probably have to use the set based end formula instead to bring another world
+into scope and fix the typing issues. check this
+\[
+    \den{A \sep B}(w)= \int_{w'} \mathbf{Set}[ \den{A}_v(w') , \den{B}_c(w \otimes_w w') ]
 \]
 }
 
