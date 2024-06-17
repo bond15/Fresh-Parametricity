@@ -217,6 +217,26 @@ module src.Models.FuturePast where
             Termᵛ : ob 𝒱
             Termᵛ = Constant _ _ (Unit* , isOfHLevelLift 2 isSetUnit)
 
+            -- judgements
+            value : (Γ A : ob 𝒱) → Set (ℓ-suc ℓS)
+            value Γ A = 𝒱 [ Γ , A ]
+
+            -- not quite a morphism in 𝒞 ..
+            -- the naturality condition is off
+            -- alternatively, could find some way to turn Γ into a computation.. 
+            -- besides F?
+            record computation (Γ : ob 𝒱)(A : ob 𝒞) : Set (ℓ-suc ℓS) where 
+                field 
+                    α : ∀ (w : ob W) → (SET ℓ)[ Γ .F-ob w , A .F-ob w ]
+                   -- nat : ∀ {w w' : ob W} → (f : W [ w , w' ]) → Γ .F-hom f ⋆⟨ SET ℓ ⟩ α w ⋆⟨ SET ℓ ⟩ A .F-hom f ≡ α w' 
+
+            convert : ob 𝒱 → ob 𝒞 
+            convert X = {! X  !}
+                -- record { F-ob = X .F-ob ; F-hom = {! X .F-hom  !} ; F-id = {!   !} ; F-seq = {!   !} }
+
+            ret' : {Γ A : ob 𝒱}→ 𝒱 [ Γ , A ] → 𝒞 [ {!  Γ !} , F ⟅ A ⟆ ]
+            ret' = {!   !}
+            
             ret : {val : ob 𝒱} → 𝒱 [ val , (U ∘F F) ⟅ val ⟆ ]
             ret {val} = natTrans α {! makeNatTransPath ?  !} where 
                 α : N-ob-Type val ((U ∘F F) ⟅ val ⟆)
@@ -300,9 +320,76 @@ module src.Models.FuturePast where
                     lemma : (tys (w .snd σ') ⟅ w ⟆) .fst ≡ (tys ty ⟅ w ⟆) .fst
                     lemma = {!   !}
                        --cong fst (cong₂ _⟅_⟆ (cong tys (snd w σ' ≡⟨ cong₂ _ refl assuming ⟩ snd w σ ≡⟨ wσ≡ty ⟩ ty ∎)) refl)
+
+            -- function type
+            fun : ob 𝒱 → ob 𝒞 → ob 𝒞 
+            fun A B .F-ob w = (SET ℓ)[ A .F-ob w , B .F-ob w ] , (SET ℓ) .isSetHom
+            fun A B .F-hom f g Ay = (B .F-hom f) (g ((A .F-hom f) Ay)) 
+            fun A B .F-id = funExt λ g → {!   !}
+               -- _ : (λ Ay → B .F-hom (id W) (g (A .F-hom (id W) Ay))) ≡ (λ Ay → B .F-hom (id W) (g Ay)) ≡ (λ Ay → g Ay)) ≡ g
+            fun A B .F-seq f g = funExt λ h → funExt λ Az → {!   !}
+
+            -- fun Intro
+            funIntro : {Γ A : ob 𝒱}{B : ob 𝒞} → computation (Γ ×P A) B → computation Γ (fun A B) 
+            funIntro {Γ} {A} {B} record { α = α } = record { α = λ w Γw Aw → α w (Γw , Aw) }
+
+            funElim : {Γ Δ A : ob 𝒱}{B : ob 𝒞} → 
+                computation Γ (fun A B) → 
+                value Δ A → 
+                computation (Γ ×P Δ) B 
+            funElim record { α = α } (natTrans N-ob N-hom) = record { α = λ{ w (Γw , Δw) → α w Γw (N-ob w Δw) }}
+
+            -- need a monoidal product on World^op?
+            _⊗^op_ : {!   !}
+            _⊗^op_ = {!   !}
+            
+            sep : ob 𝒱 → ob 𝒞 → ob 𝒞 
+                -- should be an end 
+            sep A B .F-ob w = (∀ (w' : ob W) → (SET ℓ)[ A .F-ob w' , B .F-ob (_⨂_ .F-ob (w , w')) ]) , isSetΠ  λ _ → (SET ℓ) .isSetHom
+            sep A B .F-hom {w₁}{w₂} w₁→w₂ end w₃ Aw₃ = B .F-hom (_⨂_ .F-hom (w₁→w₂ , W .id)) (end w₃ Aw₃)
+            sep A B .F-id = {!  !}
+            sep A B .F-seq = {!   !}
+
+            sepIntro :  {Γ A : ob 𝒱}{B : ob 𝒞} → computation (Γ ⨂ᴰ A) B → computation Γ (sep A B) 
+            sepIntro record { α = α } = record { α = λ w Γw w' Aw' → α (_⨂_ .F-ob (w , w')) (SetCoequalizer.inc ((w , w') , (((((λ x → x) , {!   !}) , refl) , refl) , Γw) , Aw')) }
+
+            -- morphism in the day convolution is the wrong direction..
+            sepElim : {Γ Δ A : ob 𝒱}{B : ob 𝒞} → 
+                computation Γ (sep A B) → 
+                value Δ A → 
+                computation (Γ ⨂ᴰ Δ) B 
+            sepElim {B = B} record { α = α } (natTrans N-ob N-hom) = 
+                    record { α = λ{ w (SetCoequalizer.inc ((w₂ , w₃) , (w→w₂⊗w₃ , Γw₂) , Δw₃)) → B .F-hom {! fst₁  !} (α w₂ Γw₂ w₃ (N-ob w₃ Δw₃)) 
+                            ; w (coeq a i) → {!   !}
+                            ; w (squash x x₁ p q i i₁) → {!   !} }}
+            
+        module concreteExamples where
+
+            data w1 : Set ℓS where 
+                σ₁ : w1 
+            
+            data w2 : Set ℓS where 
+                σ₁ σ₂ : w2
+                
+            w₁ : ob W 
+            w₁ = ((w1 , {!   !}) , tt*) , λ{ σ₁ → b}
+            
+            w₂ : ob W 
+            w₂ = ((w2 , {!   !}) , tt*) , λ{ σ₁ → b
+                                           ;   σ₂ → b}
+
+            --_ : fst( (sep (Case n) (F .F-ob OSum)) .F-ob w₁)
+           -- _ = λ w' → λ{ (σ₁ , lift (w₁σ₁≡n)) → {!   !}}  -- false
+
+            
+            --_ : 𝒞 [ Termᶜ , sep (Case b) (F . F-ob (tys b)) ]
+            --_ = natTrans (λ w tm → λ w' → λ{(x , wx≡b) → {!   !} , {!   !} , {!   !}}) {!   !}
+
+
+
      
 
 
  
-
+ 
  
