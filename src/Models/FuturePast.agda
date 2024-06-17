@@ -124,8 +124,13 @@ module src.Models.FuturePast where
         open MonoidalStructure SynTy hiding (W)
         _ = {! src.Data.Worlds.MonoidalStructure  !}
         
-        _⨂ᴰ_ : ob 𝒱 → ob 𝒱 → ob 𝒱
-        A ⨂ᴰ B = _⊗ᴰ_ {MC = strmon} A B 
+        -- semicartesian one for the value category
+        open import src.Data.Semicartesian
+        _⨂ᴰᵥ_ : ob 𝒱 → ob 𝒱 → ob 𝒱
+        A ⨂ᴰᵥ B = _⊗ᴰ_ {MC = strmon} A B 
+
+        _⨂ᴰc_ : ob 𝒞 → ob 𝒞 → ob 𝒞
+        A ⨂ᴰc B = _⊗ᴰ_ {MC = strmon ^opMon} A B 
 
         -- observe action of F on objects
         module _ (A : ob 𝒱)(w₁ : ob W) where 
@@ -258,9 +263,9 @@ module src.Models.FuturePast where
                 -- can't choose an x : X for which w(x) ≡ b
 
             
-            conv : 𝒱 [ Case b  ⨂ᴰ Case n , Termᵛ ]
+            conv : 𝒱 [ Case b  ⨂ᴰᵥ Case n , Termᵛ ]
             conv = natTrans {!   !} {!   !} where 
-                α : N-ob-Type (Case b ⨂ᴰ Case n) Termᵛ
+                α : N-ob-Type (Case b ⨂ᴰᵥ Case n) Termᵛ
                 α w₀ (SetCoequalizer.inc (((X ◂ _ ◂ wmap) , (Y ◂ _ ◂ wmap')) , (((w₁⊗w₂↪w₀ , ttmap) , Δ) , Case_b_w₁) , Case_n_w₂)) = {!   !}
                 α w (coeq a i) = {!   !}
                 α w (squash x x₁ p q i i₁) = {!   !}
@@ -339,9 +344,6 @@ module src.Models.FuturePast where
                 computation (Γ ×P Δ) B 
             funElim record { α = α } (natTrans N-ob N-hom) = record { α = λ{ w (Γw , Δw) → α w Γw (N-ob w Δw) }}
 
-            -- need a monoidal product on World^op?
-            _⊗^op_ : {!   !}
-            _⊗^op_ = {!   !}
             
             sep : ob 𝒱 → ob 𝒞 → ob 𝒞 
                 -- should be an end 
@@ -350,22 +352,49 @@ module src.Models.FuturePast where
             sep A B .F-id = {!  !}
             sep A B .F-seq = {!   !}
 
-            sepIntro :  {Γ A : ob 𝒱}{B : ob 𝒞} → computation (Γ ⨂ᴰ A) B → computation Γ (sep A B) 
-            sepIntro record { α = α } = record { α = λ w Γw w' Aw' → α (_⨂_ .F-ob (w , w')) (SetCoequalizer.inc ((w , w') , (((((λ x → x) , {!   !}) , refl) , refl) , Γw) , Aw')) }
+            sepIntro :  {Γ A : ob 𝒱}{B : ob 𝒞} → computation (Γ ⨂ᴰᵥ A) B → computation Γ (sep A B) 
+            sepIntro record { α = α } = record { α = λ w Γw w' Aw' → α (_⨂_ .F-ob (w , w')) (SetCoequalizer.inc ((w , w') , (((((λ x → x) , snd (id↪ _)) , refl) , refl) , Γw) , Aw')) }
 
             -- morphism in the day convolution is the wrong direction..
+            -- day convolution needed in the computation category?
             sepElim : {Γ Δ A : ob 𝒱}{B : ob 𝒞} → 
                 computation Γ (sep A B) → 
                 value Δ A → 
-                computation (Γ ⨂ᴰ Δ) B 
+                computation (Γ ⨂ᴰᵥ Δ) B 
             sepElim {B = B} record { α = α } (natTrans N-ob N-hom) = 
                     record { α = λ{ w (SetCoequalizer.inc ((w₂ , w₃) , (w→w₂⊗w₃ , Γw₂) , Δw₃)) → B .F-hom {! fst₁  !} (α w₂ Γw₂ w₃ (N-ob w₃ Δw₃)) 
-                            ; w (coeq a i) → {!   !}
+                            ; w (coeq a i) → {!  !}
                             ; w (squash x x₁ p q i i₁) → {!   !} }}
+
+
+            thunk : {Γ : ob 𝒱}{B : ob 𝒞} → computation Γ B → value Γ (U .F-ob B)
+            thunk {Γ}{B} record { α = α } = natTrans (λ{w Γw → record { fun = λ w' f → α w' (Γ .F-hom f Γw) }}) {!   !} 
+
+            return : {Γ A : ob 𝒱} → value Γ A → computation Γ (F .F-ob A) 
+            return (natTrans N-ob N-hom) = record { α = λ w Γw → w , W .id , N-ob w Γw }
+
+            OSumElim : {A : SynTy'}{Γ : ob 𝒱}{B : ob 𝒞} → 
+                value Γ (Case A) →
+                value Γ OSum → 
+                computation (Γ ×P tys A) B → 
+                computation Γ B → 
+                computation Γ B
+            OSumElim {A}{Γ}{B}(natTrans Vt N-hom) 
+                    (natTrans V N-hom₁) 
+                    record { α = M } 
+                    record { α = N } = record { α = goal } where 
+
+                        mtch : (w : ob W) → fst ((Case A) .F-ob w) → fst (B .F-ob w)
+                        mtch w c = {!  c !}
+
+                        goal : (w : ob W) → (SET _) [ Γ .F-ob w , B .F-ob w ]
+                        goal w Γw = {! mtch (Vt w Γw)  !}
+                        
+
             
         module concreteExamples where
 
-            data w1 : Set ℓS where 
+            data w1 : Set ℓS where  
                 σ₁ : w1 
             
             data w2 : Set ℓS where 
@@ -392,4 +421,4 @@ module src.Models.FuturePast where
 
  
  
- 
+   
