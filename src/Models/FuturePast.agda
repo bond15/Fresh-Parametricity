@@ -22,6 +22,7 @@ module src.Models.FuturePast where
     open import Cubical.Data.Bool 
     open import Cubical.Data.FinSet
     open import Cubical.Data.FinSet.Constructors
+    open import Cubical.Data.FinSet.DecidablePredicate 
     open import Cubical.Data.Nat
     open import Cubical.Data.Sigma
     open import Cubical.Data.Sum
@@ -111,6 +112,8 @@ module src.Models.FuturePast where
         W : Category (ℓ-suc ℓS) ℓS
         W = World SynTy
 
+        _≡tag_ : {w : ob W} → (x y : w .fst .fst .fst) → Bool 
+        _≡tag_ {w} x y = isDecProp≡ (w .fst .fst) x y .fst
 
 
         _ : isSet (Σ[ X ∈ FinSet ℓS ] Unit* → SynTy')
@@ -235,6 +238,9 @@ module src.Models.FuturePast where
                     α : ∀ (w : ob W) → (SET ℓ)[ Γ .F-ob w , A .F-ob w ]
                    -- nat : ∀ {w w' : ob W} → (f : W [ w , w' ]) → Γ .F-hom f ⋆⟨ SET ℓ ⟩ α w ⋆⟨ SET ℓ ⟩ A .F-hom f ≡ α w' 
 
+            comp≡ : {Γ : ob 𝒱}{A : ob 𝒞}{c₁ c₂ : computation Γ A} → c₁ .computation.α ≡ c₂ .computation.α → c₁ ≡ c₂
+            comp≡ p = cong (λ x → record { α = x }) p
+
             convert : ob 𝒱 → ob 𝒞 
             convert X = {! X  !}
                 -- record { F-ob = X .F-ob ; F-hom = {! X .F-hom  !} ; F-id = {!   !} ; F-seq = {!   !} }
@@ -344,7 +350,49 @@ module src.Models.FuturePast where
                 computation (Γ ×P Δ) B 
             funElim record { α = α } (natTrans N-ob N-hom) = record { α = λ{ w (Γw , Δw) → α w Γw (N-ob w Δw) }}
 
+            dup : {A : ob 𝒱} → 𝒱 [ A , A ×P A ]
+            dup = natTrans (λ x a → a , a) λ f → refl
             
+            bimap : {A B C D : ob 𝒱} → 
+                𝒱 [ A , B ] → 
+                𝒱 [ C , D ] → 
+                𝒱 [ A ×P C , B ×P D ]
+            bimap M N = natTrans (λ{w (Aw , Cw) → M .N-ob w Aw , N .N-ob w Cw}) λ f → {! refl  !} where 
+                open NatTrans
+            
+            p₁ : {A₁ A₂ : ob 𝒱} → 𝒱 [ (A₁ ×P A₂) , A₁ ]
+            p₁ = natTrans (λ x p → fst p) λ f → refl 
+
+            prodIntro : {Γ  A₁ A₂ : ob 𝒱} → 
+                value Γ A₁ → 
+                value Γ A₂ → 
+                value Γ (A₁ ×P A₂)
+            prodIntro M N = dup ⋆⟨ 𝒱 ⟩ bimap M N
+
+            prodElim₁ : {Γ  A₁ A₂ : ob 𝒱} → 
+                value Γ (A₁ ×P A₂) → 
+                value Γ A₁
+            prodElim₁ M = M ⋆⟨ 𝒱 ⟩ p₁
+
+            prodBeta : {Γ  A₁ A₂ : ob 𝒱} → 
+                (M : value Γ A₁) → 
+                (N : value Γ A₂) → 
+                prodElim₁ (prodIntro M N) ≡ M 
+            prodBeta M N = makeNatTransPath refl
+            
+            -- just bilinear map
+            sepProdIntro : {Γ Δ A₁ A₂ : ob 𝒱} → 
+                value Γ A₁ → 
+                value Δ A₂ → 
+                value (Γ  ⨂ᴰᵥ Δ) (A₁ ⨂ᴰᵥ A₂) 
+            sepProdIntro M N  = Day-Functor strmon .F-hom (M , N)
+
+            sepProdElim₁ : {Γ Δ A₁ A₂ : ob 𝒱} → 
+                value (Γ  ⨂ᴰᵥ Δ) (A₁ ⨂ᴰᵥ A₂) → 
+                value (Γ  ⨂ᴰᵥ Δ) A₁ 
+            sepProdElim₁ M = M ⋆⟨ 𝒱 ⟩ {!   !}  -- semicartesian projection
+
+
             sep : ob 𝒱 → ob 𝒞 → ob 𝒞 
                 -- should be an end 
             sep A B .F-ob w = (∀ (w' : ob W) → (SET ℓ)[ A .F-ob w' , B .F-ob (_⨂_ .F-ob (w , w')) ]) , isSetΠ  λ _ → (SET ℓ) .isSetHom
@@ -361,11 +409,46 @@ module src.Models.FuturePast where
                 computation Γ (sep A B) → 
                 value Δ A → 
                 computation (Γ ⨂ᴰᵥ Δ) B 
-            sepElim {B = B} record { α = α } (natTrans N-ob N-hom) = 
-                    record { α = λ{ w (SetCoequalizer.inc ((w₂ , w₃) , (w→w₂⊗w₃ , Γw₂) , Δw₃)) → B .F-hom {! fst₁  !} (α w₂ Γw₂ w₃ (N-ob w₃ Δw₃)) 
-                            ; w (coeq a i) → {!  !}
-                            ; w (squash x x₁ p q i i₁) → {!   !} }}
+            sepElim {Γ}{Δ}{A}{B} record { α = α } (natTrans N-ob N-hom) = record { α = goal } where 
 
+                goal : (w : ob W) → SET ℓ [ (Γ ⨂ᴰᵥ Δ) .F-ob w , B .F-ob w ] 
+                goal w (SetCoequalizer.inc ((w₂ , w₃) , (w→w₂⊗w₃ , Γw₂) , Δw₃)) = goal' where
+                    open SemicartesianStrictMonCat semimon
+                    -- instead of..
+                    --  B .F-hom w₂⊗w₃→w (α w₂ Γw₂ w₃ (N-ob w₃ Δw₃))
+                    -- since we don't have w₂⊗w₃→w ..
+                    w⊗w→w : W [ (_⨂_ .F-ob (w , w)) , w ]
+                    w⊗w→w  = proj₁ 
+                    -- This is an arbitrary choice between inl and inr... which feels wrong
+
+                    w→w₂ : W [ w , w₂ ]
+                    w→w₂ = w→w₂⊗w₃ ⋆⟨ W ⟩ proj₁
+
+                    w→w₃ : W [ w , w₃ ]
+                    w→w₃ = w→w₂⊗w₃ ⋆⟨ W ⟩ proj₂
+
+                    goal' : fst (B .F-ob w)
+                    goal' = B .F-hom w⊗w→w  (α w (Γ .F-hom w→w₂ Γw₂) w (N-ob w (Δ .F-hom w→w₃ Δw₃)))
+                    
+                goal w (coeq ((w₂ , w₃) , (w₄ , w₅) , (w₄→w₂ , w₅→w₃) , (w→w₄⊗w₅ , Γw₂) , Δw₃) i) = goal' where 
+                
+                    goal' : fst (B .F-ob w)
+                    goal' = B .F-hom {! hmm  !} {! α w Γw w Aw!}
+                goal w (squash c c₁ p q i i₁) = {!   !} 
+
+            test : {Γ A : ob 𝒱}{B : ob 𝒞} → 
+                computation A B → 
+                computation (Γ ⨂ᴰᵥ A) B 
+            test {Γ}{A}{B} record { α = α } =  record { α = goal }  where 
+                goal : (w : ob W) → SET ℓ [ (Γ ⨂ᴰᵥ A) .F-ob w , B .F-ob w ]
+                goal w (SetCoequalizer.inc ((w₂ , w₃) , (w→w₂⊗w₃ , Γw₂) , Aw₃)) = α w (A .F-hom w→w₃ Aw₃) where 
+                    -- instead of B .F-hom ?? (α w₃ Aw₃)
+                    open SemicartesianStrictMonCat semimon
+                    w→w₃ : W [ w , w₃ ]
+                    w→w₃ = w→w₂⊗w₃ ⋆⟨ W ⟩ proj₂
+
+                goal w (coeq a i) = {!   !}
+                goal w (squash c c₁ p q i i₁) = {!   !}
 
             thunk : {Γ : ob 𝒱}{B : ob 𝒞} → computation Γ B → value Γ (U .F-ob B)
             thunk {Γ}{B} record { α = α } = natTrans (λ{w Γw → record { fun = λ w' f → α w' (Γ .F-hom f Γw) }}) {!   !} 
@@ -384,13 +467,37 @@ module src.Models.FuturePast where
                     record { α = M } 
                     record { α = N } = record { α = goal } where 
 
-                        mtch : (w : ob W) → fst ((Case A) .F-ob w) → fst (B .F-ob w)
-                        mtch w c = {!  c !}
+                        goal : (w : ob W) → (SET ℓ) [ Γ .F-ob w , B .F-ob w ]
+                        goal w Γw = goal' where
+                            open import Cubical.Foundations.Equiv
+                            open import Cubical.Foundations.Isomorphism
+                            open Iso
+                            
+                            osum : fst (OSum .F-ob w)
+                            osum = V w Γw
 
-                        goal : (w : ob W) → (SET _) [ Γ .F-ob w , B .F-ob w ]
-                        goal w Γw = {! mtch (Vt w Γw)  !}
-                        
+                            case : fst( (Case A) .F-ob w )
+                            case = Vt w Γw
+                            
+                            -- why is this red?
+                            goal' : fst (B .F-ob w)
+                            goal' with (isDecProp≡ (w .fst .fst) (case .fst) (osum .fst) )
+                            ... | false , _ = N w Γw
+                            ... | true , eq = M w (Γw , a) where 
+                                p : case .fst ≡ osum .fst 
+                                p = equivToIso eq .inv tt
 
+                                prf : (snd w (fst osum)) ≡ A 
+                                prf = (snd w (fst osum)) ≡⟨ cong (λ x → snd w x) (sym p) ⟩ 
+                                      (snd w (fst case)) ≡⟨ case .snd .lower ⟩ 
+                                      A ∎
+
+                                eqty : ((tys (snd w (fst osum)) ) .F-ob w) .fst ≡ ((tys A) .F-ob w) .fst
+                                eqty = cong (λ x → fst ((tys x) .F-ob w)) prf
+
+                                a : fst (F-ob (tys A) w)
+                                a = transport eqty (osum .snd)
+                                
             
         module concreteExamples where
 
@@ -419,6 +526,6 @@ module src.Models.FuturePast where
      
 
 
- 
- 
-   
+    
+    
+      
