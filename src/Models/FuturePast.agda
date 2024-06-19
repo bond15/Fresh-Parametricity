@@ -480,15 +480,16 @@ module src.Models.FuturePast where
                             case = Vt w Γw
                             
                             -- why is this red?
+                            -- see src.sandbox... no red there
                             goal' : fst (B .F-ob w)
                             goal' with (isDecProp≡ (w .fst .fst) (case .fst) (osum .fst) )
                             ... | false , _ = N w Γw
                             ... | true , eq = M w (Γw , a) where 
-                                p : case .fst ≡ osum .fst 
-                                p = equivToIso eq .inv tt
+                                eqtag : case .fst ≡ osum .fst 
+                                eqtag = equivToIso eq .inv tt
 
                                 prf : (snd w (fst osum)) ≡ A 
-                                prf = (snd w (fst osum)) ≡⟨ cong (λ x → snd w x) (sym p) ⟩ 
+                                prf = (snd w (fst osum)) ≡⟨ cong (λ x → snd w x) (sym eqtag) ⟩ 
                                       (snd w (fst case)) ≡⟨ case .snd .lower ⟩ 
                                       A ∎
 
@@ -496,8 +497,7 @@ module src.Models.FuturePast where
                                 eqty = cong (λ x → fst ((tys x) .F-ob w)) prf
 
                                 a : fst (F-ob (tys A) w)
-                                a = transport eqty (osum .snd)
-                                
+                                a = transport eqty (osum .snd)   
             
         module concreteExamples where
 
@@ -527,5 +527,5 @@ module src.Models.FuturePast where
 
 
     
-    
+     
       
