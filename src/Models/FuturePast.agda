@@ -319,26 +319,17 @@ module src.Models.FuturePast where
                 α : N-ob-Type Termᶜ (F ⟅ Case ty ⟆)
                 α w tt* = w' w , (w→w' w , Case_w  w)
 
-            -- simple match
-            match : (ty : SynTy') → 𝒱 [ Case ty ×P OSum , tys ty ]
-            match ty = natTrans {!   !} {!   !}  where 
-                α : N-ob-Type (Case ty ×P OSum) (tys ty)
-                α w ((σ , lift wσ≡ty) , (σ' , e∈ty)) = transport lemma e∈ty where 
-                
-                    assuming : σ ≡ σ'
-                    assuming = {!   !}
-
-                    lemma : (tys (w .snd σ') ⟅ w ⟆) .fst ≡ (tys ty ⟅ w ⟆) .fst
-                    lemma = {!   !}
-                       --cong fst (cong₂ _⟅_⟆ (cong tys (snd w σ' ≡⟨ cong₂ _ refl assuming ⟩ snd w σ ≡⟨ wσ≡ty ⟩ ty ∎)) refl)
-
             -- function type
             fun : ob 𝒱 → ob 𝒞 → ob 𝒞 
             fun A B .F-ob w = (SET ℓ)[ A .F-ob w , B .F-ob w ] , (SET ℓ) .isSetHom
             fun A B .F-hom f g Ay = (B .F-hom f) (g ((A .F-hom f) Ay)) 
-            fun A B .F-id = funExt λ g → {!   !}
-               -- _ : (λ Ay → B .F-hom (id W) (g (A .F-hom (id W) Ay))) ≡ (λ Ay → B .F-hom (id W) (g Ay)) ≡ (λ Ay → g Ay)) ≡ g
-            fun A B .F-seq f g = funExt λ h → funExt λ Az → {!   !}
+            fun A B .F-id = funExt λ g → funExt λ a → 
+                B .F-hom (id W) (g (A .F-hom (id W) a)) ≡⟨ funExt⁻  (B .F-id) _ ⟩
+                (g (A .F-hom (id W) a)) ≡⟨ cong g (funExt⁻ (A .F-id) _) ⟩ 
+                g a ∎
+
+            fun A B .F-seq f g = funExt λ h → funExt λ Az → funExt⁻ (B .F-seq f g) _ ∙ 
+                cong (λ x → seq' (SET ℓ) (F-hom B f) (F-hom B g) (h x)) (funExt⁻ (A .F-seq _ _) _) 
 
             -- fun Intro
             funIntro : {Γ A : ob 𝒱}{B : ob 𝒞} → computation (Γ ×P A) B → computation Γ (fun A B) 
@@ -394,11 +385,12 @@ module src.Models.FuturePast where
 
 
             sep : ob 𝒱 → ob 𝒞 → ob 𝒞 
-                -- should be an end 
+                -- should be an end ?
             sep A B .F-ob w = (∀ (w' : ob W) → (SET ℓ)[ A .F-ob w' , B .F-ob (_⨂_ .F-ob (w , w')) ]) , isSetΠ  λ _ → (SET ℓ) .isSetHom
             sep A B .F-hom {w₁}{w₂} w₁→w₂ end w₃ Aw₃ = B .F-hom (_⨂_ .F-hom (w₁→w₂ , W .id)) (end w₃ Aw₃)
-            sep A B .F-id = {!  !}
-            sep A B .F-seq = {!   !}
+            sep A B .F-id = funExt λ end → funExt λ w₃  → funExt λ Aw₃ → cong (λ x → (B .F-hom x) (end w₃ Aw₃) ) (_⨂_ .F-id) ∙ funExt⁻ (B .F-id) ((end w₃ Aw₃))
+            sep A B .F-seq f g = funExt λ end → funExt λ w₃  → funExt λ Aw₃ → {! funExt⁻ (B .F-seq _ _) _ ∙ ?  !}
+            -- cong (λ x → (B .F-hom x) (end w₃ Aw₃) ) {! _⨂_ .F-seq _ _  !} ∙ funExt⁻ (B .F-seq _ _ ) ((end w₃ Aw₃))
 
             sepIntro :  {Γ A : ob 𝒱}{B : ob 𝒞} → computation (Γ ⨂ᴰᵥ A) B → computation Γ (sep A B) 
             sepIntro record { α = α } = record { α = λ w Γw w' Aw' → α (_⨂_ .F-ob (w , w')) (SetCoequalizer.inc ((w , w') , (((((λ x → x) , snd (id↪ _)) , refl) , refl) , Γw) , Aw')) }
