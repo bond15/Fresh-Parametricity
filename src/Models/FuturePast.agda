@@ -233,10 +233,15 @@ module src.Models.FuturePast where
             -- the naturality condition is off
             -- alternatively, could find some way to turn Γ into a computation.. 
             -- besides F?
-            record computation (Γ : ob 𝒱)(A : ob 𝒞) : Set (ℓ-suc ℓS) where 
+            record computation (Γ : ob 𝒱)(B : ob 𝒞) : Set (ℓ-suc ℓS) where 
                 field 
-                    α : ∀ (w : ob W) → (SET ℓ)[ Γ .F-ob w , A .F-ob w ]
+                    α : ∀ (w : ob W) → (SET ℓ)[ Γ .F-ob w , B .F-ob w ]
                    -- nat : ∀ {w w' : ob W} → (f : W [ w , w' ]) → Γ .F-hom f ⋆⟨ SET ℓ ⟩ α w ⋆⟨ SET ℓ ⟩ A .F-hom f ≡ α w' 
+                hmm :  ∀ {w w' : ob W} → (f : W [ w , w' ]) → Γ .F-hom f ⋆⟨ SET ℓ ⟩ α w ⋆⟨ SET ℓ ⟩ B .F-hom f ≡ α w' 
+                hmm f = {!  Γ .F-hom f !}
+
+            computation' : (Γ : ob 𝒱)(B : ob 𝒞) → Set (ℓ-suc ℓS)
+            computation' Γ B = 𝒞 [ F .F-ob Γ , B ]
 
             comp≡ : {Γ : ob 𝒱}{A : ob 𝒞}{c₁ c₂ : computation Γ A} → c₁ .computation.α ≡ c₂ .computation.α → c₁ ≡ c₂
             comp≡ p = cong (λ x → record { α = x }) p
@@ -327,7 +332,6 @@ module src.Models.FuturePast where
                 B .F-hom (id W) (g (A .F-hom (id W) a)) ≡⟨ funExt⁻  (B .F-id) _ ⟩
                 (g (A .F-hom (id W) a)) ≡⟨ cong g (funExt⁻ (A .F-id) _) ⟩ 
                 g a ∎
-
             fun A B .F-seq f g = funExt λ h → funExt λ Az → funExt⁻ (B .F-seq f g) _ ∙ 
                 cong (λ x → seq' (SET ℓ) (F-hom B f) (F-hom B g) (h x)) (funExt⁻ (A .F-seq _ _) _) 
 
@@ -428,6 +432,28 @@ module src.Models.FuturePast where
                     goal' = B .F-hom {! hmm  !} {! α w Γw w Aw!}
                 goal w (squash c c₁ p q i i₁) = {!   !} 
 
+            -- no
+            sepElim' : {Γ Δ A : ob 𝒱}{B : ob 𝒞} → 
+                computation' Γ (sep A B) → 
+                value Δ A → 
+                computation' (Γ ⨂ᴰᵥ Δ) B 
+            sepElim' {Γ} {Δ} {A} {B} (natTrans N-ob-c N-hom-c) (natTrans N-ob-v N-hom-v) = natTrans α {!   !} where 
+                open SemicartesianStrictMonCat semimon
+                α : N-ob-Type (F .F-ob (Γ ⨂ᴰᵥ Δ)) B
+                α w (w₂ , w₂→w , SetCoequalizer.inc ((w₃ , w₄) , (w₂→w₃⊗w₄ , Γw₃) , Δw₄)) = goal' where 
+
+                    a1 : fst (F .F-ob Γ .F-ob w₂ )
+                    a1 = w₂ , ((W .id) , (Γ .F-hom (w₂→w₃⊗w₄ ⋆⟨ W ⟩ proj₁) Γw₃))
+
+                    a2 : fst( A .F-ob w₂ )
+                    a2 = N-ob-v w₂ (Δ .F-hom (w₂→w₃⊗w₄ ⋆⟨ W ⟩ proj₂) Δw₄)
+
+                    goal' : fst (B .F-ob w) 
+                    goal' = B .F-hom (proj₁ ⋆⟨ W ⟩ w₂→w) (N-ob-c w₂ a1 w₂ a2 )
+
+                α w (w₂ , w₂→w , coeq a i) = {!   !}
+                α w (w₂ , w₂→w , squash snd₁ snd₂ p q i i₁) = {!   !}
+
             test : {Γ A : ob 𝒱}{B : ob 𝒞} → 
                 computation A B → 
                 computation (Γ ⨂ᴰᵥ A) B 
@@ -445,8 +471,18 @@ module src.Models.FuturePast where
             thunk : {Γ : ob 𝒱}{B : ob 𝒞} → computation Γ B → value Γ (U .F-ob B)
             thunk {Γ}{B} record { α = α } = natTrans (λ{w Γw → record { fun = λ w' f → α w' (Γ .F-hom f Γw) }}) {!   !} 
 
+            thunk' : {Γ : ob 𝒱}{B : ob 𝒞} → computation' Γ B → value Γ (U .F-ob B)
+            thunk' {Γ} {B} (natTrans N-ob N-hom) = natTrans α {!   !} where 
+                α : N-ob-Type Γ (U .F-ob B)
+                α w Γw = record { fun = goal } where 
+                    goal : (w₂ : ob W) → W [ w₂ , w ] →  B .F-ob w₂ .fst 
+                    goal w₂ w₂→w = N-ob w₂ (w₂ , (W .id , Γ .F-hom w₂→w Γw))
+
             return : {Γ A : ob 𝒱} → value Γ A → computation Γ (F .F-ob A) 
             return (natTrans N-ob N-hom) = record { α = λ w Γw → w , W .id , N-ob w Γw }
+        
+            return' : {Γ A : ob 𝒱} → value Γ A → computation' Γ (F .F-ob A) 
+            return' {Γ}{A}(natTrans N-ob N-hom) = natTrans (λ{w (w' , w'→w , Γw') → w' , (w'→w , (N-ob w' Γw')) }) {!   !}
 
             OSumElim : {A : SynTy'}{Γ : ob 𝒱}{B : ob 𝒞} → 
                 value Γ (Case A) →
@@ -518,6 +554,6 @@ module src.Models.FuturePast where
      
 
 
-    
      
-      
+     
+        
