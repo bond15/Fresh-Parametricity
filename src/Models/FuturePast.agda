@@ -168,15 +168,22 @@ module src.Models.FuturePast where
             -- pattern syntax for ob World
             pattern _◂_ x z = (((x , _), _ ) , z) 
             pattern _◂_◂_ x y z = (((x , y), _ ) , z) 
+            open import Cubical.Foundations.Isomorphism
+            open Iso
 
-            UnitF : FinSet ℓS
-            UnitF = Unit* , {! !}
+            Unit*Fin : FinSet ℓS
+            Unit*Fin = Unit* , EquivPresIsFinSet 
+                                (isoToEquiv (iso 
+                                                (λ{tt  → tt*}) 
+                                                (λ{tt* → tt}) 
+                                                (λ{ tt*  → refl}) 
+                                                (λ{ tt → refl }))) isFinSetUnit
 
             inlemb : {ℓ : Level}{A B : Type ℓ} → isEmbedding (inl {ℓ}{ℓ}{A}{B})
             inlemb = λ w x → record { equiv-proof = λ y → ({!   !} , {!   !}) , (λ y₁ → {!   !}) }
             
             inc : FinSet ℓS → FinSet ℓS
-            inc X = ((X .fst ⊎ Unit*) , isFinSet⊎ X UnitF)
+            inc X = ((X .fst ⊎ Unit*) , isFinSet⊎ X Unit*Fin)
 
             inj : {X Y  : FinSet ℓS}(f : X .fst → Y .fst) → (inc X) .fst → (inc Y) .fst
             inj f (inl x) = inl (f x)
@@ -237,8 +244,6 @@ module src.Models.FuturePast where
                 field 
                     α : ∀ (w : ob W) → (SET ℓ)[ Γ .F-ob w , B .F-ob w ]
                    -- nat : ∀ {w w' : ob W} → (f : W [ w , w' ]) → Γ .F-hom f ⋆⟨ SET ℓ ⟩ α w ⋆⟨ SET ℓ ⟩ A .F-hom f ≡ α w' 
-                hmm :  ∀ {w w' : ob W} → (f : W [ w , w' ]) → Γ .F-hom f ⋆⟨ SET ℓ ⟩ α w ⋆⟨ SET ℓ ⟩ B .F-hom f ≡ α w' 
-                hmm f = {!  Γ .F-hom f !}
 
             computation' : (Γ : ob 𝒱)(B : ob 𝒞) → Set (ℓ-suc ℓS)
             computation' Γ B = 𝒞 [ F .F-ob Γ , B ]
@@ -265,33 +270,11 @@ module src.Models.FuturePast where
         module _ where 
             open import Cubical.HITs.SetCoequalizer.Base
             
-            -- is this an issue though..?
-            _ : 𝒱 [ Termᵛ , Case b ]
-            _ = natTrans {!   !} {!   !} where 
-                α : N-ob-Type Termᵛ (Case b)
-                α w tt* = {!   !} , {!   !}
-                -- for an arbitrary X --w--> SynTy
-                -- can't choose an x : X for which w(x) ≡ b
-
-            
-            conv : 𝒱 [ Case b  ⨂ᴰᵥ Case n , Termᵛ ]
-            conv = natTrans {!   !} {!   !} where 
-                α : N-ob-Type (Case b ⨂ᴰᵥ Case n) Termᵛ
-                α w₀ (SetCoequalizer.inc (((X ◂ _ ◂ wmap) , (Y ◂ _ ◂ wmap')) , (((w₁⊗w₂↪w₀ , ttmap) , Δ) , Case_b_w₁) , Case_n_w₂)) = {!   !}
-                α w (coeq a i) = {!   !}
-                α w (squash x x₁ p q i i₁) = {!   !}
-                
-            -- given 
-            -- m : 𝒱 [ Γ , Case b ]
-            -- p : 𝒱 [ Γ , tys b ]
-            -- construct
-            -- 𝒱 [ Γ , OSum ]
-
-            injSem' : {Γ : ob 𝒱} → 𝒱 [ Γ , Case b ] → 𝒱 [ Γ , tys b ] → 𝒱 [ Γ , OSum ]
+            injSem' : {Γ : ob 𝒱} → value Γ  (Case b) → value Γ  (tys b ) → value Γ  OSum 
             injSem' {Γ} m p  = ctx ⋆⟨ 𝒱 ⟩ injSem where 
 
                 ctx : 𝒱 [ Γ  , (Case b) ×P (tys b) ]
-                ctx = natTrans (λ w γ → (m ⟦ w ⟧)(γ) , (p ⟦ w ⟧)(γ)) {!   !}
+                ctx = natTrans (λ w γ → (m ⟦ w ⟧)(γ) , (p ⟦ w ⟧)(γ)) λ f → {!  !}
 
                 injSem : 𝒱 [ (Case b) ×P (tys b) , OSum ]
                 injSem = natTrans α prf where
@@ -309,20 +292,33 @@ module src.Models.FuturePast where
                 --     {(((Y , Yfin) , tt* ) , w')}
                 --     (((f , femb), _) , Δ )  = ? --funExt λ{((x , lift wx≡b) , lift bval) → {!   !} }
 
-            newcase : (ty : SynTy') → 𝒞 [ Termᶜ , F ⟅ Case ty ⟆ ]
-            newcase ty = natTrans α {!   !} where 
+            newcase : 
+                {Γ : ob 𝒱}{B : ob 𝒞}→ 
+                (ty : SynTy') → 
+                computation (Γ ⨂ᴰᵥ Case ty) B → 
+                computation Γ B
+            newcase {Γ} {B} ty record { α = α } = record { α = goal} where 
+                goal : (w : ob W) → SET ℓ [ Γ .F-ob w , B .F-ob w ]
+                goal w₁ Γw₁ = B .F-hom w₁⊗w₂→w₁ (α w₁⊗w₂ (SetCoequalizer.inc ((w₁ , w₂) , ((W .id , Γw₁) , casew₂))) ) where
+                    -- this doesn't work
+                    -- α w₁ (SetCoequalizer.inc ((w₁ , w₂) , ((w₁→w₁⊗w₂ , Γw₁) , casew₂))) where
+                    -- b/c
+                    -- this doesn't exist
+                    --w₁→w₁⊗w₂ : W [ w₁ , w₁⊗w₂ ]
+                    --w₁→w₁⊗w₂ = (({!   !} , {!   !}) , {!   !}) , {!   !}
+                    open SemicartesianStrictMonCat semimon
+                    
+                    w₂ : ob W 
+                    w₂ = (Unit*Fin , tt*) , (λ{tt* → ty})
 
-                w' : ob W → ob W
-                w' = extend ty
+                    w₁⊗w₂ : ob W 
+                    w₁⊗w₂ = _⨂_ .F-ob (w₁ , w₂)
 
-                w→w' : (w : ob W) → (W ^op) [ w , w' w ]
-                w→w' w = (((inl , inlemb) , refl) , refl)
+                    w₁⊗w₂→w₁ : W [ w₁⊗w₂ , w₁ ]
+                    w₁⊗w₂→w₁ = proj₁
 
-                Case_w : (w : ob W) →  Case ty .F-ob (w' w) .fst
-                Case_w _ = (inr tt* , lift refl)
-
-                α : N-ob-Type Termᶜ (F ⟅ Case ty ⟆)
-                α w tt* = w' w , (w→w' w , Case_w  w)
+                    casew₂ : fst (Case ty ⟅ w₂ ⟆)
+                    casew₂ = tt* , (lift refl)
 
             -- function type
             fun : ob 𝒱 → ob 𝒞 → ob 𝒞 
@@ -399,7 +395,7 @@ module src.Models.FuturePast where
             sepIntro :  {Γ A : ob 𝒱}{B : ob 𝒞} → computation (Γ ⨂ᴰᵥ A) B → computation Γ (sep A B) 
             sepIntro record { α = α } = record { α = λ w Γw w' Aw' → α (_⨂_ .F-ob (w , w')) (SetCoequalizer.inc ((w , w') , (((((λ x → x) , snd (id↪ _)) , refl) , refl) , Γw) , Aw')) }
 
-            -- morphism in the day convolution is the wrong direction..
+            -- morphism in the day convolution is the wrong direction..?
             -- day convolution needed in the computation category?
             sepElim : {Γ Δ A : ob 𝒱}{B : ob 𝒞} → 
                 computation Γ (sep A B) → 
@@ -454,25 +450,18 @@ module src.Models.FuturePast where
                 α w (w₂ , w₂→w , coeq a i) = {!   !}
                 α w (w₂ , w₂→w , squash snd₁ snd₂ p q i i₁) = {!   !}
 
-            test : {Γ A : ob 𝒱}{B : ob 𝒞} → 
-                computation A B → 
-                computation (Γ ⨂ᴰᵥ A) B 
-            test {Γ}{A}{B} record { α = α } =  record { α = goal }  where 
-                goal : (w : ob W) → SET ℓ [ (Γ ⨂ᴰᵥ A) .F-ob w , B .F-ob w ]
-                goal w (SetCoequalizer.inc ((w₂ , w₃) , (w→w₂⊗w₃ , Γw₂) , Aw₃)) = α w (A .F-hom w→w₃ Aw₃) where 
-                    -- instead of B .F-hom ?? (α w₃ Aw₃)
-                    open SemicartesianStrictMonCat semimon
-                    w→w₃ : W [ w , w₃ ]
-                    w→w₃ = w→w₂⊗w₃ ⋆⟨ W ⟩ proj₂
-
-                goal w (coeq a i) = {!   !}
-                goal w (squash c c₁ p q i i₁) = {!   !}
-
             thunk : {Γ : ob 𝒱}{B : ob 𝒞} → computation Γ B → value Γ (U .F-ob B)
             thunk {Γ}{B} record { α = α } = natTrans (λ{w Γw → record { fun = λ w' f → α w' (Γ .F-hom f Γw) }}) {!   !} 
 
+            force : {Γ : ob 𝒱}{B : ob 𝒞} → value Γ (U .F-ob B) → computation Γ B 
+            force {Γ} {B} (natTrans N-ob N-hom) = record { α = goal } where 
+                goal : (w : ob W) → SET ℓ [ Γ .F-ob w , B .F-ob w ]
+                goal w Γw = huh (N-ob w Γw) where 
+                    huh : fst (U .F-ob B .F-ob w) → fst (B .F-ob w)
+                    huh record { fun = fun } = fun w (W .id)
+
             thunk' : {Γ : ob 𝒱}{B : ob 𝒞} → computation' Γ B → value Γ (U .F-ob B)
-            thunk' {Γ} {B} (natTrans N-ob N-hom) = natTrans α {!   !} where 
+            thunk' {Γ} {B} (natTrans N-ob N-hom) = natTrans α λ f → {!   !} where 
                 α : N-ob-Type Γ (U .F-ob B)
                 α w Γw = record { fun = goal } where 
                     goal : (w₂ : ob W) → W [ w₂ , w ] →  B .F-ob w₂ .fst 
@@ -482,7 +471,7 @@ module src.Models.FuturePast where
             return (natTrans N-ob N-hom) = record { α = λ w Γw → w , W .id , N-ob w Γw }
         
             return' : {Γ A : ob 𝒱} → value Γ A → computation' Γ (F .F-ob A) 
-            return' {Γ}{A}(natTrans N-ob N-hom) = natTrans (λ{w (w' , w'→w , Γw') → w' , (w'→w , (N-ob w' Γw')) }) {!   !}
+            return' {Γ}{A}(natTrans N-ob N-hom) = natTrans (λ{w (w' , w'→w , Γw') → w' , (w'→w , (N-ob w' Γw')) }) λ f → refl
 
             OSumElim : {A : SynTy'}{Γ : ob 𝒱}{B : ob 𝒞} → 
                 value Γ (Case A) →
@@ -517,9 +506,7 @@ module src.Models.FuturePast where
                                 eqtag = equivToIso eq .inv tt
 
                                 prf : (snd w (fst osum)) ≡ A 
-                                prf = (snd w (fst osum)) ≡⟨ cong (λ x → snd w x) (sym eqtag) ⟩ 
-                                      (snd w (fst case)) ≡⟨ case .snd .lower ⟩ 
-                                      A ∎
+                                prf = cong (λ x → snd w x) (sym eqtag) ∙ case .snd .lower 
 
                                 eqty : ((tys (snd w (fst osum)) ) .F-ob w) .fst ≡ ((tys A) .F-ob w) .fst
                                 eqty = cong (λ x → fst ((tys x) .F-ob w)) prf
@@ -527,33 +514,3 @@ module src.Models.FuturePast where
                                 a : fst (F-ob (tys A) w)
                                 a = transport eqty (osum .snd)   
             
-        module concreteExamples where
-
-            data w1 : Set ℓS where  
-                σ₁ : w1 
-            
-            data w2 : Set ℓS where 
-                σ₁ σ₂ : w2
-                
-            w₁ : ob W 
-            w₁ = ((w1 , {!   !}) , tt*) , λ{ σ₁ → b}
-            
-            w₂ : ob W 
-            w₂ = ((w2 , {!   !}) , tt*) , λ{ σ₁ → b
-                                           ;   σ₂ → b}
-
-            --_ : fst( (sep (Case n) (F .F-ob OSum)) .F-ob w₁)
-           -- _ = λ w' → λ{ (σ₁ , lift (w₁σ₁≡n)) → {!   !}}  -- false
-
-            
-            --_ : 𝒞 [ Termᶜ , sep (Case b) (F . F-ob (tys b)) ]
-            --_ = natTrans (λ w tm → λ w' → λ{(x , wx≡b) → {!   !} , {!   !} , {!   !}}) {!   !}
-
-
-
-     
-
-
-     
-     
-        
