@@ -98,7 +98,6 @@ module src.Models.FuturePast where
     module Model {ℓS : Level} where 
         open import src.Data.Worlds hiding (Inc)
 
-
         data SynTy' : Type ℓS where 
             u n b : SynTy'
 
@@ -112,10 +111,6 @@ module src.Models.FuturePast where
         W : Category (ℓ-suc ℓS) ℓS
         W = World SynTy
 
-        _≡tag_ : {w : ob W} → (x y : w .fst .fst .fst) → Bool 
-        _≡tag_ {w} x y = isDecProp≡ (w .fst .fst) x y .fst
-
-
         _ : isSet (Σ[ X ∈ FinSet ℓS ] Unit* → SynTy')
         _ = isSet→ {A' = SynTy'}{A = Σ[ X ∈ FinSet ℓS ] Unit* } SynTyisSet   
         wset : isSet (ob W)
@@ -125,7 +120,6 @@ module src.Models.FuturePast where
 
         open import src.Data.DayConv
         open MonoidalStructure SynTy hiding (W)
-        _ = {! src.Data.Worlds.MonoidalStructure  !}
         
         -- semicartesian one for the value category
         open import src.Data.Semicartesian
@@ -134,34 +128,6 @@ module src.Models.FuturePast where
 
         _⨂ᴰc_ : ob 𝒞 → ob 𝒞 → ob 𝒞
         A ⨂ᴰc B = _⊗ᴰ_ {MC = strmon ^opMon} A B 
-
-        -- observe action of F on objects
-        module _ (A : ob 𝒱)(w₁ : ob W) where 
-            -- must provide
-            -- a future world w₂
-            -- an injection f from w₁ to w₂ 
-            -- and an element at that future world
-            sig : (w₂ : ob W)(f : W [ w₂ , w₁ ])(a : (A ⟅ w₂ ⟆) .fst) → ((F ⟅ A ⟆) ⟅ w₁ ⟆) .fst 
-            sig w₂ f a = w₂ , (f , a)
-            -- action of F ⟅ A ⟆ on morphisms
-            -- just precomposition of w₂↪w₁
-            sigact : (w₂ : ob W)(f : W [ w₁ , w₂ ])→ ((F ⟅ A ⟆) ⟅ w₁ ⟆) .fst → ((F ⟅ A ⟆) ⟅ w₂ ⟆) .fst 
-            sigact w₂ w₂↪w₁ (w₃ , w₁↪w₃ , Aw₃ ) = ((F ⟅ A ⟆)⟪ w₂↪w₁ ⟫) (w₃ , (w₁↪w₃ , Aw₃))
-            
-            
-            
-        -- observe actions of F on morphism
-        module _ (A B : ob 𝒱)(nt : A ⇒ B )(w₁ : ob W) where 
-
-            mor : 𝒞 [ F ⟅ A ⟆ , F ⟅ B ⟆ ]
-            mor = F ⟪ nt ⟫
-
-            open NatTrans
-            -- in some current world w₁ 
-            -- for any future world w₂ of w₁ 
-            -- with injection p from 
-            act : (w₂ : ob W)(p : W [ w₂ , w₁ ])(a : F-ob A w₂ .fst) → ((F ⟅ B ⟆) .F-ob w₁ ).fst
-            act w₂ p a = mor .N-ob w₁ (w₂ , p , a )
 
         -- utilities
         module _ where 
@@ -196,6 +162,20 @@ module src.Models.FuturePast where
             extend : (ty : SynTy') → ob |W| → ob |W|
             extend ty ((X , tt*) , w) = (inc X , tt*) , extend' {X} w ty
 
+            dup : {A : ob 𝒱} → 𝒱 [ A , A ×P A ]
+            dup = natTrans (λ x a → a , a) λ f → refl
+            
+            bimap : {A B C D : ob 𝒱} → 
+                𝒱 [ A , B ] → 
+                𝒱 [ C , D ] → 
+                𝒱 [ A ×P C , B ×P D ]
+            bimap M N = natTrans (λ{w (Aw , Cw) → M .N-ob w Aw , N .N-ob w Cw}) λ f → {! refl  !} where 
+                open NatTrans
+            
+            p₁ : {A₁ A₂ : ob 𝒱} → 𝒱 [ (A₁ ×P A₂) , A₁ ]
+            p₁ = natTrans (λ x p → fst p) λ f → refl 
+
+        -- denote types
         module _ where 
     
             tys : SynTy' → ob 𝒱
@@ -226,6 +206,26 @@ module src.Models.FuturePast where
             Case ty .F-id = {!   !}
             Case ty .F-seq = {!   !}
 
+            -- function type
+            fun : ob 𝒱 → ob 𝒞 → ob 𝒞 
+            fun A B .F-ob w = (SET ℓ)[ A .F-ob w , B .F-ob w ] , (SET ℓ) .isSetHom
+            fun A B .F-hom f g Ay = (B .F-hom f) (g ((A .F-hom f) Ay)) 
+            fun A B .F-id = funExt λ g → funExt λ a → 
+                B .F-hom (id W) (g (A .F-hom (id W) a)) ≡⟨ funExt⁻  (B .F-id) _ ⟩
+                (g (A .F-hom (id W) a)) ≡⟨ cong g (funExt⁻ (A .F-id) _) ⟩ 
+                g a ∎
+            fun A B .F-seq f g = funExt λ h → funExt λ Az → funExt⁻ (B .F-seq f g) _ ∙ 
+                cong (λ x → seq' (SET ℓ) (F-hom B f) (F-hom B g) (h x)) (funExt⁻ (A .F-seq _ _) _)
+
+            -- separating function type
+            sep : ob 𝒱 → ob 𝒞 → ob 𝒞 
+                -- should be an end ?
+            sep A B .F-ob w = (∀ (w' : ob W) → (SET ℓ)[ A .F-ob w' , B .F-ob (_⨂_ .F-ob (w , w')) ]) , isSetΠ  λ _ → (SET ℓ) .isSetHom
+            sep A B .F-hom {w₁}{w₂} w₁→w₂ end w₃ Aw₃ = B .F-hom (_⨂_ .F-hom (w₁→w₂ , W .id)) (end w₃ Aw₃)
+            sep A B .F-id = funExt λ end → funExt λ w₃  → funExt λ Aw₃ → cong (λ x → (B .F-hom x) (end w₃ Aw₃) ) (_⨂_ .F-id) ∙ funExt⁻ (B .F-id) ((end w₃ Aw₃))
+            sep A B .F-seq f g = funExt λ end → funExt λ w₃  → funExt λ Aw₃ → {! funExt⁻ (B .F-seq _ _) _ ∙ ?  !}
+            -- cong (λ x → (B .F-hom x) (end w₃ Aw₃) ) {! _⨂_ .F-seq _ _  !} ∙ funExt⁻ (B .F-seq _ _ ) ((end w₃ Aw₃))
+
             Termᶜ : ob 𝒞 
             Termᶜ = Constant _ _ (Unit* , isOfHLevelLift 2 isSetUnit)
             
@@ -251,33 +251,18 @@ module src.Models.FuturePast where
             comp≡ : {Γ : ob 𝒱}{A : ob 𝒞}{c₁ c₂ : computation Γ A} → c₁ .computation.α ≡ c₂ .computation.α → c₁ ≡ c₂
             comp≡ p = cong (λ x → record { α = x }) p
 
-            convert : ob 𝒱 → ob 𝒞 
-            convert X = {! X  !}
-                -- record { F-ob = X .F-ob ; F-hom = {! X .F-hom  !} ; F-id = {!   !} ; F-seq = {!   !} }
-
-            ret' : {Γ A : ob 𝒱}→ 𝒱 [ Γ , A ] → 𝒞 [ {!  Γ !} , F ⟅ A ⟆ ]
-            ret' = {!   !}
-            
-            ret : {val : ob 𝒱} → 𝒱 [ val , (U ∘F F) ⟅ val ⟆ ]
-            ret {val} = natTrans α {! makeNatTransPath ?  !} where 
-                α : N-ob-Type val ((U ∘F F) ⟅ val ⟆)
-                α w Vw = record { fun = λ w2 f →  w2 , ((W ^op) .id , val .F-hom f Vw) }
-
-                prf : N-hom-Type val ((U ∘F F) ⟅ val ⟆) α
-                prf f = {! makeNatTransPath ? !}
-
         -- denote terms
         module _ where 
             open import Cubical.HITs.SetCoequalizer.Base
             
-            injSem' : {Γ : ob 𝒱} → value Γ  (Case b) → value Γ  (tys b ) → value Γ  OSum 
-            injSem' {Γ} m p  = ctx ⋆⟨ 𝒱 ⟩ injSem where 
+            injSem : {Γ : ob 𝒱} → value Γ (Case b) → value Γ (tys b ) → value Γ OSum 
+            injSem {Γ} m p  = ctx ⋆⟨ 𝒱 ⟩ injSem' where 
 
                 ctx : 𝒱 [ Γ  , (Case b) ×P (tys b) ]
                 ctx = natTrans (λ w γ → (m ⟦ w ⟧)(γ) , (p ⟦ w ⟧)(γ)) λ f → {!  !}
 
-                injSem : 𝒱 [ (Case b) ×P (tys b) , OSum ]
-                injSem = natTrans α prf where
+                injSem' : 𝒱 [ (Case b) ×P (tys b) , OSum ]
+                injSem' = natTrans α prf where
                 
                     α : N-ob-Type (Case b ×P (tys b)) OSum
                     α w ((x , lift wxisb), y) = x , transport eqty y where
@@ -287,10 +272,6 @@ module src.Models.FuturePast where
 
                     prf : N-hom-Type (Case b ×P tys b) OSum α
                     prf f = {!   !}
-                -- prf : N-hom-Type (Case b ×P Constant ((W ^op) ^op) (SET ℓ) (Lift Bool , isOfHLevelLift 2 isSetBool)) OSum α
-                -- prf {(((X , Xfin) , tt* ) , w)}
-                --     {(((Y , Yfin) , tt* ) , w')}
-                --     (((f , femb), _) , Δ )  = ? --funExt λ{((x , lift wx≡b) , lift bval) → {!   !} }
 
             newcase : 
                 {Γ : ob 𝒱}{B : ob 𝒞}→ 
@@ -318,18 +299,7 @@ module src.Models.FuturePast where
                     w₁⊗w₂→w₁ = proj₁
 
                     casew₂ : fst (Case ty ⟅ w₂ ⟆)
-                    casew₂ = tt* , (lift refl)
-
-            -- function type
-            fun : ob 𝒱 → ob 𝒞 → ob 𝒞 
-            fun A B .F-ob w = (SET ℓ)[ A .F-ob w , B .F-ob w ] , (SET ℓ) .isSetHom
-            fun A B .F-hom f g Ay = (B .F-hom f) (g ((A .F-hom f) Ay)) 
-            fun A B .F-id = funExt λ g → funExt λ a → 
-                B .F-hom (id W) (g (A .F-hom (id W) a)) ≡⟨ funExt⁻  (B .F-id) _ ⟩
-                (g (A .F-hom (id W) a)) ≡⟨ cong g (funExt⁻ (A .F-id) _) ⟩ 
-                g a ∎
-            fun A B .F-seq f g = funExt λ h → funExt λ Az → funExt⁻ (B .F-seq f g) _ ∙ 
-                cong (λ x → seq' (SET ℓ) (F-hom B f) (F-hom B g) (h x)) (funExt⁻ (A .F-seq _ _) _) 
+                    casew₂ = tt* , (lift refl) 
 
             -- fun Intro
             funIntro : {Γ A : ob 𝒱}{B : ob 𝒞} → computation (Γ ×P A) B → computation Γ (fun A B) 
@@ -340,19 +310,6 @@ module src.Models.FuturePast where
                 value Δ A → 
                 computation (Γ ×P Δ) B 
             funElim record { α = α } (natTrans N-ob N-hom) = record { α = λ{ w (Γw , Δw) → α w Γw (N-ob w Δw) }}
-
-            dup : {A : ob 𝒱} → 𝒱 [ A , A ×P A ]
-            dup = natTrans (λ x a → a , a) λ f → refl
-            
-            bimap : {A B C D : ob 𝒱} → 
-                𝒱 [ A , B ] → 
-                𝒱 [ C , D ] → 
-                𝒱 [ A ×P C , B ×P D ]
-            bimap M N = natTrans (λ{w (Aw , Cw) → M .N-ob w Aw , N .N-ob w Cw}) λ f → {! refl  !} where 
-                open NatTrans
-            
-            p₁ : {A₁ A₂ : ob 𝒱} → 𝒱 [ (A₁ ×P A₂) , A₁ ]
-            p₁ = natTrans (λ x p → fst p) λ f → refl 
 
             prodIntro : {Γ  A₁ A₂ : ob 𝒱} → 
                 value Γ A₁ → 
@@ -382,15 +339,6 @@ module src.Models.FuturePast where
                 value (Γ  ⨂ᴰᵥ Δ) (A₁ ⨂ᴰᵥ A₂) → 
                 value (Γ  ⨂ᴰᵥ Δ) A₁ 
             sepProdElim₁ M = M ⋆⟨ 𝒱 ⟩ {!   !}  -- semicartesian projection
-
-
-            sep : ob 𝒱 → ob 𝒞 → ob 𝒞 
-                -- should be an end ?
-            sep A B .F-ob w = (∀ (w' : ob W) → (SET ℓ)[ A .F-ob w' , B .F-ob (_⨂_ .F-ob (w , w')) ]) , isSetΠ  λ _ → (SET ℓ) .isSetHom
-            sep A B .F-hom {w₁}{w₂} w₁→w₂ end w₃ Aw₃ = B .F-hom (_⨂_ .F-hom (w₁→w₂ , W .id)) (end w₃ Aw₃)
-            sep A B .F-id = funExt λ end → funExt λ w₃  → funExt λ Aw₃ → cong (λ x → (B .F-hom x) (end w₃ Aw₃) ) (_⨂_ .F-id) ∙ funExt⁻ (B .F-id) ((end w₃ Aw₃))
-            sep A B .F-seq f g = funExt λ end → funExt λ w₃  → funExt λ Aw₃ → {! funExt⁻ (B .F-seq _ _) _ ∙ ?  !}
-            -- cong (λ x → (B .F-hom x) (end w₃ Aw₃) ) {! _⨂_ .F-seq _ _  !} ∙ funExt⁻ (B .F-seq _ _ ) ((end w₃ Aw₃))
 
             sepIntro :  {Γ A : ob 𝒱}{B : ob 𝒞} → computation (Γ ⨂ᴰᵥ A) B → computation Γ (sep A B) 
             sepIntro record { α = α } = record { α = λ w Γw w' Aw' → α (_⨂_ .F-ob (w , w')) (SetCoequalizer.inc ((w , w') , (((((λ x → x) , snd (id↪ _)) , refl) , refl) , Γw) , Aw')) }
