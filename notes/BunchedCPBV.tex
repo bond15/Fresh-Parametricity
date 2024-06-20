@@ -2,7 +2,7 @@
 \usepackage{graphicx} % Required for inserting images
 \usepackage{simplebnf}
 \usepackage{bussproofs}
-\usepackage{hyperref}
+%\usepackage{hyperref}
 \usepackage[llbracket,rrbracket]{stmaryrd}
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -205,13 +205,13 @@ $\fatsemi$ admits weakening and exchange (semicartisian symmetric monoidal struc
 \begin{prooftree}
 \AxiomC{$\Gamma \fatsemi \Delta \vdash_v P : A_1 * A_2$}
 \RightLabel{$\textrm{Elim}_1$}
-\UnaryInfC{$\Gamma \vdash_v \rho_1 P : A_1$}
+\UnaryInfC{$\Gamma \fatsemi \Delta \vdash_v \rho_1 P : A_1$}
 \end{prooftree}
 
 \begin{prooftree}
 \AxiomC{$\Gamma \fatsemi \Delta \vdash_v P : A_1 * A_2$}
 \RightLabel{$\textrm{Elim}_2$}
-\UnaryInfC{$\Delta \vdash_v \rho_2 P : A_2$}
+\UnaryInfC{$\Gamma \fatsemi \Delta \vdash_v \rho_2 P : A_2$}
 \end{prooftree}
 
 \subsubsection{Thunk}
@@ -269,6 +269,13 @@ $\fatsemi$ admits weakening and exchange (semicartisian symmetric monoidal struc
 \AxiomC{$\Gamma ; (x : A) | \cdot \vdash_c N : B $}
 \RightLabel{Elim}
 \BinaryInfC{$\Gamma | \Theta \vdash_c x \leftarrow M ; N : B$}
+\end{prooftree}
+
+\subsubsection{New Case}
+\begin{prooftree}
+\AxiomC{$\Gamma \fatsemi (x : Case A) | \Theta \vdash_c M : B $}
+\RightLabel{new}
+\UnaryInfC{$\Gamma | \Theta \vdash_c \newcase{A}{x}{M}$}
 \end{prooftree}
 
 \subsubsection{Error}
@@ -562,12 +569,7 @@ Should this be allowed with $\llbracket A \rrbracket \cong \llbracket Unit \time
     \llbracket A * B \rrbracket_v &= \llbracket A \rrbracket_v \otimes \llbracket B \rrbracket_v \\
     \llbracket U  \underline{B} \rrbracket_v &= \; U \llbracket B \rrbracket_c 
 \end{align*}
-Lastly, we interpret the computation types
-
-
-\blue{
-I just noticed this (6-11), I naively thought the function type would map to an exponential but no.
-The denotation for the regular function type is somewhat surprising. 
+Lastly, we interpret the computation types\footnote{ The denotation for the regular function type is somewhat surprising. 
 See section 7.1 of Levy's thesis (or 6.7.3 of the CBPV book). Levy's model for cell generation has:
 \[
     \den{A \rightarrow B}_c(w)= \mathbf{Set} [ \den{A}_v(w) , \den{B}_c(w) ]
@@ -585,7 +587,7 @@ For the separating function, we should expect
     \den{A \sep B}(w)= \mathbf{Set^{\world}}[ \den{A}_v , \den{B}_c(w \otimes_w \_)]
 \]
 We'll probably have to use the set based end formula instead to bring another world
-into scope and fix the typing issues. check this
+into scope and fix the typing issues.
 \[
     \den{A \sep B}(w)= \int_{w'} \mathbf{Set}[ \den{A}_v(w') , \den{B}_c(w \otimes_w w') ]
 \]
@@ -593,9 +595,9 @@ into scope and fix the typing issues. check this
 
 
 \begin{align*}
-    \llbracket A \rightarrow B \rrbracket_c(w) &= \mathbf{Set}[ \den{A}_v(w) , \den{B}_c(w) ]\\
-    \llbracket A \sep B \rrbracket_c &= \\
-    \llbracket F A \rrbracket_c &= F\llbracket A \rrbracket_v\\
+    \den{A \rightarrow B }_c(w) &= \mathbf{Set}[ \den{A}_v(w) , \den{B}_c(w) ]\\
+    \den{A \sep B}_c(w) &= \int_{w'} \mathbf{Set}[ \den{A}_v(w') , \den{B}_c(w \otimes_w w') ]\\
+    \den{F A}_c &= F\den{A}_v\\
 \end{align*}
 \subsection{Interpreting Contexts}
 In \textit{regular} type theory, contexts have the structure of a list and are interpreted as an n-ary product in the category used 
@@ -670,16 +672,39 @@ The denotation of product and separating product are both akin to contructing bi
     \llbracket  (V_1, V_2)\rrbracket_{vtm} &= \den{V_1} , \den{V_2}\\
     \llbracket  (V_1 * V_2)\rrbracket_{vtm} &= \den{V_1} * \den{V_2}\\
 \end{align*}
-TODO projection maps\\
-And finally, the interpretation of $\thunk{M}$.
+Projection maps are just postcomposing with the correct projections
 \begin{align*}
-    \llbracket  \thunk{M}\rrbracket_{vtm} &= \\
+    \den{\pi_1 V} &= \den{\Gamma}_v \xrightarrow{\den{V}_v} \den{A_1 \times A_2} \xrightarrow{\pi_1} \den{A_1}\\
+    \den{\pi_2 V} &= \den{\Gamma}_v \xrightarrow{\den{V}_v} \den{A_1 \times A_2} \xrightarrow{\pi_2} \den{A_2}\\
+    \den{\rho_1 V} &= \den{\Gamma \fatsemi \Delta}_v \xrightarrow{\den{V}_v} \den{A_1 * A_2} \xrightarrow{\rho_1} \den{A_1}\\
+    \den{\rho_1 V} &= \den{\Gamma \fatsemi \Delta}_v \xrightarrow{\den{V}_v} \den{A_1 * A_2} \xrightarrow{\rho_2} \den{A_2}\\
 \end{align*}
 
+Before we give the interpretation of $\thunk{M}$, we need to discuss the interpretation of computation judgments.
+
 \subsubsection{Computation Terms}
-\blue{The computation judgments in Levy's model are not required to satisfy naturality? It seems the problem is the store type
-.. which we don't have (section 6.7.2 paragraph 2 \cite{CBPV-Book}). Their problem is that the store "type" is not covariant or 
-contravariant in world morphisms. It is a functor from the discrete category on worlds.}
+Following Levy's model
+\footnote{The computation judgments in Levy's model are not required to satisfy naturality. The problem is the store type, 
+which we don't have (section 6.7.2 paragraph 2 \cite{CBPV-Book}), that is not covariant or 
+contravariant in world morphisms.}
+, the denotation of computation judgments are not morphisms in the computation category. 
+Instead, they are denoted as a family of set maps:
+\begin{align*}
+    \den{\Gamma | \Theta \vdash_c M : B} &= \forall_w \mathbf{Set}[ \den{\Gamma}(w) , \den{\textit{B}}(w)]
+\end{align*}
+\blue{I'm not satisfied with this. One alternative that typechecks is $\mathbf{Set}^{\world}[ F \den{\Gamma}_v , \den{B}_c]$,
+but this is unnatural.}
+
+
+And finally, the interpretation of $\thunk{M}$ given $\den{M}(w)= \den{\Gamma}(w) \rightarrow \den{B}(w)$.
+\[
+    \den{\thunk{M}}_{vtm}(w)(\gamma : \den{\Gamma}(w)) = \lambda(w')(f : w' \rightarrow w). \den{M}(w)(\den{\Gamma}_1(f)(\gamma))\\
+    \den{\force{V}}_{ctm}(w)(\gamma : \den{\Gamma}(w)) = \den{V}_{vtm}(w)(\gamma)(w)(id_w) \\
+    \den{\ret{v}}_{ctm}(w)(\gamma : \den{\Gamma}(w)) = (w , id_w , \den{V}_{vtm}(w)(\gamma))\\
+    \den{\lambda x : A . M }_{ctm}(w)(\gamma : \den{\Gamma}(w))(a : \den{A}_{vtm}(w)) = \den{M}_{ctm}(w)(\gamma,a)\\
+    \den{M \; N}_{ctm}(w)(\gamma : \den{\Gamma}(w) , \delta : \den{\Delta}(w)) = \den{M}_{ctm}(w)(\gamma)(\den{N}_{vtm}(w)(\delta)) 
+\]
+
 \begin{align*}
     \llbracket \err \rrbracket_{ctm} &= \red{\textrm{add error to alloc monad}}\\
     \llbracket \force{V} \rrbracket_{ctm} &= \\
@@ -693,7 +718,7 @@ contravariant in world morphisms. It is a functor from the discrete category on 
     \llbracket \match{V_1}{V_2}{x}{M}{N}\rrbracket_{ctm} &= \\
     \llbracket \ite{V}{M}{N} \rrbracket_{ctm} &= \\
 \end{align*}
-
+\red{TODO: notation consistency (ex subscripts on $\den{}$)}
 
 \bibliographystyle{acm}
 \bibliography{ref}
