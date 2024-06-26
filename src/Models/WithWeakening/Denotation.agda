@@ -196,7 +196,6 @@ module src.Models.WithWeakening.Denotation {ℓS} where
                 -- b/c
                 -- this doesn't exist
                 --w₁→w₁⊗w₂ : W [ w₁ , w₁⊗w₂ ]
-                --w₁→w₁⊗w₂ = (({!   !} , {!   !}) , {!   !}) , {!   !}
                 open SemicartesianStrictMonCat semimon
                 
                 w₂ : ob W 
@@ -220,6 +219,16 @@ module src.Models.WithWeakening.Denotation {ℓS} where
             value Δ A → 
             computation (Γ ×P Δ) B 
         funElim record { α = α } (natTrans N-ob N-hom) = record { α = λ{ w (Γw , Δw) → α w Γw (N-ob w Δw) }}
+        
+        open import Cubical.Foundations.Isomorphism
+        open Iso hiding (fun)
+
+        funUP : {Γ A : ob 𝒱}{B : ob 𝒞} → Iso (computation (Γ ×P A) B) (computation Γ (fun A B))
+        funUP = iso 
+                funIntro 
+                (λ{record { α = α } → record { α = λ{ w (Γw , Aw) → α w Γw Aw } }}) 
+                (λ{record { α = α } → refl }) 
+                (λ{record { α = α } → refl })
 
         prodIntro : {Γ  A₁ A₂ : ob 𝒱} → 
             value Γ A₁ → 
@@ -248,10 +257,37 @@ module src.Models.WithWeakening.Denotation {ℓS} where
         sepProdElim₁ : {Γ Δ A₁ A₂ : ob 𝒱} → 
             value (Γ  ⨂ᴰᵥ Δ) (A₁ ⨂ᴰᵥ A₂) → 
             value (Γ  ⨂ᴰᵥ Δ) A₁ 
-        sepProdElim₁ M = M ⋆⟨ 𝒱 ⟩ {!   !}  -- semicartesian projection
+        sepProdElim₁ M = M ⋆⟨ 𝒱 ⟩ {!   !}  
+        -- semicartesian projection
+        -- but how does thas split up worlds?
 
         sepIntro :  {Γ A : ob 𝒱}{B : ob 𝒞} → computation (Γ ⨂ᴰᵥ A) B → computation Γ (sep A B) 
-        sepIntro record { α = α } = record { α = λ w Γw w' Aw' → α (_⨂_ .F-ob (w , w')) (SetCoequalizer.inc ((w , w') , (((((λ x → x) , snd (id↪ _)) , refl) , refl) , Γw) , Aw')) }
+        sepIntro record { α = α } = record { α = λ w Γw w' Aw' → α (_⨂_ .F-ob (w , w')) (SetCoequalizer.inc ((w , w') , ( W .id , Γw) , Aw')) }
+
+        sepIntro' : {Γ A : ob 𝒱}{B : ob 𝒞} → computation Γ (sep A B) → computation (Γ ⨂ᴰᵥ A) B
+        sepIntro' {Γ} {A} {B} record { α = α } = record { α = goal } where 
+            goal : (w : ob W) → SET ℓ [ (Γ ⨂ᴰᵥ A) .F-ob w , B .F-ob w ]
+            goal w (SetCoequalizer.inc ((w₂ , w₃) , (w→w₂⊗w₃ , Γw₂) , Aw₃)) = working where 
+                open SemicartesianStrictMonCat semimon
+
+                postulate w₂⊗w₃→w : W [ (_⨂_ .F-ob (w₂ , w₃))  , w ]
+
+                alternate = B .F-hom w₂⊗w₃→w (α w₂ Γw₂ w₃ Aw₃)
+
+                -- arbitrary choice of inl hiden in proj₁
+                working = B .F-hom proj₁ (α w (Γ .F-hom (w→w₂⊗w₃ ⋆⟨ W ⟩ proj₁) Γw₂) w (A .F-hom (w→w₂⊗w₃ ⋆⟨ W ⟩ proj₂) Aw₃)) 
+                
+            goal w (coeq a i) = {!   !}
+            goal w (squash c c₁ p q i i₁) = {!   !}        
+
+        sepUP : {Γ A : ob 𝒱}{B : ob 𝒞} → Iso (computation (Γ ⨂ᴰᵥ A) B) (computation Γ (sep A B))
+        sepUP {Γ}{A}{B}= iso 
+                    sepIntro 
+                    sepIntro'
+                    (λ{record { α = α } → comp≡ (funExt λ w → funExt λ Γw → funExt λ w' → funExt λ Aw' → {!  refl !}) })
+                    (λ{record { α = α } → comp≡ (funExt λ w → funExt λ {(SetCoequalizer.inc ((w₂ , w₃) , (w→w₂⊗w₃ , Γw₂) , Aw₃)) → {!  refl!}
+                                                                      ; (coeq a i) → {!   !}
+                                                                      ; (squash x x₁ p q i i₁) → {!   !}}) })
 
         -- morphism in the day convolution is the wrong direction..?
         -- day convolution needed in the computation category?
@@ -372,4 +408,6 @@ module src.Models.WithWeakening.Denotation {ℓS} where
                             a : fst (F-ob (tys A) w)
                             a = transport eqty (osum .snd)   
  
+        test' : {w : ob W} → (fun OSum (sep (Case b) (F .F-ob {!   !}))) .F-ob w .fst
+        test' = {!   !}
             
