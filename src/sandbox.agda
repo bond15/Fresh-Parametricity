@@ -28,6 +28,49 @@ module src.sandbox where
             prf : el (f y) ≡ el a 
             prf = cong el (cong f (sym (equivToIso eq .inv tt)) ∙ fx≡a)
 
+    
+    data Syn : Type where 
+        _⇒_ : Syn → Syn → Syn 
+    
+    el : Syn → Type 
+    el (x ⇒ y) = el x → el y
+
+    open import Effect.Monad.State 
+    open import Cubical.Data.Nat
+    open import Cubical.Data.Unit
+
+    S : Type 
+    S = ℕ → ℕ
+
+    T : Type → Type 
+    T A = State S A
+   -- T A = State (ℕ → T ℕ) A
+
+    open import Effect.Monad
+
+    open import Effect.Monad.State.Transformer hiding (monad)
+    open import Effect.Monad.Identity hiding(monad)
+    open RawMonad {ℓ-zero} (monad {ℓ-zero}{S})
+    
+    get : T (ℕ → ℕ)
+    get = mkStateT (λ s → mkIdentity (s , s))
+
+    put : (ℕ → ℕ) → T Unit
+    put f = mkStateT (λ s → mkIdentity (f , tt))
+
+    idℕ : ℕ → ℕ 
+    idℕ x = x 
+
+    r : T Unit
+    r = put idℕ
+
+    f : ℕ → T ℕ
+    f n = (λ g → return (g n)) =<< get
+    -- but you can't store f in T
+    -- T would need to store elements of ℕ → T ℕ 
+    -- which is already recursive
+    
+
 
 {- 
     module boring {X : Type} where 
@@ -121,3 +164,4 @@ module src.sandbox where
 -}
 
             
+ 

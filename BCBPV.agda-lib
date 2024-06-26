@@ -1,4 +1,4 @@
 name: BCPBV
 include: . 
-depend: cubical , cubical-categorical-logic
+depend: cubical , cubical-categorical-logic , standard-library
 flags: --cubical 
