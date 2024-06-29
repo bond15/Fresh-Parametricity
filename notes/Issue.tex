@@ -1,0 +1,90 @@
+\documentclass{article}
+    % General document formatting
+    \usepackage[margin=0.7in]{geometry}
+    \usepackage[parfill]{parskip}
+    \usepackage[utf8]{inputenc}
+    \usepackage{xcolor}
+    
+    % Related to math
+    \usepackage{stmaryrd}
+    \usepackage{amsmath,amssymb,amsfonts,amsthm}
+    \newcommand{\den}[1]{\llbracket #1 \rrbracket}
+    \newcommand{\sep}{\mathrel{-\mkern-6mu*}}
+    \newcommand{\blue}[1]{\textcolor{blue}{#1}}
+    \newcommand{\red}[1]{\textcolor{red}{#1}}
+
+
+\begin{document}
+\section{Issue}
+There is a variance issue when trying to add a \textbf{computational} separating 
+function type to Levy's dynamic store model\cite{CBPVbook}
+\footnote{Chapter 6}\footnote{The following issue exists in our setup too.}. Take the category 
+of worlds to be $\mathcal{W} := FinSet_{mono}$, the value category to be $\mathcal{V} :=  [\mathcal{W}, Set]$ 
+and the computation category to be $\mathcal{C} := [\mathcal{W}^{op} , Set]$. 
+Value judgments $\Gamma \vdash_v M : A$ are denoted as morphisms in $\mathcal{V}$.
+Computation judgments $\Gamma \vdash_c M : B$ are denoted as families of maps $\forall(w : ob \;W) 
+\rightarrow Set[ \den{\Gamma}(w) , \den{B}(w)]$. Note that we are dropping the storage
+part (S) of Levy's monad. The monoidal structure on $\mathcal{W}$ given by disjoint union yields a monoidal
+structure on $\mathcal{V}$ via the Day convolution\footnote{\textit{covariant}
+Day convolution given by taking the monoidal structure on $\mathcal{W}^{op}$ and
+then applying the day convolution}. 
+
+\[
+    (A \otimes_D B)_0(w_1) = \int_{}^{w_2,w_3} \mathcal{W}[ w_2 \otimes w_3 , w_1 ] 
+    \times A(w_2) \times B(w_3)
+\]
+
+The separating function in the \textbf{value category}($A , B : ob \;\mathcal{V}$) is given by:
+\[
+    (A \sep B)_0(w) = \mathcal{V}[ \den{A} , \den{B}(w \otimes \_)]
+\]
+And we have that:
+\begin{align}
+    \mathcal{V} [ A \otimes_D B , C] \cong \mathcal{V} [ A , B \sep C]
+\end{align}
+The \textbf{computational} function type ($A : ob \;\mathcal{V} , B : ob \;\mathcal{C}$) is given by:
+\[ 
+    (A \rightarrow B)_0(w) = Set[ \den{A}(w) , \den{B}(w)]
+\]
+We can try to define the \textbf{computational} separating function ($A : ob \;\mathcal{V} , B : ob \;\mathcal{C}$) as :
+\[
+    (A \sep B)_0(w) = \forall(w' : ob \; W) \rightarrow Set[ \den{A}(w'), \den{B}(w \otimes w')] 
+\]
+which is a contravariant functor. We should expect the following isomorpism of types(in Set?):
+\[
+    (A \otimes_D B) \rightarrow C \cong A \rightarrow B \sep C  
+\]
+given by:
+\begin{align*}
+    &fun : ((A \otimes_D B) \rightarrow C) \rightarrow (A \rightarrow B \sep C )\\
+    &fun \; M \; w_1 \;(a : \den{A}(w_1)) \; w_2 \;(b : \den{B}(w_2)) = M (w_1 \otimes w_2)(id_{w_1 \otimes w_2} , a , b)\\
+    \\
+    &inv :(A \rightarrow B \sep C ) \rightarrow ((A \otimes_D B) \rightarrow C)\\
+    &inv \; M \; w_1 \; (w_2,w_3,f : w_2 \otimes w_3 \rightarrow w_1, a : \den{A}(w_2), b : \den{B}(w_3)) = \red{\den{B}_1(f)}(M \; w_2 \; a \; w_3 \; b)
+\end{align*}
+However, the variance of $\den{B}$ gives us $\den{B}_1(f) : \den{B}(w_1) \rightarrow \den{B}(w_2 \otimes w_3)$ 
+which is the opposite direction that \textit{we want}\footnote{Meaning this is how the isomorpism goes in (1)}.
+\subsection{Our Model}
+I was able to derive an \textit{inverse} (likely not able to show the isomorphism) in our model, 
+but it felt like a hack and involves an \red{arbitrary choice}. Without reproducing all the details here, 
+the gist is the following:
+
+\begin{align*}
+    &s2p : \mathcal{V}[ A \otimes_D B , A \times B]    \\
+    &s2p (w_1)(w_2,w_3,f : w_2 \otimes w_3 \hookrightarrow w_1, a , b) = \den{A}_1(inl\; ; f )(a) , \den{B}_1(inr \; ; f)(b)\\
+    \\
+    &inv :(A \rightarrow B \sep C ) \rightarrow ((A \otimes_D B) \rightarrow C)\\
+    &inv \; M \; w \; s = \den{B}_1(\red{inl \; or \; inr})(M \; w \; (\pi_1 \; p)\; w \; (\pi_2 \;p)) \\ 
+    & \;\;\;\; where \\
+    & \;\;\;\;\;\;\;\; p : \den{A \times B}(w)\\
+    & \;\;\;\;\;\;\;\; p = s2p \; w \; s
+\end{align*}
+
+\section{A possible way forward}
+I'm starting to look at a weaker version of the setup in section 2.4 of \cite{sterling_denotational_2023} 
+which is a model of $\textrm{SystemF}_{\mu}^{ref}$. I think we had already worked out the 
+computational separating function for an algebra model of CBPV. 
+
+\bibliographystyle{acm}
+\bibliography{ref}
+\end{document}
