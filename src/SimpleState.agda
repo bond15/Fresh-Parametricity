@@ -1,4 +1,4 @@
-{-# OPTIONS --type-in-type #-}
+{-# OPTIONS --type-in-type --lossy-unification #-}
 module src.SimpleState where 
     open import src.Data.FinSet
     open import Cubical.Foundations.HLevels hiding (extend)
@@ -15,21 +15,31 @@ module src.SimpleState where
 
     module _ {ℓS} where 
         module Levy where 
+
+            open import Cubical.Categories.Presheaf.Base
+            open import Cubical.Categories.Presheaf.Constructions
+            open import Cubical.Categories.Bifunctor.Redundant
             Inj = FinSetMono {ℓS}
 
             𝒱 : Category (ℓ-suc ℓS) (ℓ-suc ℓS) 
-            𝒱 = FUNCTOR Inj (SET ℓS)
+            𝒱 = PresheafCategory (Inj ^op) ℓS
+                --FUNCTOR Inj (SET ℓS)
+
             
             open Category
             open Functor
             open NatTrans
+
+            _×P_ : ob 𝒱 → ob 𝒱 → ob 𝒱
+            (P ×P Q)  = PshProd ⟅ P , Q ⟆b
 
             𝒞 : Category (ℓ-suc ℓS) (ℓ-suc ℓS) 
             𝒞 = FUNCTOR (Inj ^op) (SET ℓS)
 
             open import Cubical.Categories.Instances.Discrete
 
-            postulate Injset : isSet (ob Inj)
+            Injset : isSet (ob Inj)
+            Injset = {!   !}
             |Inj| : Category (ℓ-suc ℓS) (ℓ-suc ℓS) 
             |Inj| = DiscreteCategory ((ob Inj) , (isSet→isGroupoid Injset))
             open import Cubical.Data.Bool
@@ -58,6 +68,36 @@ module src.SimpleState where
 
             T : Functor 𝒱 𝒱 
             T = U ∘F F
+
+            strength : {A B : ob 𝒱} → 𝒱 [ A ×P (T .F-ob B) , T .F-ob (A ×P B) ]
+            strength {A}{B} = natTrans goal {!   !} where 
+                goal : N-ob-Type (A ×P T .F-ob B) (T .F-ob (A ×P B))
+                goal X (Ax , TBx) Y X→Y Sy = subgoal where 
+
+                    FBy : (F ⟅ B ⟆) .F-ob Y .fst
+                    FBy = TBx Y X→Y Sy
+
+                    Z : ob Inj 
+                    Z = FBy .fst 
+
+                    Y→Z : Inj [ Y , Z ]
+                    Y→Z = FBy .snd .fst 
+
+                    Sz : S .F-ob Z .fst 
+                    Sz = FBy .snd .snd .fst
+
+                    Bz : B .F-ob Z .fst 
+                    Bz = FBy .snd .snd .snd 
+
+                    Az : A .F-ob Z .fst
+                    Az = A .F-hom (X→Y ⋆⟨ Inj ⟩ Y→Z) Ax 
+                    -- where functoriality is used
+                    
+                    subgoal : (F ⟅ A ×P B ⟆) .F-ob Y .fst
+                    subgoal = Z , (Y→Z , (Sz , (Az , Bz)))
+             
+                isnatural : N-hom-Type (A ×P T .F-ob B) (T .F-ob (A ×P B)) goal
+                isnatural {X}{Y} f = funExt λ{ (Ax , TBx) → funExt λ Z → funExt λ Y→Z → funExt λ Sz → {! refl  !}}
 
             Ref : ob 𝒱 
             Ref .F-ob X = (fst X) , (isFinSet→isSet (snd X))
@@ -95,6 +135,9 @@ module src.SimpleState where
             
             inlemb : {ℓ : Level}{A B : Type ℓ} → isEmbedding (inl {ℓ}{ℓ}{A}{B})
             inlemb = λ w x → record { equiv-proof = λ y → ({!   !} , {!   !}) , (λ y₁ → {!   !}) }
+
+            inremb : {ℓ : Level}{A B : Type ℓ} → isEmbedding (inr {ℓ}{ℓ}{A}{B})
+            inremb = {!   !}
             
             alloc : {Γ : ob 𝒱} → (M : 𝒱 [ Γ , T .F-ob BoolF ]) → 𝒱 [ Γ , T .F-ob Ref ]
             alloc {Γ} (natTrans N-ob N-hom) = natTrans goal {!   !} where 
@@ -122,7 +165,7 @@ module src.SimpleState where
             get : {Γ : ob 𝒱} → 𝒱 [ Γ , T .F-ob Ref ] → 𝒱 [ Γ , T .F-ob BoolF ]
             get {Γ} (natTrans N-ob N-hom) = natTrans goal {!   !} where 
                 goal : N-ob-Type Γ (T .F-ob BoolF)
-                goal X ΓX Y f SY = Y , ((Inj .id) , (SY , SY {! N-ob X ΓX Y f SY !})) where 
+                goal X ΓX Y f SY = Y , ((Inj .id) , (SY , SY {! N-ob X ΓX Y f SY .fst !})) where 
                     p : (F ⟅ Ref ⟆) .F-ob Y .fst
                     p =  N-ob X ΓX Y f SY 
     
@@ -174,7 +217,7 @@ module src.SimpleState where
             _⨂ᴰᵥ_ : ob 𝒱 → ob 𝒱 → ob 𝒱
             A ⨂ᴰᵥ B =  _⊗ᴰ_ {MC = strmon ^opMon } A B 
 
-            open import Cubical.HITs.SetCoequalizer renaming (inc to incs)
+            open import Cubical.HITs.SetCoequalizer renaming (inc to incs ; rec to recs)
 
             test : (A B : ob 𝒱)(X : ob Inj) → (A ⨂ᴰᵥ B) .F-ob X .fst
             test A B X = incs ((Y , Z) , ((f , {!   !}) , {!   !})) where 
@@ -193,6 +236,141 @@ module src.SimpleState where
             _⊸_ A B .F-hom {X} {Y} f FX Z AZ = B .F-hom (_⨂_ .F-hom (f , (Inj .id))) (FX Z AZ)
             _⊸_ A B .F-id = {!   !}
             _⊸_ A B .F-seq = {!   !}
+            
+
+            module asdf where 
+                open UniversalProperty
+
+                easy : {A B C : ob 𝒱} → Set ℓS
+                easy {A}{B}{C }= (∀(X Y : ob Inj) → A .F-ob X .fst × B .F-ob Y .fst → C .F-ob (_⨂_ .F-ob (X , Y)) .fst)
+                open import src.Data.Coend 
+                open Coend
+                bkwd : {A B C : ob 𝒱} → easy {A}{B}{C} → 𝒱 [ A ⨂ᴰᵥ B , C ] 
+                bkwd {A}{B}{C} M = natTrans η nat where 
+                    η : N-ob-Type (A ⨂ᴰᵥ B) C
+                    η w A⨂Bw = inducedHom 
+                                (C .F-ob w .snd) 
+                                m 
+                                (λ{((w₂ , w₃) , (w₄ , w₅) , (w₂→w₄ , w₃→w₅) , (w₄⊗w₅→w , Aw₂) , Bw₃) → {!   !}})
+                                 --   {! lmap (diagram A B w) !}}) 
+                                A⨂Bw where 
+
+                        open Coend
+                        open Cowedge
+                        _ = {! Day A B w .cowedge .extranatural !}
+
+                        open import Cubical.Categories.Bifunctor.Base
+                        open Cubical.Categories.Bifunctor.Base.Bifunctor
+                       -- m : Σ-syntax (ob Inj × ob Inj)(λ X → fst (diagram{(ℓ-suc ℓS)}{ℓS}{{! strmon  !}} A B w .Bif-ob X X))→ 
+                       --     fst (C .F-ob w)
+                        m = ((λ{((w₂ , w₃) , (w₂⊗w₃→w , Aw₂) , Bw₃) → C .F-hom w₂⊗w₃→w (M w₂ w₃ (Aw₂ , Bw₃))}))  
+                        
+                    nat : N-hom-Type (A ⨂ᴰᵥ B) C η
+                    nat x→y = {! (A ⨂ᴰᵥ B) .F-hom x→y  !}
+                        
+                        --{! uniqueness   !}
+                        --funExt λ x₁ → {!   !}
+
+                TensorUP : {A B C : ob 𝒱} → Iso (𝒱 [ A ⨂ᴰᵥ B , C ]) (easy {A}{B}{C})
+                TensorUP {A}{B}{C} = iso 
+                        (λ{M X Y (Ax , By) → M .N-ob (_⨂_ .F-ob (X , Y)) (incs ((X , Y) , ((Inj .id , Ax) , By)))})
+                        bkwd
+                        {-(λ M → natTrans (λ w A⨂Bw → 
+                                inducedHom (
+                                    C .F-ob w .snd) 
+                                    (λ{((w₂ , w₃) , (w₂⊗w₃→w , Aw₂) , Bw₃) → C .F-hom w₂⊗w₃→w (M w₂ w₃ (Aw₂ , Bw₃))}) 
+                                    (λ{((w₂ , w₃) , (w₄ , w₅) , (w₂→w₄ , w₃→w₅) , (w₄⊗w₅→w , Aw₂) , Bw₃) → 
+                                       {!   !} })
+                                       -- cong (λ h → (λ { ((w₂ , w₃) , (w₂⊗w₃→w , Aw₂) , Bw₃) → C .F-hom w₂⊗w₃→w (M w₂ w₃ (Aw₂ , Bw₃)) }) h ) {!   !} }) 
+                                    A⨂Bw) 
+                                {!   !})  -}
+                        ((λ b  → funExt λ w → funExt λ w' → funExt λ{(Aw , Bw') → funExt⁻ (C .F-id ) (b w w' (Aw , Bw')) }))
+                        λ b → makeNatTransPath (funExt λ w → 
+                            sym (uniqueness 
+                                    (lmap (diagram A B w)) 
+                                    (rmap (diagram A B w)) 
+                                    (C .F-ob w .snd) 
+                                    {!   !}
+                                   -- ((λ{((w₂ , w₃) , (w₂⊗w₃→w , Aw₂) , Bw₃) → C .F-hom w₂⊗w₃→w (b w₂ w₃ (Aw₂ , Bw₃))})) 
+                                    {!   !} 
+                                    (b .N-ob w) 
+                                    {!   !}) )
+                        {-funExt λ A⨂Bw → 
+                                funExt⁻ 
+                                    (sym (uniqueness 
+                                            (lmap (diagram A B w)) 
+                                            (rmap (diagram A B w)) 
+                                            {!   !} 
+                                            {!   !} 
+                                            {!   !} 
+                                            {!   !} 
+                                            {!   !})) A⨂Bw ) -}
+{-
+bkwd
+((λ { M X Y (Ax , By)
+        → M .N-ob (.F-ob ⨂ (X , Y)) (incs ((X , Y) , (Inj .id , Ax) , By))
+    })
+ b)
+.N-ob w A⨂Bw
+≡ b .N-ob w A⨂Bw
+                                -}
+            {- 
+              uniqueness : {C : Type ℓ''}
+             → (f g : A → B)
+             → (Cset : (x y : C) → (p q : x ≡ y) → p ≡ q)
+             → (h : B → C)
+             → (hcoeq : (a : A) → h (f a) ≡ h (g a))
+             → (i : SetCoequalizer f g → C)
+             → (icommutativity : (b : B) → h b ≡ i (inc b))
+             → (i ≡ inducedHom Cset h hcoeq)
+            -}
+            
+            --Pym book pg 46 
+            -- Check this in our model, show to Max
+            TensorUP : {A B C : ob 𝒱} → Iso (𝒱 [ A ⨂ᴰᵥ B , C ]) (∀(X Y : ob Inj) → A .F-ob X .fst × B .F-ob Y .fst → C .F-ob (_⨂_ .F-ob (X , Y)) .fst)
+            TensorUP {A}{B}{C} = iso 
+                        (λ{M X Y (Ax , By) → M .N-ob (_⨂_ .F-ob (X , Y)) (incs ((X , Y) , ((Inj .id , Ax) , By)))}) 
+                        (λ x → natTrans (λ{w (incs ((w₂ , w₃) , (w₂⊗w₃→w , Aw₂) , Bw₃)) → C .F-hom w₂⊗w₃→w (x w₂ w₃ (Aw₂ , Bw₃))
+                                         ; w (coeq a i) → {!   !}
+                                         ; w (squash A⊗Bx A⊗Bx₁ p q i i₁) → {!   !}}) {!   !})
+                        (λ b  → funExt λ w → funExt λ w' → funExt λ{(Aw , Bw') → funExt⁻ (C .F-id {(_⨂_ .F-ob (w , w'))}) (b w w' (Aw , Bw')) }) 
+                        λ b → makeNatTransPath {!   !}
+
+
+            sepIntro : {Γ A B : ob 𝒱} → 𝒱 [ Γ ⨂ᴰᵥ A , B ] → 𝒱 [ Γ , A ⊸ B ]
+            sepIntro {Γ} {A} {B} (natTrans N-ob₁ N-hom₁) = natTrans goal {!   !} where 
+                goal : N-ob-Type Γ (A ⊸ B) 
+                goal X Γx Y Ay = N-ob₁ (_⨂_ .F-ob (X , Y))  (incs ((X , Y) , (((Inj .id) , Γx) , Ay)))
+
+
+            sepIntroInv :  {Γ A B : ob 𝒱} → 𝒱 [ Γ , A ⊸ B ] → 𝒱 [ Γ ⨂ᴰᵥ A , B ] 
+            sepIntroInv {Γ}{A}{B} M = N ⋆⟨ 𝒱 ⟩ O where 
+                N : 𝒱 [ Γ ⨂ᴰᵥ A , (A ⊸ B) ⨂ᴰᵥ A  ]  
+                N = Day-Functor (strmon ^opMon) .F-hom (M , (𝒱 .id))
+
+                O : 𝒱 [ (A ⊸ B) ⨂ᴰᵥ A , B ]
+                O = TensorUP .inv λ{X Y (fx , Ay) → fx Y Ay}
+
+            lemma : 
+                (A B C : ob 𝒱)
+                (w₁ w₂ w₃ : ob Inj)
+                (a : A .F-ob w₂ .fst)
+                (b : B .F-ob w₃ .fst)
+                (f : Inj [ (_⨂_ .F-ob (w₂ , w₃)) , w₁ ])
+                (M : 𝒱 [ A ⨂ᴰᵥ B , C ]) → 
+                C .F-hom f (M .N-ob (_⨂_ .F-ob (w₂ , w₃)) (incs ((w₂ , w₃) , (((Inj .id) , a) , b))) ) 
+                    ≡ 
+                M .N-ob w₁ (incs ((w₂ , w₃) , ((f , a) , b))) 
+            lemma A B C w₁ w₂ w₃ a b f M = {! M  .N-hom f !}
+
+            sepUP : {Γ A B : ob 𝒱} → Iso (𝒱 [ Γ ⨂ᴰᵥ A , B ]) (𝒱 [ Γ , A ⊸ B ])
+            sepUP {Γ}{A}{B} = iso 
+                        sepIntro 
+                        sepIntroInv 
+                        (λ b  → makeNatTransPath (funExt λ w → funExt λ Γw → funExt λ w' → funExt λ Aw' → {!   !}))
+                        λ b → makeNatTransPath (funExt λ w → funExt λ x → {! lemma Γ A B  !})
+                        --(λ{ b → makeNatTransPath (funExt λ w → funExt λ Γw → funExt λ w' → funExt λ Aw' → funExt⁻  (B .F-id {(_⨂_ .F-ob (w , w'))}) (N-ob b w Γw w' Aw')) })
+                       -- (λ{ b → makeNatTransPath (funExt λ w → {!   !})}) -- by lemma
 
             test2 : (X : ob Inj) → (Ref ⊸ BoolF) .F-ob X .fst
             test2 X = λ Y y → lift true
@@ -200,6 +378,7 @@ module src.SimpleState where
             -- if reference y is supposed to be fresh.. why can i use it?!
             test3 : (X : ob Inj) → (Ref ⊸ T .F-ob BoolF) .F-ob X .fst
             test3 X = λ Y y → λ Z X+Y→Z Sz → Z , ((Inj .id) , (Sz , (Sz ((inr ⋆⟨ SET ℓS ⟩ (fst X+Y→Z)) y))))
+            -- Z X+Y→Z Sz come from the U functor
 
             test4 : (X : ob Inj) → (Ref ⊸ T .F-ob BoolF) .F-ob X .fst
             test4 X = λ Y y → {!  (get2 .N-ob Y y) !}
@@ -281,4 +460,4 @@ module src.SimpleState where
             T .F-ob A .F-seq = {!   !}
             T .F-hom = {!   !}
             T .F-id = {!   !} 
-            T .F-seq = {!   !}
+            T .F-seq = {!   !}  

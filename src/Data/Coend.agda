@@ -4,7 +4,7 @@
 
 module src.Data.Coend where
     
-    open import Cubical.Categories.Bifunctor.Base 
+    open import Cubical.Categories.Bifunctor.Redundant
     open import Cubical.Categories.Category
     open import Cubical.Categories.Functor
     open import Cubical.Categories.Instances.Sets
@@ -22,7 +22,7 @@ module src.Data.Coend where
 
         module C = Category C
         module D = Category D
-
+            
         record Cowedge : Set (ℓ-max ℓC (ℓ-max ℓC' (ℓ-max ℓD ℓD'))) where
             field
                 nadir : D.ob
@@ -37,7 +37,7 @@ module src.Data.Coend where
                     F₀(c,c)---ψ(c)-----------> nadir
                 -}
                 extranatural : {c c' : C.ob}(f : C [ c , c' ]) →
-                    (F ⟪ C.id , f ⟫lr D.⋆  ψ c') ≡ ( F ⟪ f ,  C.id ⟫lr D.⋆ ψ c)
+                    (F ⟪ (C.id , f) ⟫× D.⋆  ψ c') ≡ ( F ⟪ f ,  C.id ⟫× D.⋆ ψ c)
 
         -- TODO : Can probably define a Presheaf structure for Cowedge and then
         -- this should be isomorphic to a universal element of that presheaf.
@@ -59,22 +59,31 @@ module src.Data.Coend where
         open import Cubical.HITs.SetCoequalizer
         open Category
 
+        lmap : Σ[ X ∈ ob C ]
+                Σ[ Y ∈ ob C ]
+                Σ[ f ∈ (C)[ Y , X ] ] fst( F ⟅ X , Y ⟆b )
+            →  Σ[ X ∈ ob C ] fst ( F ⟅ X , X ⟆b)
+        lmap (X , Y , f , Fxy ) = X , ( F ⟪ id C {X} , f ⟫× ) Fxy
+
+        rmap : Σ[ X ∈ ob C ]
+                Σ[ Y ∈ ob C ]
+                Σ[ f ∈ (C)[ Y , X ] ] fst( F ⟅ X , Y ⟆b )
+            →  Σ[ X ∈ ob C ] fst ( F ⟅ X , X ⟆b)
+        rmap (X , Y , f , Fxy ) = Y , ( F ⟪ f , id C {Y}  ⟫× ) Fxy
+        
         Set-Coend : Coend F
         Set-Coend = coend where
             open Cowedge
             open Coend
-
+{-}
             lmap : Σ[ X ∈ ob C ]
                    Σ[ Y ∈ ob C ]
                    Σ[ f ∈ (C)[ Y , X ] ] fst( F ⟅ X , Y ⟆b )
                 →  Σ[ X ∈ ob C ] fst ( F ⟅ X , X ⟆b)
-            lmap (X , Y , f , Fxy ) = X , ( F ⟪ id C {X} , f ⟫lr ) Fxy
+            lmap (X , Y , f , Fxy ) = X , ( F ⟪ id C {X} , f ⟫× ) Fxy
+            -}
 
-            rmap : Σ[ X ∈ ob C ]
-                   Σ[ Y ∈ ob C ]
-                   Σ[ f ∈ (C)[ Y , X ] ] fst( F ⟅ X , Y ⟆b )
-                →  Σ[ X ∈ ob C ] fst ( F ⟅ X , X ⟆b)
-            rmap (X , Y , f , Fxy ) = Y , ( F ⟪ f , id C {Y}  ⟫lr ) Fxy
+
 
             {-
                 for morphism f : Y ⇒ X in category C,
@@ -119,4 +128,4 @@ module src.Data.Coend where
                     factor'
                     λ{(x , Fxx) → funExt⁻ (sym(commutes' x)) Fxx}
 
-                    
+            

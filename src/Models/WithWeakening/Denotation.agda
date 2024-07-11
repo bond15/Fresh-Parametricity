@@ -3,10 +3,10 @@
 module src.Models.WithWeakening.Denotation {ℓS} where
     
     open import Cubical.Foundations.HLevels hiding (extend)
-    open import Cubical.Foundations.Prelude    
-    open import Cubical.Functions.Embedding
+    open import Cubical.Foundations.Prelude hiding (comp)
+    open import Cubical.Functions.Embedding 
 
-    open import Cubical.Categories.Category
+    open import Cubical.Categories.Category 
     open import Cubical.Categories.Functor
     open import Cubical.Categories.Functors.Constant
     open import Cubical.Categories.Instances.Sets 
@@ -25,11 +25,11 @@ module src.Models.WithWeakening.Denotation {ℓS} where
     open Category
     open Functor
 
-    open import src.Models.WithWeakening.Base {ℓS}
+    open import src.Models.WithWeakening.Base {ℓS} 
     
     module utils  where 
 
-        open import Cubical.Foundations.Isomorphism
+        open import Cubical.Foundations.Isomorphism 
         open Iso
         open Worlds
         open SyntacticTypes 
@@ -68,7 +68,7 @@ module src.Models.WithWeakening.Denotation {ℓS} where
             𝒱 [ C , D ] → 
             𝒱 [ A ×P C , B ×P D ]
         bimap M N = natTrans (λ{w (Aw , Cw) → M .N-ob w Aw , N .N-ob w Cw}) λ f → {! refl  !} where 
-            open NatTrans
+            open NatTrans   
         
         p₁ : {A₁ A₂ : ob 𝒱} → 𝒱 [ (A₁ ×P A₂) , A₁ ]
         p₁ = natTrans (λ x p → fst p) λ f → refl 
@@ -76,10 +76,10 @@ module src.Models.WithWeakening.Denotation {ℓS} where
  
     -- denote types
     module _ where 
-        open Worlds
+        open Worlds 
         open SyntacticTypes 
-        open CBPV {ℓS} W wset
-        open Monoids
+        open CBPV {ℓS} W wset 
+        open Monoids 
         
         tys : SynTy' → ob 𝒱
         tys b = Constant _ _ (Lift Bool , isOfHLevelLift 2 isSetBool)  
@@ -109,16 +109,24 @@ module src.Models.WithWeakening.Denotation {ℓS} where
         Case ty .F-id = {!   !}
         Case ty .F-seq = {!   !}
 
-        -- function type
-        fun : ob 𝒱 → ob 𝒞 → ob 𝒞 
-        fun A B .F-ob w = (SET ℓ)[ A .F-ob w , B .F-ob w ] , (SET ℓ) .isSetHom
-        fun A B .F-hom f g Ay = (B .F-hom f) (g ((A .F-hom f) Ay)) 
-        fun A B .F-id = funExt λ g → funExt λ a → 
+        -- computation function types
+        funty : ob 𝒱 → ob 𝒞 → ob 𝒞 
+        funty A B .F-ob w = (SET ℓ)[ A .F-ob w , B .F-ob w ] , (SET ℓ) .isSetHom
+        funty A B .F-hom f g Ay = (B .F-hom f) (g ((A .F-hom f) Ay)) 
+        funty A B .F-id = funExt λ g → funExt λ a → 
             B .F-hom (id W) (g (A .F-hom (id W) a)) ≡⟨ funExt⁻  (B .F-id) _ ⟩
             (g (A .F-hom (id W) a)) ≡⟨ cong g (funExt⁻ (A .F-id) _) ⟩ 
             g a ∎
-        fun A B .F-seq f g = funExt λ h → funExt λ Az → funExt⁻ (B .F-seq f g) _ ∙ 
+        funty A B .F-seq f g = funExt λ h → funExt λ Az → funExt⁻ (B .F-seq f g) _ ∙ 
             cong (λ x → seq' (SET ℓ) (F-hom B f) (F-hom B g) (h x)) (funExt⁻ (A .F-seq _ _) _)
+
+        -- value function types
+        -- exponent object in presheaf category
+        funty' : ob 𝒱 → ob 𝒱 → ob 𝒱 
+        funty' A B .F-ob w = {!   !}
+        funty' A B .F-hom f g = {! A .F-hom f  !}
+        funty' A B .F-id = {!   !}
+        funty' A B .F-seq f g = {!   !}
 
         -- separating function type
         sep : ob 𝒱 → ob 𝒞 → ob 𝒞 
@@ -126,8 +134,34 @@ module src.Models.WithWeakening.Denotation {ℓS} where
         sep A B .F-ob w = (∀ (w' : ob W) → (SET ℓ)[ A .F-ob w' , B .F-ob (_⨂_ .F-ob (w , w')) ]) , isSetΠ  λ _ → (SET ℓ) .isSetHom
         sep A B .F-hom {w₁}{w₂} w₁→w₂ end w₃ Aw₃ = B .F-hom (_⨂_ .F-hom (w₁→w₂ , W .id)) (end w₃ Aw₃)
         sep A B .F-id = funExt λ end → funExt λ w₃  → funExt λ Aw₃ → cong (λ x → (B .F-hom x) (end w₃ Aw₃) ) (_⨂_ .F-id) ∙ funExt⁻ (B .F-id) ((end w₃ Aw₃))
-        sep A B .F-seq f g = funExt λ end → funExt λ w₃  → funExt λ Aw₃ → {! funExt⁻ (B .F-seq _ _) _ ∙ ?  !}
+        sep A B .F-seq f g = funExt λ end → funExt λ w₃  → funExt λ Aw₃ → cong (λ x → (B .F-hom x) (end w₃ Aw₃) ) {!  (_⨂_ .F-seq _ _ )  !} ∙ {!   !}
         -- cong (λ x → (B .F-hom x) (end w₃ Aw₃) ) {! _⨂_ .F-seq _ _  !} ∙ funExt⁻ (B .F-seq _ _ ) ((end w₃ Aw₃))
+
+        -- separating function type for values
+
+        partial : ob W → ob 𝒱 → ob 𝒱 
+        partial w A .F-ob w' = A .F-ob (_⨂_ .F-ob (w , w'))
+        partial w A .F-hom {w₂}{w₃} f Aw⊗w₂ = A .F-hom  (_⨂_ .F-hom (((W ^op) .id) , f))  Aw⊗w₂
+        partial w A .F-id  = cong (λ x → (A .F-hom x)) (_⨂_ .F-id) ∙ A .F-id
+        partial w A .F-seq f g = {!   !}
+
+        open NatTrans
+        sepv' : ob 𝒱 → ob 𝒱 → ob 𝒱
+            -- this version is a natural transformation in V
+        sepv' A B .F-ob w = 𝒱 [ A , partial w B ] , 𝒱 .isSetHom
+        sepv' A B .F-hom {w₁}{w₂} w₁→w₂ M = natTrans (λ w₃ Aw₃ → B .F-hom (_⨂_ .F-hom (w₁→w₂ , W .id))  (M .N-ob w₃ Aw₃)) λ f → {! w  !}
+        sepv' A B .F-id = {!   !}
+        sepv' A B .F-seq f g = {!   !}
+
+        
+        sepv : ob 𝒱 → ob 𝒱 → ob 𝒱
+            -- this version is a natural transformation in V
+        sepv A B .F-ob w = (∀ (w' : ob W) → (SET ℓ)[ A .F-ob w' , B .F-ob (_⨂_ .F-ob (w , w')) ]) , isSetΠ  λ _ → (SET ℓ) .isSetHom
+        sepv A B .F-hom {w₁}{w₂} w₁→w₂ end w₃ Aw₃ = B .F-hom (_⨂_ .F-hom (w₁→w₂ , W .id)) (end w₃ Aw₃)
+        sepv A B .F-id = funExt λ end → funExt λ w₃  → funExt λ Aw₃ → cong (λ x → (B .F-hom x) (end w₃ Aw₃) ) (_⨂_ .F-id) ∙ funExt⁻ (B .F-id) ((end w₃ Aw₃))
+        sepv A B .F-seq f g = funExt λ end → funExt λ w₃  → funExt λ Aw₃ → {! funExt⁻ (B .F-seq _ _) _ ∙ ?  !}
+
+
 
         Termᶜ : ob 𝒞 
         Termᶜ = Constant _ _ (Unit* , isOfHLevelLift 2 isSetUnit)
@@ -150,6 +184,12 @@ module src.Models.WithWeakening.Denotation {ℓS} where
 
         computation' : (Γ : ob 𝒱)(B : ob 𝒞) → Set (ℓ-suc ℓS)
         computation' Γ B = 𝒞 [ F .F-ob Γ , B ]
+
+        Comp : (Γ : ob 𝒱)(B : ob 𝒞) → Set (ℓ-suc ℓS)
+        Comp Γ B = ∀ (w : ob W) → (SET ℓ)[ Γ .F-ob w , B .F-ob w ]
+
+        CompAgain : (Γ : ob 𝒱)(B : ob 𝒞) → Set (ℓ-suc ℓS)
+        CompAgain Γ B = value Γ (U .F-ob B)
 
         comp≡ : {Γ : ob 𝒱}{A : ob 𝒞}{c₁ c₂ : computation Γ A} → c₁ .computation.α ≡ c₂ .computation.α → c₁ ≡ c₂
         comp≡ = cong (λ x → record { α = x })
@@ -211,11 +251,11 @@ module src.Models.WithWeakening.Denotation {ℓS} where
                 casew₂ = tt* , (lift refl) 
 
         -- fun Intro
-        funIntro : {Γ A : ob 𝒱}{B : ob 𝒞} → computation (Γ ×P A) B → computation Γ (fun A B) 
+        funIntro : {Γ A : ob 𝒱}{B : ob 𝒞} → computation (Γ ×P A) B → computation Γ (funty A B) 
         funIntro {Γ} {A} {B} record { α = α } = record { α = λ w Γw Aw → α w (Γw , Aw) }
 
         funElim : {Γ Δ A : ob 𝒱}{B : ob 𝒞} → 
-            computation Γ (fun A B) → 
+            computation Γ (funty A B) → 
             value Δ A → 
             computation (Γ ×P Δ) B 
         funElim record { α = α } (natTrans N-ob N-hom) = record { α = λ{ w (Γw , Δw) → α w Γw (N-ob w Δw) }}
@@ -223,7 +263,7 @@ module src.Models.WithWeakening.Denotation {ℓS} where
         open import Cubical.Foundations.Isomorphism
         open Iso hiding (fun)
 
-        funUP : {Γ A : ob 𝒱}{B : ob 𝒞} → Iso (computation (Γ ×P A) B) (computation Γ (fun A B))
+        funUP : {Γ A : ob 𝒱}{B : ob 𝒞} → Iso (computation (Γ ×P A) B) (computation Γ (funty A B))
         funUP = iso 
                 funIntro 
                 (λ{record { α = α } → record { α = λ{ w (Γw , Aw) → α w Γw Aw } }}) 
@@ -261,13 +301,112 @@ module src.Models.WithWeakening.Denotation {ℓS} where
         -- semicartesian projection
         -- but how does thas split up worlds?
 
+        uhg  : {w : ob W}{B : ob 𝒞} → U .F-ob B .F-ob w .fst → B .F-ob w .fst
+        uhg {w} {B} record { fun = fun } = fun w (W .id)
+        module variancesucks where   
+            -- same problem if you try to interpret computations as 
+            -- 𝒱 [ A , (U B) ]
+            -- or 𝒞 [ F A ,  B ]       
+            sepIntro :  {Γ A : ob 𝒱}{B : ob 𝒞} → CompAgain (Γ ⨂ᴰᵥ A) B → CompAgain Γ (sep A B) 
+            sepIntro {Γ} {A} {B} (natTrans N-ob N-hom) = natTrans goal {!   !} where 
+                goal : N-ob-Type Γ (U .F-ob (sep A B))
+                goal w₁ Γw₁ = record { fun = wtf } where 
+                    wtf : (w₂ : ob W) → W [ w₂ , w₁ ] → (Inc* ⟅ sep A B ⟆) .F-ob w₂ .fst
+                    wtf w₂ w₂→w₁ w₃ Aw₃ = uhg (N-ob (_⨂_ .F-ob  (w₂ , w₃)) (SetCoequalizer.inc ((w₂ , w₃) , (((W .id) , (Γ .F-hom w₂→w₁ Γw₁)) , Aw₃))) ) 
+
+            open Past.End
+            sepIntroInv : {Γ A : ob 𝒱}{B : ob 𝒞} → CompAgain Γ (sep A B) → CompAgain (Γ ⨂ᴰᵥ A) B 
+            sepIntroInv {Γ} {A} {B} (natTrans N-ob N-hom) = natTrans goal {!   !} where 
+                goal : N-ob-Type (Γ ⨂ᴰᵥ A) (U .F-ob B)
+                goal w₁ (SetCoequalizer.inc ((w₂ , w₃) , (w₁→w₂⊗w₃ , Γw₂) , Aw₃)) = record { fun = λ  w₄  w₄→w₁ → B .F-hom {! w₄→w₁ ⋆⟨ W ⟩ w₁→w₂⊗w₃  !}  (N-ob w₂ Γw₂ .fun w₂ (W .id) w₃ Aw₃)  }
+                goal w₁ (coeq a i) = {!   !}
+                goal w₁ (squash x₁ x₂ p q i i₁) = {!   !}
+
+        module valuesep where 
+            sepvIntro :  {Γ A B : ob 𝒱} → value (Γ ⨂ᴰᵥ A) B → value Γ (sepv A B)
+            sepvIntro {Γ} {A} {B} (natTrans N-ob N-hom) = natTrans goal {!   !} where 
+                goal : N-ob-Type Γ (sepv A B)
+                goal w₁ Γw₁ w₂ Aw₂ = N-ob (_⨂_ .F-ob (w₁ , w₂)) (SetCoequalizer.inc ((w₁ , w₂) , (((W .id) , Γw₁) , Aw₂)))
+
+            sepvIntroInv :  {Γ A B : ob 𝒱} → value Γ (sepv A B) → value (Γ ⨂ᴰᵥ A) B 
+            sepvIntroInv {Γ} {A} {B} (natTrans N-ob N-hom) = natTrans goal {!   !} where 
+                goal : N-ob-Type (Γ ⨂ᴰᵥ A) B
+                goal w₁ (SetCoequalizer.inc ((w₂ , w₃) , (w₁→w₂⊗w₃ , Γw₂) , Aw₃)) = B .F-hom w₁→w₂⊗w₃ (N-ob w₂ Γw₂ w₃ Aw₃)
+                goal w₁ (coeq a i) = {!   !}
+                goal w₁ (squash x x₁ p q i i₁) = {!   !}
+
+            -- so this works as expected.. 
+            open NatTrans
+            sepUP : {Γ A B : ob 𝒱} → Iso (value (Γ ⨂ᴰᵥ A) B)  (value Γ (sepv A B))
+            sepUP {Γ}{A}{B}= iso 
+                        sepvIntro 
+                        sepvIntroInv 
+                        ((λ b → makeNatTransPath (funExt λ w → funExt λ Γw → funExt λ w' → funExt λ Aw' → funExt⁻  (B .F-id {(_⨂_ .F-ob (w , w'))}) (N-ob b w Γw w' Aw')) )) 
+                        λ b → makeNatTransPath (funExt λ w → funExt λ p → {! refl  !})
+            
+            -- but this is an issue?
+            sus : 𝒱 [ Termᵛ , sepv (Case b) (tys b) ]
+            sus = natTrans (λ{w₁ tt* w' (σ , w'σ≡b) → {!   !}}) {!   !}
+            {-
+                from simplestate.agda
+                
+                        -- if reference y is supposed to be fresh.. why can i use it?!
+            test3 : (X : ob Inj) → (Ref ⊸ T .F-ob BoolF) .F-ob X .fst
+            test3 X = λ Y y → λ Z X+Y→Z Sz → Z , ((Inj .id) , (Sz , (Sz ((inr ⋆⟨ SET ℓS ⟩ (fst X+Y→Z)) y))))
+            -- Z X+Y→Z Sz come from the U functor 
+            -}
+
+
         sepIntro :  {Γ A : ob 𝒱}{B : ob 𝒞} → computation (Γ ⨂ᴰᵥ A) B → computation Γ (sep A B) 
         sepIntro record { α = α } = record { α = λ w Γw w' Aw' → α (_⨂_ .F-ob (w , w')) (SetCoequalizer.inc ((w , w') , ( W .id , Γw) , Aw')) }
+
+
+        {-sepProdIso : {A B : ob 𝒱}{w : ob W} → Iso ((A ⨂ᴰᵥ B) .F-ob w .fst) ((A ×P B) .F-ob w .fst)
+        sepProdIso {A}{B}{w} = iso to {!   !} {!   !} {!   !} where 
+            open SemicartesianStrictMonCat semimon
+            to : (A ⨂ᴰᵥ B) .F-ob w .fst → (A ×P B) .F-ob w .fst
+            to (SetCoequalizer.inc ((w₂ , w₃) , (w→w₂⊗w₃ , Aw₂) , Bw₃)) = (A .F-hom (w→w₂⊗w₃ ⋆⟨ W ⟩ proj₁) Aw₂) , (B .F-hom (w→w₂⊗w₃ ⋆⟨ W ⟩ proj₂) Bw₃)
+            to (coeq a i) = {!   !}
+            to (squash x x₁ p q i i₁) = {!   !}
+
+            -- no, not an injection
+            fro : (A ×P B) .F-ob w .fst → (A ⨂ᴰᵥ B) .F-ob w .fst
+            fro (Aw , Bw) = SetCoequalizer.inc ((w , w) , (((((rec (λ x → x) (λ x → x)) , {!   !}) , {!   !}) , {!   !}) , Aw) , Bw)
+            -}
+
+        -- show monomorphism (should be injective)
+        sepProd : {A B : ob 𝒱} → value (A ⨂ᴰᵥ B) (A ×P B)
+        sepProd {A}{B}= natTrans  α{!   !} where 
+            α : N-ob-Type (A ⨂ᴰᵥ B) (A ×P B)
+            α w (SetCoequalizer.inc ((w₂ , w₃) , (w→w₂⊗w₃ , Aw₂) , Bw₃)) = (A .F-hom (w→w₂⊗w₃ ⋆⟨ W ⟩ proj₁) Aw₂) , (B .F-hom (w→w₂⊗w₃ ⋆⟨ W ⟩ proj₂) Bw₃) where 
+                open SemicartesianStrictMonCat semimon
+            α w (coeq a i) = {!   !}
+            α w (squash x x₁ p q i i₁) = {!   !}
+
+        open NatTrans
+        {- Γ → A ⊸ B 
+        ≅ Γ * A → B 
+          Γ , A → B 
+        -}
+        alternate : {Γ A : ob 𝒱}{B : ob 𝒞} → computation Γ (sep A B) → computation (Γ ×P  A) B
+        alternate {Γ}{A}{B} record { α = α } = record { α = goal } where 
+            open SemicartesianStrictMonCat semimon
+
+            goal : (w : ob W) → SET ℓ [ (Γ ×P  A) .F-ob w , B .F-ob w ]
+            goal w (Γw , Aw) = B .F-hom proj₁ (α w Γw w Aw) -- proj₁ is arbitrary choice
 
         sepIntro' : {Γ A : ob 𝒱}{B : ob 𝒞} → computation Γ (sep A B) → computation (Γ ⨂ᴰᵥ A) B
         sepIntro' {Γ} {A} {B} record { α = α } = record { α = goal } where 
             goal : (w : ob W) → SET ℓ [ (Γ ⨂ᴰᵥ A) .F-ob w , B .F-ob w ]
-            goal w (SetCoequalizer.inc ((w₂ , w₃) , (w→w₂⊗w₃ , Γw₂) , Aw₃)) = working where 
+            goal w x = B .F-hom proj₁ close where -- proj₁ is arbitrary choice
+                open SemicartesianStrictMonCat semimon
+                p : fst ((Γ ×P A) .F-ob w)
+                p = sepProd .N-ob w x
+
+                close : B .F-ob (_⨂_ .F-ob (w , w)) .fst 
+                close = α w (fst p) w (snd p) 
+            
+            {-(SetCoequalizer.inc ((w₂ , w₃) , (w→w₂⊗w₃ , Γw₂) , Aw₃)) = working where 
                 open SemicartesianStrictMonCat semimon
 
                 postulate w₂⊗w₃→w : W [ (_⨂_ .F-ob (w₂ , w₃))  , w ]
@@ -276,9 +415,13 @@ module src.Models.WithWeakening.Denotation {ℓS} where
 
                 -- arbitrary choice of inl hiden in proj₁
                 working = B .F-hom proj₁ (α w (Γ .F-hom (w→w₂⊗w₃ ⋆⟨ W ⟩ proj₁) Γw₂) w (A .F-hom (w→w₂⊗w₃ ⋆⟨ W ⟩ proj₂) Aw₃)) 
+
+                Γw = (Γ .F-hom (w→w₂⊗w₃ ⋆⟨ W ⟩ proj₁) Γw₂)
+                Aw = (A .F-hom (w→w₂⊗w₃ ⋆⟨ W ⟩ proj₂) Aw₃)
+                whatif = {! α w Γw emptymap  !}
                 
             goal w (coeq a i) = {!   !}
-            goal w (squash c c₁ p q i i₁) = {!   !}        
+            goal w (squash c c₁ p q i i₁) = {!   !}        -}
 
         sepUP : {Γ A : ob 𝒱}{B : ob 𝒞} → Iso (computation (Γ ⨂ᴰᵥ A) B) (computation Γ (sep A B))
         sepUP {Γ}{A}{B}= iso 
@@ -407,7 +550,131 @@ module src.Models.WithWeakening.Denotation {ℓS} where
 
                             a : fst (F-ob (tys A) w)
                             a = transport eqty (osum .snd)   
- 
-        test' : {w : ob W} → (fun OSum (sep (Case b) (F .F-ob {!   !}))) .F-ob w .fst
-        test' = {!   !}
+
+
+        _⊹p_ : ob 𝒱 → ob 𝒱 → ob 𝒱 
+        (x ⊹p y) .F-ob  w = ((x .F-ob w .fst) ⊎ y .F-ob w .fst) , {!   !}
+        (x ⊹p y) .F-hom {w1}{w2} f (inl x₁) = inl (x .F-hom f x₁)
+        (x ⊹p y) .F-hom {w1}{w2} f (inr y₁) = inr (y .F-hom f y₁)
+        (x ⊹p y) .F-id = {!   !}
+        (x ⊹p y) .F-seq = {!   !}
+        
+        c2c : {A : ob 𝒱}{B : ob 𝒞} → computation A B → Comp A B 
+        c2c record { α = α } = α
+
+        theTest : ∀(ty : SynTy') → value Termᵛ OSum → value Termᵛ (Case ty) → Comp Termᵛ ((funty OSum (sep (Case ty) (F .F-ob (tys ty ⊹p Termᵛ)))))
+        theTest ty osum cas = goal where 
+            open computation
+            goal : Comp Termᵛ (funty OSum (sep (Case ty) (F .F-ob (tys ty ⊹p Termᵛ))))
+            goal w ttt (σ₁ , e) w' (σ₂ , prf) = {! OSumElim {ty} {Termᵛ} {(F .F-ob (tys ty ⊹p Termᵛ))} cas osum ? ?  !} where
+                -- we get to pick some future world w''
+                -- such that we have some injective function w ⨂ w' → w''
+                -- then we need to provide an element of [[ ty ]](w'')
+                
+                -- one possible option is to just choose w ⨂ w'
+                w'' : ob W 
+                w'' =  (_⨂_ .F-ob (w , w'))
+
+                f : W [ w'' , (_⨂_ .F-ob (w , w')) ]
+                f = W .id 
+
+                -- can we use the OSum elim to get an element?
+                M : value Termᵛ (Case ty)
+                M = {!   !}
+            _ = OSumElim {ty} {Termᵛ}{(F .F-ob (tys ty ⊹p Termᵛ))} {!   !} {!   !} {!   !} {!   !}
             
+        Forall : ob 𝒱 
+        Forall = {!   !}
+
+        cant : ∀ (ty  : SynTy') → Comp Termᵛ (funty OSum (sep (Case ty) (F .F-ob (tys ty)))) 
+        cant ty w tt* (σ₁ , e) w' (σ₂ , prf) = w'' , (f , goal) where 
+            w'' : ob W 
+            w'' =  {!   !}
+
+            f : W [ w'' , (_⨂_ .F-ob (w , w')) ]
+            f = {!   !}
+
+            goal : tys ty .F-ob w'' .fst 
+            goal = {!   !}
+            
+        -- without inspecting ty
+        test' : ∀ (ty  : SynTy') → Comp Termᵛ (funty OSum (sep (Case ty) (F .F-ob (tys ty ⊹p Termᵛ)))) 
+        test' ty w tt* (σ₁ , e) w' (σ₂ , prf) = w'' , (f , (inl goal)) where 
+            
+            -- ((_⨂_ .F-ob (w , w'))) , (W .id , inl {!   !} ) where --(tys ty .F-hom {!   !} {! e  !})) where 
+            -- claim this should be the only allowed term (inr)
+            --((_⨂_ .F-ob (w , w'))) , (W .id , inr (lift tt))
+            -- so what do we know..
+
+            {- 
+                X --w-> SynTy
+
+                Y --w'-> SynTy
+
+                σ₁ : X 
+                σ₂ : Y 
+
+                e : [[ w(σ₁) ]]
+
+                prf : w'(σ₂) ≡ ty
+
+                w' should be a fresh world distinct from w
+            
+            -}
+            -- we get to pick some future world w''
+            -- such that we have some injective function w ⨂ w' → w''
+            -- then we need to provide an element of [[ ty ]](w'')
+            
+            -- one possible option is to just choose w ⨂ w'
+            w'' : ob W 
+            w'' =  (_⨂_ .F-ob (w , w'))
+
+            f : W [ w'' , (_⨂_ .F-ob (w , w')) ]
+            f = W .id 
+
+            open SemicartesianStrictMonCat semimon
+            g : W [ w'' , w ]
+            g = f ⋆⟨ W ⟩ proj₁
+
+            h : W [ w'' , w' ]
+            h = f ⋆⟨ W ⟩ proj₂
+
+            ty' : SynTy' 
+            ty' = (snd w σ₁)
+       
+            -- we can then lift element e into world w''
+            lift-e : tys ty' .F-ob w'' .fst
+            lift-e = tys ty' .F-hom g e
+
+            -- we can also lift the tags / case symbols
+            lift-σ₁ : w'' .fst .fst .fst 
+            lift-σ₁ = g .fst .fst .fst σ₁
+
+            lift-σ₂ : w'' .fst .fst .fst 
+            lift-σ₂ = h .fst .fst .fst σ₂
+
+            -- and the proof into world w''
+            _ = {! g .snd  !}
+
+
+            M : value Termᵛ (Case ty)
+            M = {! tys ty .F-hom g   !}
+            _ = OSumElim {ty} {Termᵛ}{(F .F-ob (tys ty ⊹p Termᵛ))} {!   !} {!   !} {!   !} {!   !}
+            
+            _ : w .fst .fst .fst
+            _ = σ₁
+
+            _ : w' .fst .fst .fst
+            _ = σ₂
+            
+
+            _ : tys ty' .F-ob w .fst
+            _ = e
+
+            _ : snd w' σ₂ ≡ ty
+            _ = prf .lower
+
+            goal : tys ty .F-ob w'' .fst
+            goal = {!   !}
+            
+        

@@ -251,7 +251,7 @@ module src.Models.WithoutWeakening.Denotation {ℓS} where
         sepProdElim₁ M = M ⋆⟨ 𝒱 ⟩ {!   !}  -- no longer have semicartesian projection
 
         sepIntro :  {Γ A : ob 𝒱}{B : ob 𝒞} → computation (Γ ⨂ᴰᵥ A) B → computation Γ (sep A B) 
-        sepIntro record { α = α } = record { α = λ w Γw w' Aw' → α (_⨂_ .F-ob (w , w')) (SetCoequalizer.inc ((w , w') , (((((λ x → x) , snd (id↪ _)) , refl) , refl) , Γw) , Aw')) }
+        sepIntro record { α = α } = record { α = λ w Γw w' Aw' → α (_⨂_ .F-ob (w , w')) (SetCoequalizer.inc ((w , w') , (W .id , Γw) , Aw')) }
 
         -- morphism in the day convolution is the wrong direction..?
         -- day convolution needed in the computation category?
@@ -273,6 +273,9 @@ module src.Models.WithoutWeakening.Denotation {ℓS} where
                 -- still an arbitrary choice
                 w→w⊗w : W [ w , (_⨂_ .F-ob (w , w)) ]
                 w→w⊗w  = ((inl , inlemb) , refl) , refl
+
+                -- the problem is not the day convolution, but the variance of B!
+                _ = {! B .F-hom w₂⊗w₃→w   !}
 
                 goal' : fst (B .F-ob w)
                 goal' = B .F-hom w→w⊗w (α w (Γ .F-hom w₂→w Γw₂) w (N-ob w (Δ .F-hom w₃→w Δw₃))) 

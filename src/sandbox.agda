@@ -10,6 +10,10 @@ module src.sandbox where
     open import Cubical.Foundations.Prelude
     open Iso
 
+    module up where 
+        _ : {A B C : Set} → Iso (A × B → C) (A → (B → C))
+        _ = iso (λ f a b → f (a , b)) (λ{f (a , b) → f a b}) (λ x → refl) (λ x → refl)
+        
     module _ {ℓ}
         {X : FinSet ℓ}
         {A : Set ℓ}

@@ -430,14 +430,16 @@ The monoidal unit is given by:
 \[ 
     I(X) = \mathbf{World}[X , \lambda()]
 \]
-The separating function is defined by: 
+The separating function is defined by: \footnote{Z interpreted as a set}
 \[
-(A \sep B) X = \int_{Z}^{}\ \mathbf{Set}[A(Z), B(X \otimes_w Z)] \cong \pworld[A, B(X\otimes_w\_)]
+(A \sep B) X = \mathbf{Set}[ |Z| , B(X \otimes_w Z)^{A(Z)}] 
 \]
+\begin{comment}
 Finally, we have that:
 \[
 \textrm{Hom}(A \otimes B , C) \cong \textrm{Hom}(A , B \sep C) 
 \]
+\end{comment}
 
 These definitions are standard in the literature on bunched implication with the 
 exception that our \textit{resources} are finite maps specifying typing of allocated
@@ -586,19 +588,27 @@ For the separating function, we should expect
 \[
     \den{A \sep B}(w)= \mathbf{Set^{\world}}[ \den{A}_v , \den{B}_c(w \otimes_w \_)]
 \]
-We'll probably have to use the set based end formula instead to bring another world
-into scope and fix the typing issues.
+We need to bring another world into scope to fix the typing issues.
 \[
-    \den{A \sep B}(w)= \int_{w'} \mathbf{Set}[ \den{A}_v(w') , \den{B}_c(w \otimes_w w') ]
+    \den{A \sep B}(w)= \forall_{w'} \mathbf{Set}[ \den{A}_v(w') , \den{B}_c(w \otimes_w w') ]
 \]
 }
 
-
 \begin{align*}
     \den{A \rightarrow B }_c(w) &= \mathbf{Set}[ \den{A}_v(w) , \den{B}_c(w) ]\\
-    \den{A \sep B}_c(w) &= \int_{w'} \mathbf{Set}[ \den{A}_v(w') , \den{B}_c(w \otimes_w w') ]\\
+    \den{A \sep B}_c(w) &= \forall_{w'} \mathbf{Set}[ \den{A}_v(w') , \den{B}_c(w \otimes_w w') ]\\
     \den{F A}_c &= F\den{A}_v\\
 \end{align*}
+\red{No, this isn't quite correct because of a variance issue. Consider the introduction rule for $\sep$ 
+and its inverse. 
+\[
+    intro : \den{\Gamma \otimes A \vdash_c B} \rightarrow \den{\Gamma \vdash_c A \sep B}\\
+    intro (M)(w_1)(\gamma : \den{\Gamma}_0)(w_1)(w_2)(a : \den{A}_0(w_2)) = M(w_1 \otimes w_2)(id_{w_1\otimes w_2},\gamma , a)\\
+    \\
+    inv : \den{\Gamma \vdash_c A \sep B} \rightarrow \den{\Gamma \otimes A \vdash_c B} \\
+    inv (M)(w_1)(w_2,w_3,f : w_1 \rightarrow w_2 \otimes w_3 , \gamma : \den{\Gamma}_0(w_2), a : \den{A}_0(w_3)) = \den{B}_1(f)(M(w_2)(\gamma)(w_3)(a))
+\]}
+
 \subsection{Interpreting Contexts}
 In \textit{regular} type theory, contexts have the structure of a list and are interpreted as an n-ary product in the category used 
 to interpret types. In the bunched type theory we are working with here, there are two connectives for constructing contexts 

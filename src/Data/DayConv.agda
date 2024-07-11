@@ -9,7 +9,7 @@ module src.Data.DayConv where
     open import Cubical.Categories.Presheaf
     open import Cubical.Categories.Category
     open import Cubical.Categories.Functor
-    open import Cubical.Categories.Bifunctor.Base
+    open import Cubical.Categories.Bifunctor.Redundant
     open import Cubical.Categories.Monoidal.Base 
     open import Cubical.Categories.Instances.Sets
 
@@ -21,30 +21,38 @@ module src.Data.DayConv where
     -- strict or regular? StrictMonCategory
     module _ {MC : StrictMonCategory ℓC ℓC'}(F G : Presheaf (MC .StrictMonCategory.C) (ℓ-max ℓC ℓC')) where
         open StrictMonCategory MC 
-        open Category C renaming (ob to obᶜ ; _⋆_ to _⋆ᶜ_ ; id to idᶜ ; ⋆IdL to ⋆IdLᶜ ; ⋆IdR to ⋆IdRᶜ ;  isSetHom to isSetHomC )
+        open Category C renaming (ob to obᶜ ; _⋆_ to _⋆ᶜ_ ; id to idᶜ ; ⋆IdL to ⋆IdLᶜ ; ⋆IdR to ⋆IdRᶜ ; ⋆Assoc to ⋆Assocᶜ ; isSetHom to isSetHomC )
         
         open Category (SET (ℓ-max ℓC ℓC')) renaming (ob to obˢ ; _⋆_ to _⋆ˢ_ ; id to idˢ ; ⋆IdR to ⋆IdRˢ ; ⋆IdL to ⋆IdLˢ)
         open Functor
         open Bifunctor
         
         open import Cubical.Categories.Constructions.BinProduct
+
+        open BifunctorPar
+        diagram' : obᶜ → BifunctorPar ((C ×C C) ^op) (C ×C C) (SET (ℓ-max ℓC ℓC'))
+        diagram' c . Bif-ob (c₁⁻ , c₂⁻) (c₁⁺ , c₂⁺) = 
+            ((((C)[ c , c₁⁺ ⊗ c₂⁺ ]) × fst ( F ⟅ c₁⁻ ⟆ )) × fst ( G ⟅ c₂⁻ ⟆ )) , 
+            isSet× (isSet× isSetHomC (snd ( F ⟅ c₁⁻ ⟆ ))) (snd ( G ⟅ c₂⁻ ⟆ )) 
+        diagram' c . Bif-hom× (f₁ , f₂)(g₁ , g₂) = map-× (map-× ((λ m → m ⋆⟨ C ⟩ (g₁ ⊗ₕ g₂))) ((F ⟪ f₁ ⟫))) ((G ⟪ f₂ ⟫)) 
+        diagram' c . Bif-×-id = funExt λ{ ((f , Fc) , Gc) → 
+                ≡-× (
+                    ≡-× ((cong (λ h → f ⋆ᶜ h) (─⊗─ .F-id )) ∙ ⋆IdRᶜ f) 
+                        (funExt⁻  (F .F-id) Fc)) 
+                ((funExt⁻ (G .F-id) Gc)) } 
+        diagram' c . Bif-×-seq (f₁ , f₂) (g₁ , g₂)(h₁ , h₂)(i₁ , i₂) = 
+                funExt λ ((f , Fc) , Gc) → 
+                    ≡-× 
+                        (≡-×  
+                            ((cong (λ h → f ⋆ᶜ h) (─⊗─ .F-seq _ _ )) ∙ sym (⋆Assocᶜ _ _ _)) 
+                            ((funExt⁻ (F .F-seq _ _) Fc))) 
+                        (funExt⁻ (G .F-seq _ _) Gc)
         
         diagram : obᶜ → Bifunctor ((C ×C C) ^op) (C ×C C) (SET (ℓ-max ℓC ℓC')) 
-        diagram c .Bif-ob (c₁⁻ , c₂⁻) (c₁⁺ , c₂⁺) = 
-            ((((C)[ c , c₁⁺ ⊗ c₂⁺ ]) × fst ( F ⟅ c₁⁻ ⟆ )) × fst ( G ⟅ c₂⁻ ⟆ )) , 
-            isSet× (isSet× isSetHomC (snd ( F ⟅ c₁⁻ ⟆ ))) (snd ( G ⟅ c₂⁻ ⟆ ))
-        diagram c .Bif-homL (f₁ , f₂) _ = map-× (map-× (λ x → x) (F ⟪ f₁ ⟫)) (G ⟪ f₂ ⟫)
-        diagram c .Bif-homR _ (f₁ , f₂) = map-× (map-× (λ m → m ⋆⟨ C ⟩ (f₁ ⊗ₕ f₂)) λ x → x ) λ x → x
-        diagram c .Bif-idL = 
-            funExt λ {((_ , Fc), Gc) → ≡-× (≡-× refl (funExt⁻ (F .F-id) Fc)) ((funExt⁻ (G .F-id) Gc))}
-        diagram c .Bif-idR = 
-            funExt λ {((f , _), _) → ≡-× (≡-×  {!  !} refl )refl }
-        diagram c .Bif-seqL {d = (d₁ , d₂)} (f₁ , f₂) (g₁ , g₂) = 
-            funExt λ{((c→d₁d₂ , Fc₁fst) , Gc₁snd) → ≡-× (≡-× refl (funExt⁻ (F-seq F f₁ g₁) Fc₁fst)) ((funExt⁻ (F-seq G f₂ g₂) Gc₁snd))}
-        diagram c .Bif-seqR {d = (d₁ , d₂)} (f₁ , f₂) (g₁ , g₂) = 
-            funExt λ{((c→d₁d₂ , Fc₁fst) , Gc₁snd) → ≡-× (≡-× {!   !} refl) refl}
-        diagram c .Bif-assoc (f₁ , f₂) (g₁ , g₂) = refl
-
+        diagram c = mkBifunctorPar (diagram' c)
+        
+        
+        
         open import src.Data.Coend
 
         Day : (c : obᶜ) → Coend (diagram c)
@@ -54,7 +62,7 @@ module src.Data.DayConv where
         open Coend
         open Cowedge
         open Functor
-
+    
         day : {z x y : obᶜ} → ((C)[ z , (x ⊗ y) ]) → ( fst ( F ⟅ x ⟆ ))→  ( fst ( G ⟅ y ⟆ )) → fst( Day z .cowedge .nadir) 
         day {x = x}{y} f Fx Gy = inc ((x , y) , (f , Fx) , Gy)
 
@@ -68,7 +76,7 @@ module src.Data.DayConv where
         Day-cowedge : ∀ {x} {y} → (C)[ y ,  x ] → Cowedge (diagram x)
         Day-cowedge {_} {y} _ .nadir = Day y .cowedge .nadir
         Day-cowedge f .ψ (a , b) ((g , Fa) , Gb) = day (f ⋆ᶜ g) Fa Gb
-        Day-cowedge f .extranatural (f₁ , f₂) = funExt λ { x → {!  !} }
+        Day-cowedge f .extranatural (f₁ , f₂) = funExt λ { x → {! !} }
 
         factor' : ∀ {i} (W : Cowedge (diagram i)) → fst(Day i . cowedge .nadir) → fst (W .nadir)
         factor' W = Day _ .factor W 
@@ -96,7 +104,7 @@ module src.Data.DayConv where
 
         Day-Functor : Functor (PshC ×C PshC) PshC 
         Day-Functor .F-ob (F , G)= _⊗ᴰ_ {MC = MC} F G
-        Day-Functor .F-hom {(x₁ , x₂)}{(y₁ , y₂)}(f₁ , f₂) = {!   !}
+        Day-Functor .F-hom {(x₁ , x₂)}{(y₁ , y₂)}(f₁ , f₂) = {!    !}
         Day-Functor .F-id = {!   !}
         Day-Functor .F-seq = {!   !}
 
@@ -113,3 +121,4 @@ module src.Data.DayConv where
 
         Day-Monoidal : MonoidalCategory (ℓ-suc (ℓ-max ℓC ℓC')) (ℓ-max ℓC ℓC')
         Day-Monoidal = record { C = PshC ; monstr = PshMon } 
+        

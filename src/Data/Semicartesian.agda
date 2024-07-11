@@ -1,4 +1,4 @@
-{-# OPTIONS --allow-unsolved-metas  --lossy-unification #-}
+{-# OPTIONS  --allow-unsolved-metas  --lossy-unification #-}
 
 module src.Data.Semicartesian where
     open import Cubical.Foundations.Prelude

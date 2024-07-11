@@ -84,10 +84,108 @@ module src.Data.Direct where
                     (g : W [ w₁ , w₂ ] ) 
                     (f : |W| [ w₂ , w₃ ]) -- w₂ ≡ w₃
                     (a : (A ⟅ w₃ ⟆) .fst) where
+
+                    module _ {ℓD ℓD'}{D : Category ℓD ℓD' } where 
+                        hom-path : ∀ {A B A' B'} (p : A ≡ A') (q : B ≡ B') →
+                            (D [ A , B ]) ≡ (D [ A' , B' ])
+                        hom-path p q = cong₂ (λ a b → D [ a , b ]) p q
+
+                        hom-pathP : ∀ {A B A' B'} (p : A ≡ A') (q : B ≡ B') →
+                                    (f : D [ A , B ]) → (f' : D [ A' , B' ]) →
+                                    Type ℓD'
+                        hom-pathP p q f f' = PathP (λ i → hom-path p q i) f f'
+
+                    hammer  : {w w' : ob W} →  isProp (|W| [ w , w' ])
+                    hammer = isSetWob _ _
+
+                    -- these homsets are equal
+                    eqhomset : (|W| [ w₂ , w₂ ]) ≡ (|W| [ w₂ , w₃ ])
+                    eqhomset = hom-path refl f
+                    _ : (w₂ ≡ w₂) ≡ (w₂ ≡ w₃)
+                    _ = eqhomset
+
+                    _ : ((w₂ ≡ w₂) ≡ (w₂ ≡ w₃)) ≡ ((w₂ ≡ w₂) ≡ (w₂ ≡ w₃))
+                    _ = {! isSetHom |W| {w₂} {w₃} (hom-path refl f)!}
+
+                    
+
+                    _ : isProp (w₂ ≡ w₃)
+                    _ = hammer
+
+                    _ = {! isSetHom |W|  !}
+
+                    eqelems : hom-pathP {D = |W|}{A = w₂} refl f (|W| .id) f -- hom-pathP refl f (|W| .id) f 
+                    eqelems = isProp→PathP (λ i → hammer) refl f
+
+                    yas : (f g : |W| [ w₂ , w₃ ]) → f ≡ g
+                    yas f g = hammer  f g
+
+                    closer : PathP (λ i → |W| [ w₂ , (f i) ]) (|W| .id) f -- |W| .id is refl
+                    closer = isProp→PathP (λ i → hammer) refl f
+
+                    eqhom' : W [ Inc ⟅ w₂ ⟆ , Inc ⟅ w₂ ⟆ ] ≡ W [ Inc ⟅ w₂ ⟆ , Inc ⟅ w₃ ⟆ ]
+                    eqhom' = hom-path refl f
+
+
+                    -- every element in this set is equal to refl
+                    contr : isContr (|W| [ w₂ , w₂ ])
+                    contr = refl , hammer refl 
+
+                    -- all morphisms in |W| [ w , w ] map to via Inc W .id 
+                    toId : {w : ob |W|}(f : |W| [ w , w ]) → (Inc ⟪ f ⟫ ) ≡ W .id 
+                    toId f = Inc ⟪ f ⟫ ≡⟨ cong (Inc .F-hom) (hammer _ _) ⟩  
+                             Inc ⟪ |W| .id ⟫ ≡⟨ Inc .F-id ⟩ 
+                             W .id ∎
+
+                    toId' : hom-pathP {D = W}{A = w₂} refl f (W .id ) (Inc ⟪ f ⟫ )
+                    toId' = {! hammer {w₂}{(f i)}  !}
+                        --toPathP {! toId (transport (sym eqhomset) f) !}
+
+
+                    contrcong : isContr (|W| [ w₂ , w₂ ]) ≡ isContr (|W| [ w₂ , w₃ ])
+                    contrcong = cong isContr eqhomset
+                    -- now show this for hom-path refl f
+
+
+                    eqhomprop : isProp ((|W| [ w₂ , w₂ ]) ≡ (|W| [ w₂ , w₂ ]))
+                    eqhomprop = {! J ()  !}
+                        -- {! isPropIsProp {A = } !}
+
+                    contrcontr : isContr ((|W| [ w₂ , w₂ ]) ≡ (|W| [ w₂ , w₂ ]))
+                    contrcontr = refl , λ y → λ i → {! hammer {w₂} {w₂}  !}
+
+                    
+                    contrcontr' : isContr ((|W| [ w₂ , w₂ ]) ≡ (|W| [ w₂ , w₃ ]))
+                    contrcontr' = eqhomset , λ y → {!   !}
+
+                    contr' : isContr (|W| [ w₂ , w₃ ])
+                    contr' = transport contrcong contr
+
+                    _ = {! J (contr' .snd)  !}
+
+                    _ : |W| .id ≡ f ∙ (sym f)
+                    _ = hammer _ _
+
+                    lemma : hom-pathP  {D = W} {A = w₁} refl (sym f) (g ⋆⟨ W ⟩ (Inc ⟪ f ⟫)) g
+                        --PathP (λ i → W [ w₁ , Inc ⟅ f i ⟆ ])  g  (g ⋆⟨ W ⟩ (Inc ⟪ f ⟫))
+                    lemma = {! (g ⋆⟨ W ⟩ (Inc ⟪ f ⟫)) ≡[ i ]⟨ ? ⟩ ?  !}
+
+                    _ = ({!   !} ≡[ i ]⟨ {!   !} ⟩ {!   !})
+
+
+                    -- toId
+                    lemma₂ : transport (λ z → W [ w₁ , (f (~ z)) ] ) (g ⋆⟨ W ⟩ (Inc ⟪ f ⟫)) ≡ g
+                    lemma₂ = transport (λ z → W [ w₁ , (f (~ z)) ] ) (g ⋆⟨ W ⟩ (Inc ⟪ f ⟫)) ≡⟨ {!   !} ⟩ {!   !}
+
+                    lemma₃ : transport (λ i → fst (F-ob A (f (~ i)))) a ≡ (A ⟪ sym f ⟫) a
+                    lemma₃ i = {!   !}
                     
                     -- use identity system?
                     -- I'd like a discrete category with refl as the only endomorphism
+                    open import Cubical.Data.Sigma
                     postulate triv : (w₃ , (g ⋆⟨ W ⟩ (Inc ⟪ f ⟫)) , a) ≡ (w₂ , g , (A ⟪ sym f ⟫) a)
+                    prove : (w₃ , (g ⋆⟨ W ⟩ (Inc ⟪ f ⟫)) , a) ≡ (w₂ , g , (A ⟪ sym f ⟫) a)
+                    prove = ΣPathP (sym f , ΣPathP (toPathP lemma₂ , toPathP lemma₃))
             
             -- action on arrows
             mapR : {w₁ w₂ : ob W}(f : (W ^op) [ w₁ , w₂ ]) → Sig w₁ → Sig w₂
@@ -243,3 +341,4 @@ module src.Data.Direct where
         adj ._⊣_.triangleIdentities .TriangleIdentities.Δ₁ = Δ₁
         adj ._⊣_.triangleIdentities .TriangleIdentities.Δ₂ = Δ₂
 
+     
