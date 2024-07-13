@@ -95,10 +95,14 @@ module src.Models.DayConvUP where
             open NatFam
             makeNatFamPath : n .NF-ob ≡ m .NF-ob → n ≡ m
             makeNatFamPath p i .NF-ob = p i
-            makeNatFamPath p i .NF-hom {X}{Y}{X'}{Y'}f g = {!   !} 
-               -- prf : PathP (λ i → {!   !} ≡ {!   !}) (n .NF-hom f g) ((m .NF-hom f g)) 
-                --prf = {! (SET _) .isSetHom !}
-
+            makeNatFamPath p i .NF-hom {X}{Y}{X'}{Y'}f g = prf i where
+                l =  seq' (SET ℓS) {P .F-ob X ×h Q .F-ob Y}{R .F-ob (X ⨂ Y)}{R .F-ob (X' ⨂ Y')} (p i X Y) (R .F-hom (f ⨂₁ g)) 
+                prf : PathP 
+                        (λ i → seq' (SET ℓS) {P .F-ob X ×h Q .F-ob Y}{R .F-ob (X ⨂ Y)}{R .F-ob (X' ⨂ Y')} (p i X Y) (R .F-hom (f ⨂₁ g)) 
+                             ≡ seq' (SET ℓS) {P .F-ob X ×h Q .F-ob Y}{P .F-ob X' ×h Q .F-ob Y'}{R .F-ob (X' ⨂ Y')} (×Fhom P Q f g) (p i X' Y') )  
+                        (n .NF-hom f g) 
+                        (m .NF-hom f g)
+                prf = toPathP ((SET ℓS) .isSetHom {P .F-ob X ×h Q .F-ob Y} {R .F-ob (X' ⨂ Y')}  _ _ _ _)
         
         module fresh (P Q R : ob 𝓥) where
             open NatFam
@@ -124,8 +128,26 @@ module src.Models.DayConvUP where
             diag : ob C → Bifunctor ((C ×C C) ^op) (C ×C C) (SET ℓ-zero)
             diag = diagram {MC = SMC} P Q
             
+            Dom : (x : ob C) → Set _
+            Dom x = Σ[ X ∈ (ob C × ob C) ] 
+                     Σ[ Y ∈ (ob C × ob C) ] 
+                     Σ[ (f , g) ∈ ((C ×C C) [ Y , X ]) ] 
+                     ((diag x ⟅ (X , Y) ⟆b ) .fst)
+                     
+
             Diag : (x : ob C) → Set _
             Diag x = Σ[ (y , z) ∈ (ob C × ob C)] (fst (diag x ⟅ (y , z) , (y , z) ⟆b))
+            {-
+              Dom ==(lmap (diag x))=(rmap (diag x))==> Diag --inc--> Day' x = SetCoequalizer (lmap (diag x)) (rmap (diag x))
+                                                            \            .
+                                                              \          .
+                                                              h   ∃! inducedHom
+                                                                  \      .
+                                                                    \    .
+                                                                        C
+            commuting diagram
+            
+            -}
 
             Day' : (c : ob C) → Coend (diag c)
             Day' = Day  {MC = SMC} P Q
@@ -143,10 +165,7 @@ module src.Models.DayConvUP where
             
             mapoutcoeq : (m : NatFam P Q R)
                 (x : ob C)
-                (a : Σ[ X ∈ (ob C × ob C) ] 
-                     Σ[ Y ∈ (ob C × ob C) ] 
-                     Σ[ (f , g) ∈ ((C ×C C) [ Y , X ]) ] 
-                     ((diag x ⟅ (X , Y) ⟆b ) .fst) ) → 
+                (a : Dom x ) → 
                 mapout m x (lmap (diag x) a) 
                  ≡
                 mapout m x (rmap (diag x) a)
@@ -161,6 +180,24 @@ module src.Models.DayConvUP where
                         ∙ funExt⁻ (sym (R .F-id )) (m _ _(F-hom P f Py , F-hom Q g Qz))) 
                         ∙ cong (λ h → R .F-hom h (m _ _(F-hom P f Py , F-hom Q g Qz))) (sym (sms .tenstr .─⊗─ . F-id)))
                     ∙ funExt⁻ (sym (R .F-seq _ _)) (m _ _ (F-hom P f Py , F-hom Q g Qz)) 
+
+            η≡ : {x : ob C }
+                {nf : NatFam P Q R}
+                {other : SET ℓ' [ (P ⨂ᴰᵥ Q) .F-ob x , R .F-ob x ] }
+                (prf : ((d : Diag x ) → mapout nf x d ≡ other (inc d)) ) → 
+                other ≡ inducedHom 
+                        (R .F-ob x .snd) 
+                        (mapout nf x) 
+                        (mapoutcoeq nf x)
+            η≡ {x}{nf} {other} prf =  
+                uniqueness  
+                    ((lmap (diag x))) 
+                    ((rmap (diag x))) 
+                    ((R .F-ob x .snd)) 
+                    ((mapout nf x))  
+                    ((mapoutcoeq nf x)) 
+                    other 
+                    prf
                 
             bkwd : NatFam P Q R → 𝓥 [ P ⨂ᴰᵥ Q , R ] 
             bkwd nf = natTrans η ηnat where 
@@ -172,22 +209,106 @@ module src.Models.DayConvUP where
 
                 ηnat : N-hom-Type (P ⨂ᴰᵥ Q) R η 
                 ηnat {x}{y} f = goal where 
-                    -- to get rid the dumb isSet obligations, explicity use seq'
-                    goal :
-                            seq' (SET _) {(P ⨂ᴰᵥ Q) .F-ob x}{(P ⨂ᴰᵥ Q) .F-ob y}{R .F-ob y}
-                            ((P ⨂ᴰᵥ Q) .F-hom f) (η y) 
-                         ≡ seq' (SET _){(P ⨂ᴰᵥ Q) .F-ob x}{R .F-ob x}{R .F-ob y}
-                            (η x) (R .F-hom f)
-                    goal = funExt pointwise where 
+                    l : (SET _)[ (P ⨂ᴰᵥ Q) .F-ob x , R .F-ob y ] 
+                    l = seq' (SET _) {(P ⨂ᴰᵥ Q) .F-ob x}{(P ⨂ᴰᵥ Q) .F-ob y}{R .F-ob y}
+                        ((P ⨂ᴰᵥ Q) .F-hom f) (η y)
 
-                        observe : η x ≡ inducedHom (R .F-ob x .snd) (mapout nf x) (mapoutcoeq nf x) 
-                        observe = refl
+                    r : (SET _)[ (P ⨂ᴰᵥ Q) .F-ob x , R .F-ob y ]
+                    r = seq' (SET _){(P ⨂ᴰᵥ Q) .F-ob x}{R .F-ob x}{R .F-ob y}
+                        (η x) (R .F-hom f)
+
+                                      -- show a map is equal to a component 
+                    -- if they are equal maps on Diag
+                    fact : {x : ob C }
+                         {other : SET ℓ' [ (P ⨂ᴰᵥ Q) .F-ob x , R .F-ob x ] }
+                         (prf : ((d : Diag x ) → mapout nf x d ≡ other (inc d)) ) → 
+                         other ≡ η x 
+                    fact {x} {other} prf = η≡ prf
                         
-                        pointwise : (coe : fst ((P ⨂ᴰᵥ Q) .F-ob x)) →
-                             (η y)  (((P ⨂ᴰᵥ Q) .F-hom f) coe ) ≡ (R .F-hom f) ((η x) coe)
-                        pointwise coe = {!   !}
-                
-                    -- {! Day' x .cowedge .nadir  !}
+                    -- to get rid the dumb isSet obligations, explicity use seq'
+                    goal : l ≡ r
+                    goal = funExt λ coex → {!   !}
+                    --funExt⁻ (sym (η≡ {y}{{!   !}} {!   !})) (((P ⨂ᴰᵥ Q) .F-hom f) coex) ∙ {! nf .NF-hom _ _  !}
+
+                    top : SET ℓ' [ F-ob (P ⨂ᴰᵥ Q) x , F-ob (P ⨂ᴰᵥ Q) y ]
+                    top = ((P ⨂ᴰᵥ Q) .F-hom f)
+
+                    right' : SET ℓ' [ (P ⨂ᴰᵥ Q) .F-ob y , R .F-ob y ]
+                    right' = inducedHom (R .F-ob y .snd) (mapout nf y) (mapoutcoeq nf y)
+
+                    rightcom : (d : Diag y) → mapout nf y d ≡ (η y) (inc d)
+                    rightcom = commutativity (R .F-ob y .snd) (mapout nf y) (mapoutcoeq nf y)
+
+
+                    _ : SetCoequalizer (lmap (diag y)) (rmap (diag y)) ≡ (P ⨂ᴰᵥ Q) .F-ob y  .fst
+                    _ = refl
+
+
+      
+                            --{! commutativity (R .F-ob x .snd) (mapout nf x) (mapoutcoeq nf x)  !}
+                            --prf
+
+                    cross : 
+                         {other : SET ℓ' [ (P ⨂ᴰᵥ Q) .F-ob x , R .F-ob y ] }→ 
+                        -- (prf : ((d : Diag x ) → mapout nf x d ≡ other (inc d)) ) → 
+                         other ≡ l
+                    cross {other} = {! uniqueness ? ? ? ? ? ? ?  !}
+                    
+                            
+                    {-
+
+                      uniqueness : {C : Type ℓ''}
+             → (f g : A → B)
+             → (Cset : (x y : C) → (p q : x ≡ y) → p ≡ q)
+             → (h : B → C)
+             → (hcoeq : (a : A) → h (f a) ≡ h (g a))
+             → (i : SetCoequalizer f g → C)
+             → (icommutativity : (b : B) → h b ≡ i (inc b))
+             → (i ≡ inducedHom Cset h hcoeq)
+
+ commutativity : {C : Type ℓ''} {f g : A → B}
+                → (Cset : (x y : C) → (p q : x ≡ y) → p ≡ q)
+                → (h : B → C)
+                → (hcoeq : (a : A) → h (f a) ≡ h (g a))
+                → ((b : B) → h b ≡ inducedHom Cset h hcoeq (inc b))
+  commutativity Cset h hcoeq = λ b → refl
+
+        record Coend : Set ((ℓ-max ℓC (ℓ-max ℓC' (ℓ-max ℓD ℓD'))))  where
+            open Cowedge
+            field
+                cowedge : Cowedge
+                factor : (W : Cowedge ) → D [ cowedge .nadir , W .nadir ]
+                commutes : (W : Cowedge )
+                           (c : C.ob) →
+                           (cowedge .ψ c D.⋆ factor W) ≡ W .ψ c
+                unique : (W : Cowedge )
+                         (factor' : D [ cowedge .nadir , W .nadir ]) →
+                         (∀(c : C.ob) → (cowedge .ψ c D.⋆ factor') ≡ W .ψ c) →
+                         factor' ≡ factor W
+                    -}
+                    topUnique : (other : SET ℓ' [ F-ob (P ⨂ᴰᵥ Q) x , F-ob (P ⨂ᴰᵥ Q) y ]) → other ≡ top
+                    topUnique  other = Day' x .unique {! tr  !} {!   !} {!   !} where 
+
+                        tr : Cowedge (diag y) 
+                        tr = {! Day' y .cowedge   !}
+                           -- Day' x .unique 
+                           --     (Day-cowedge {MC = SMC} P Q f) 
+                           --     {! Day' x .factor (Day-cowedge {MC = SMC} P Q f)   !} 
+                           --     {!   !} 
+
+                    right : SET ℓ' [ (P ⨂ᴰᵥ Q) .F-ob y , R .F-ob y ]
+                    right = (η y)
+
+                    tr : F-ob (P ⨂ᴰᵥ Q) x ≡ Day' x .cowedge .nadir
+                    tr = refl
+ 
+                    -- l is a composition of two induced homs.. 
+                    observation : l ≡ λ x → (inducedHom (R .F-ob y .snd) (mapout nf y) (mapoutcoeq nf y)) {!   !}
+                    observation = {!((lmap (diagram P Q y)))    !}
+
+ 
+
+                         
 
             UP : Iso (𝓥 [ P ⨂ᴰᵥ Q , R ]) (NatFam P Q R)
             UP = iso 
@@ -195,13 +316,8 @@ module src.Models.DayConvUP where
                     bkwd 
                     (λ b → makeNatFamPath (funExt λ x → funExt λ y → funExt λ{(Px , Qy) → funExt⁻ (R .F-id) _ }) )
                     (λ b → makeNatTransPath (funExt λ x → 
-                        sym (uniqueness 
-                                (lmap (diagram P Q x)) 
-                                (rmap (diagram P Q x)) 
-                                (R .F-ob x .snd) 
-                                (mapout (fwd b) x) 
-                                (mapoutcoeq (fwd b) x) 
-                                (b .N-ob x) 
-                                λ {((y , z) , (x→y⊗z , Py) , Qz) → 
+                                -- show the components are equal by showing they are equal maps on diagrams
+                                sym (η≡  λ {((y , z) , (x→y⊗z , Py) , Qz) → 
                                     funExt⁻ (sym (b .N-hom _)) _ 
-                                    ∙ cong (λ h → b .N-ob x h) (day-apₘ {MC = SMC} P Q (C .⋆IdR _))} )))
+                                        ∙ cong (λ h → b .N-ob x h) (day-apₘ {MC = SMC} P Q (C .⋆IdR _))} )))  
+
