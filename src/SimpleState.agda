@@ -10,8 +10,8 @@ module src.SimpleState where
     open import Cubical.Data.FinSet.Base
     open import Cubical.Categories.NaturalTransformation
     open import Cubical.Categories.Functors.Constant
-
-
+    open import Cubical.Categories.Bifunctor.Redundant
+    open import Cubical.Categories.Presheaf.Constructions
 
     module _ {ℓS} where 
         module Levy where 
@@ -58,6 +58,40 @@ module src.SimpleState where
 
             T : Functor 𝒱 𝒱 
             T = U ∘F F
+
+            _×P_ : ob 𝒱 → ob 𝒱 → ob 𝒱
+            (P ×P Q)  = PshProd ⟅ P , Q ⟆b
+            
+            strength : {A B : ob 𝒱} → 𝒱 [ A ×P (T .F-ob B) , T .F-ob (A ×P B) ]
+            strength {A}{B} = natTrans goal {!   !} where 
+                goal : N-ob-Type (A ×P T .F-ob B) (T .F-ob (A ×P B))
+                goal X (Ax , TBx) Y X→Y Sy = subgoal where 
+
+                    FBy : (F ⟅ B ⟆) .F-ob Y .fst
+                    FBy = TBx Y X→Y Sy
+
+                    Z : ob Inj 
+                    Z = FBy .fst 
+
+                    Y→Z : Inj [ Y , Z ]
+                    Y→Z = FBy .snd .fst 
+
+                    Sz : S .F-ob Z .fst 
+                    Sz = FBy .snd .snd .fst
+
+                    Bz : B .F-ob Z .fst 
+                    Bz = FBy .snd .snd .snd 
+
+                    Az : A .F-ob Z .fst
+                    Az = A .F-hom (X→Y ⋆⟨ Inj ⟩ Y→Z) Ax 
+                    -- where functoriality is used
+                    
+                    subgoal : (F ⟅ A ×P B ⟆) .F-ob Y .fst
+                    subgoal = Z , (Y→Z , (Sz , (Az , Bz)))
+             
+                isnatural : N-hom-Type (A ×P T .F-ob B) (T .F-ob (A ×P B)) goal
+                isnatural {X}{Y} f = funExt λ{ (Ax , TBx) → funExt λ Z → funExt λ Y→Z → funExt λ Sz → {! refl  !}}
+
 
             Ref : ob 𝒱 
             Ref .F-ob X = (fst X) , (isFinSet→isSet (snd X))
