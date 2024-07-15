@@ -4,7 +4,7 @@
 
 module src.Data.Coend where
     
-    open import Cubical.Categories.Bifunctor.Base 
+    open import Cubical.Categories.Bifunctor.Redundant
     open import Cubical.Categories.Category
     open import Cubical.Categories.Functor
     open import Cubical.Categories.Instances.Sets
@@ -37,7 +37,41 @@ module src.Data.Coend where
                     F₀(c,c)---ψ(c)-----------> nadir
                 -}
                 extranatural : {c c' : C.ob}(f : C [ c , c' ]) →
-                    (F ⟪ C.id , f ⟫lr D.⋆  ψ c') ≡ ( F ⟪ f ,  C.id ⟫lr D.⋆ ψ c)
+                    (F ⟪ C.id , f ⟫× D.⋆  ψ c') ≡ ( F ⟪ f ,  C.id ⟫× D.⋆ ψ c)
+
+
+
+        record cowedgeMorphism (X Y : Cowedge) : Set (ℓ-max ℓC (ℓ-max ℓC' (ℓ-max ℓD ℓD'))) where 
+            open Cowedge
+            open Category
+            field 
+                factor : D [ X .nadir , Y .nadir ]
+                commutes : ∀ (c : ob C) → X .ψ c ⋆⟨ D ⟩ factor ≡ Y .ψ c
+
+        --owedgeMorphismisSet : (X Y : Cowedge) → isSet (cowedgeMorphism X Y)
+        --cowedgeMorphismisSet X Y = {!   !} -- as a sigma type, then derived via knowind D has set homs
+
+        open import Cubical.Data.Sigma
+        -- want a universal morphism definition
+
+
+        open import Cubical.Categories.Exponentials
+        record CoendAlt : Set ((ℓ-max ℓC (ℓ-max ℓC' (ℓ-max ℓD ℓD'))))  where
+            open Cowedge
+            open cowedgeMorphism
+            field 
+                U : Cowedge
+                univMor : (W : Cowedge)(m : cowedgeMorphism U W) → 
+                    ∃![ um ∈ (cowedgeMorphism U W)] (um .factor ≡ m .factor)
+                    
+        record Coend' : Set ((ℓ-max ℓC (ℓ-max ℓC' (ℓ-max ℓD ℓD'))))  where
+            open Cowedge
+            open cowedgeMorphism
+            field 
+                U : Cowedge
+                univMor : (W : Cowedge) → cowedgeMorphism U W
+                unique : (W : Cowedge)(m : cowedgeMorphism U W)
+                         →  m .factor ≡ univMor W .factor
 
         -- TODO : Can probably define a Presheaf structure for Cowedge and then
         -- this should be isomorphic to a universal element of that presheaf.
@@ -59,22 +93,22 @@ module src.Data.Coend where
         open import Cubical.HITs.SetCoequalizer
         open Category
 
+        lmap : Σ[ X ∈ ob C ]
+                Σ[ Y ∈ ob C ]
+                Σ[ f ∈ (C)[ Y , X ] ] fst( F ⟅ X , Y ⟆b )
+            →  Σ[ X ∈ ob C ] fst ( F ⟅ X , X ⟆b)
+        lmap (X , Y , f , Fxy ) = X , ( F ⟪ id C {X} , f ⟫× ) Fxy
+
+        rmap : Σ[ X ∈ ob C ]
+                Σ[ Y ∈ ob C ]
+                Σ[ f ∈ (C)[ Y , X ] ] fst( F ⟅ X , Y ⟆b )
+            →  Σ[ X ∈ ob C ] fst ( F ⟅ X , X ⟆b)
+        rmap (X , Y , f , Fxy ) = Y , ( F ⟪ f , id C {Y}  ⟫× ) Fxy
+
         Set-Coend : Coend F
         Set-Coend = coend where
             open Cowedge
             open Coend
-
-            lmap : Σ[ X ∈ ob C ]
-                   Σ[ Y ∈ ob C ]
-                   Σ[ f ∈ (C)[ Y , X ] ] fst( F ⟅ X , Y ⟆b )
-                →  Σ[ X ∈ ob C ] fst ( F ⟅ X , X ⟆b)
-            lmap (X , Y , f , Fxy ) = X , ( F ⟪ id C {X} , f ⟫lr ) Fxy
-
-            rmap : Σ[ X ∈ ob C ]
-                   Σ[ Y ∈ ob C ]
-                   Σ[ f ∈ (C)[ Y , X ] ] fst( F ⟅ X , Y ⟆b )
-                →  Σ[ X ∈ ob C ] fst ( F ⟅ X , X ⟆b)
-            rmap (X , Y , f , Fxy ) = Y , ( F ⟪ f , id C {Y}  ⟫lr ) Fxy
 
             {-
                 for morphism f : Y ⇒ X in category C,
@@ -102,6 +136,34 @@ module src.Data.Coend where
                     (W .nadir .snd)
                     (λ {(x , Fxx) → W .ψ x Fxx})
                     λ{(X , Y , f , Fxy) → funExt⁻ (W .extranatural f) Fxy}
+
+            open Coend'
+            open cowedgeMorphism
+            open CoendAlt
+
+            open import Cubical.Data.Sigma
+            {-
+            coendalt : CoendAlt F
+            coendalt .U = univ
+            coendalt .univMor W m = 
+                uniqueExists 
+                    (record { factor = factoring W ; commutes = λ c → refl }) 
+                    (funExt (λ x → {! W .nadir .snd  !})) 
+                    {! λ a →  (cowedgeMorphismisSet F univ W) _ a      !} -- we'd have this if we 
+                    λ a' x  → {! uniqueness ? ? ? ? ? ? ?  !} -}
+
+            coend' : Coend' F 
+            coend' .U = univ
+            coend' .univMor W = record { factor = factoring W ; commutes = λ c → refl }
+            coend' .unique W m = 
+                    uniqueness
+                        lmap
+                        rmap 
+                        (W .nadir .snd)
+                        ((λ{ (c , Fcc) → W . ψ c Fcc}))
+                        ((λ{( X , Y , f , Fxy ) → funExt⁻ (W .extranatural f) Fxy }))
+                        (m .factor)
+                        λ{(x , Fxx) → funExt⁻ (sym (m. commutes x)) Fxx}
 
             coend : Coend F
             coend .cowedge = univ
