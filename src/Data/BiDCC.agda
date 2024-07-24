@@ -300,8 +300,6 @@ module src.Data.BiDCC where
         module SepUP {P Q R : ob 𝓥} where 
             open DayUP
 
-            UP = ⨂UP {P}{Q}{R}
-
             left : 𝓥× [ P ⨂Ext Q , R ∘F (⨂c ^opF) ] → 𝓥 [ P , Q ⊸ R ] 
             left nt = natTrans η ηcom where 
                 η : N-ob-Type P (Q ⊸ R)
@@ -352,5 +350,4 @@ module src.Data.BiDCC where
                     (λ _ → makeNatTransPath (funExt λ (x , y) → funExt λ (Px , Qy) → refl))
 
             ⊸UP : Iso (𝓥 [ P ⨂ᴰ Q , R ]) (𝓥 [ P , Q ⊸ R ]) 
-            ⊸UP = compIso UP ⊸UP'
- 
+            ⊸UP = compIso (⨂UP {P}{Q}{R}) ⊸UP'
