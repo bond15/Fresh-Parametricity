@@ -299,252 +299,58 @@ module src.Data.BiDCC where
 
         module SepUP {P Q R : ob 𝓥} where 
             open DayUP
-            η : N-ob-Type ((Q ⊸ R) ⨂Ext Q) (R ∘F (⨂c ^opF))
-            η (y , z) (f , q) = f .N-ob z q
-            eval : 𝓥 [ ((Q ⊸ R) ⊗ᴰ Q) , R ] 
-            eval = ⨂UP .inv (natTrans η ηcom) where
-
-
-                ηcom : N-hom-Type ((Q ⊸ R) ⨂Ext Q) (R ∘F (⨂c ^opF)) η
-                ηcom {(y , z)}{(y' , z')}(y'→y , z'→z) = funExt sub where
-
-                    sub : ((Q⊸Ry , Qz) : fst (F-ob ((Q ⊸ R) ⨂Ext Q) (y , z))) → 
-                        F-hom R (⨂c .F-hom (y'→y , (C .id))) (Q⊸Ry .N-ob z' (F-hom Q z'→z Qz))
-                      ≡ F-hom R (⨂c .F-hom (y'→y , z'→z))    (Q⊸Ry .N-ob z Qz)
-                    sub (Q⊸Ry , Qz) = 
-                        -- use naturality of Q⊸Ry 
-                        cong (λ h → R .F-hom _ h) (funExt⁻ ( Q⊸Ry .N-hom z'→z ) Qz) 
-                        ∙ funExt⁻ (sym (R .F-seq _ _ )) _ 
-                        ∙ cong (λ h → R .F-hom h _) 
-                            (sym (⨂c .F-seq _ _) ∙ cong (λ h → ⨂c .F-hom h) (≡-× (C .⋆IdR _) (C .⋆IdL _)))  
-
-            ⊸Intro : 𝓥 [ P ⨂ᴰ Q , R ] → 𝓥 [ P , Q ⊸ R ] 
-            ⊸Intro nt = natTrans ηi ηcomi where 
-                ηi : N-ob-Type P (Q ⊸ R) 
-                ηi x Px = natTrans η' η'com where 
-                    η' : N-ob-Type Q (R ⦅ x ⊗-⦆)
-                    η' y Qy = nt .N-ob (x ⊗ y) ((inc ((x , y) , (((C .id) , Px) , Qy))))
-
-                    η'com : N-hom-Type Q (R ⦅ x ⊗-⦆) η' 
-                    η'com {y}{z} z→y = 
-                        funExt λ Qy → 
-                            cong (λ h → nt .N-ob _ h) 
-                                (day-ap {MC = SMC} P Q refl (funExt⁻ (sym (P .F-id )) Px) refl 
-                                ∙ sym (day-fact {MC = SMC} P Q {f = C .id}{z→y}{C .id}{Px}{Qy} 
-                                    (C .⋆IdR _ ∙ sym (C .⋆IdL _))))
-                            -- use naturality of nt
-                            ∙  funExt⁻ (nt .N-hom (((C ^op) .id) ⊗ₕ z→y)) (inc ((x , y) , (((C .id) , Px) , Qy)))
-
-
-                ηcomi : N-hom-Type P (Q ⊸ R) ηi 
-                ηcomi {x}{y} y→x = funExt λ Px → makeNatTransPath (funExt λ z → funExt λ Qz → 
-                        cong (λ h → nt .N-ob _ h) ((day-ap {MC = SMC} P Q refl refl ((funExt⁻ (sym (Q .F-id )) Qz)) ) 
-                            ∙ sym (day-fact {MC = SMC} P Q {f = y→x}{C .id}{C .id}{Px}{Qz}{ y→x ⊗ₕ (C .id)} (sym (C .⋆IdL _))) 
-                            ∙ day-apₘ {MC = SMC} P Q (sym(C .⋆IdR _)))
-                        -- use naturality of nt
-                        ∙ funExt⁻ (nt .N-hom (y→x ⊗ₕ (C .id{z}))) (inc ((x , z) , (C .id , Px) ,  Qz)))
-
-            ⊸IntroInv : 𝓥 [ P , Q ⊸ R ] → 𝓥 [ P ⨂ᴰ Q , R ] 
-            ⊸IntroInv nt = (Day-Functor SMC .F-hom (nt , 𝓥 .id)) ⋆⟨ 𝓥 ⟩ eval
-
-
-            what : (nt : NatTrans P (Q ⊸ R)) →  𝓥× [ P ⨂Ext Q , R ∘F (⨂c ^opF) ] 
-            what nt = ⨂UP {P}{Q}{Q ⊸ R} .fun {!(⊸IntroInv nt)   !} ⋆⟨ 𝓥× ⟩ {!   !}
-            hmm : (nt : NatTrans P (Q ⊸ R)) → {! (⊸Intro (⊸IntroInv nt))  !}
-            hmm nt = {! ⨂UP {P}{Q}{R} .fun  !}
---(⊸Intro (⊸IntroInv nt))
-            prf : section ⊸Intro ⊸IntroInv
-            prf nt = {! nt  !}
-                {-}
-                -- need to show these two homsets are equal, 
-                -- they are natural transformations so their components need to be equal
-                makeNatTransPath 
-                -- lets reason pointwise
-                (funExt λ x → funExt λ Px → 
-                -- each component results in a natural transformation 𝓥 [ Q , partial x R ]
-                -- we need to show they are equal 
-                makeNatTransPath 
-                -- again reasoning pointwise
-                (funExt λ y → funExt λ Qy →
-                -- one component of the natrual transformation is given by inducedHom
-                -- to reason about it, we need to use uniqueness to see if the underlying maps are equal
-                funExt⁻ (sym 
-                    (uniqueness 
-                        (lmap (diag {P}{Q}{R}(x ⊗ y))) 
-                        (rmap (diag {P}{Q}{R}(x ⊗ y)))
-                        (R .F-ob (⨂c .F-ob (x , y)) .snd) 
-                        (mapout {P}{Q}{R} {!   !} (x ⊗ y)) 
-                        (mapoutcoeq {P}{Q}{R}{!   !} ((x ⊗ y))) 
-                        {! (idTrans Q) .N-ob (⨂c .F-ob (x , y))  !} 
-                        {!   !})) 
-                        {!   !})) -}
-                    --(inc ((x , y) , (? , Px) , Qy))))
-{-}
-Cubical.HITs.SetCoequalizer.rec 
-(R .F-ob (⨂c .F-ob (x , y)) .snd)
-
-(mapout
- (natTrans src.Data.BiDCC.Mod.SepUP.η src.Data.BiDCC.Mod.SepUP.ηcom)
- (⨂c .F-ob (x , y)))
-
-(mapoutcoeq
- (natTrans src.Data.BiDCC.Mod.SepUP.η src.Data.BiDCC.Mod.SepUP.ηcom)
- (⨂c .F-ob (x , y)))
-
-(src.Data.DayConv.unsolved#meta.913 SMC P Q (Q ⊸ R) Q nt
- (idTrans Q) .N-ob (⨂c .F-ob (x , y))
-
- (inc ((x , y) , (C .id , Px) , Qy)))
-≡ nt .N-ob x Px .N-ob y Qy
--}
 
             UP = ⨂UP {P}{Q}{R}
-            maybe : (m n : 𝓥 [ P ⨂ᴰ Q , R ]) → UP .fun m ≡ UP .fun n → m ≡ n 
-            maybe m n prf = sym bbb ∙ (cong (λ h → inv UP h) prf ∙ aaa) where 
-                aaa : inv UP (fun UP n) ≡ n
-                aaa = UP  .leftInv n
 
-                bbb : inv UP (fun UP m) ≡ m
-                bbb = UP .leftInv m
+            left : 𝓥× [ P ⨂Ext Q , R ∘F (⨂c ^opF) ] → 𝓥 [ P , Q ⊸ R ] 
+            left nt = natTrans η ηcom where 
+                η : N-ob-Type P (Q ⊸ R)
+                η x Px = natTrans η' η'com where 
+                    η' : N-ob-Type Q (R ⦅ x ⊗-⦆) 
+                    η' y Qy = nt .N-ob (x , y) (Px , Qy)
 
-            ret : retract ⊸Intro ⊸IntroInv
-            ret nt = maybe _ nt (makeNatTransPath {! UP .fun (⊸IntroInv (⊸Intro nt)) .N-ob  !}) where 
-                f1 : UP .fun nt .N-ob ≡ fwd nt .N-ob
-                f1 = refl
+                    η'com : N-hom-Type Q (R ⦅ x ⊗-⦆) η'
+                    η'com {y}{z} z→y = funExt λ Qy → 
+                        cong (λ h → nt .N-ob (x , z) h ) (≡-× (funExt⁻ (sym (P .F-id)) Px) refl)
+                        -- use naturality of nt
+                        ∙ funExt⁻ (nt .N-hom (C .id , z→y)) _
+                        
+                ηcom : N-hom-Type P (Q ⊸ R) η
+                ηcom {x}{y} y→x = funExt λ Px → makeNatTransPath (funExt λ z → funExt λ Qz → 
+                    cong (λ h → nt .N-ob (y , z) h ) (≡-×  refl (funExt⁻ (sym (Q .F-id)) Qz)) 
+                    ∙ funExt⁻ (nt .N-hom (y→x , C .id)) _)
 
-                f2 : UP .fun (⊸IntroInv (⊸Intro nt)) .N-ob ≡ fwd (seqTrans {!   !} {!   !}) .N-ob 
-                f2 = refl
+            eval : 𝓥× [ (Q ⊸ R)  ⨂Ext Q , R ∘F (⨂c ^opF) ] 
+            eval = natTrans η ηcom where 
+                η : N-ob-Type ((Q ⊸ R) ⨂Ext Q) (R ∘F (⨂c ^opF)) 
+                η (x , y) (f , q) = f .N-ob y q
+
+                ηcom : N-hom-Type ((Q ⊸ R) ⨂Ext Q) (R ∘F (⨂c ^opF)) η
+                ηcom {x}{y}(f₁ , f₂) = funExt goal where 
+
+                    goal : ((q⊸r , q) : fst (F-ob ((Q ⊸ R) ⨂Ext Q) x)) → 
+                          F-hom R (⨂c .F-hom (f₁ , C .id))(q⊸r .N-ob (snd y) (F-hom Q f₂ q)) 
+                        ≡ F-hom R (⨂c .F-hom (f₁ , f₂))   (q⊸r .N-ob (snd x) q)
+                    goal (q⊸r , q) = 
+                        -- using naturality of q⊸r
+                        cong (λ h → R .F-hom _ h) (funExt⁻ (q⊸r .N-hom f₂) q)
+                        -- collapse sequence of R.hom 
+                        ∙ funExt⁻ (sym (R .F-seq _ _ ))_ 
+                        ∙ cong (λ h → R .F-hom h _) 
+                            (sym (⨂c .F-seq _ _) 
+                            ∙ cong (λ h → ⨂c .F-hom h) (≡-× (C .⋆IdR _) (C .⋆IdL _)))
+                            
+            right : 𝓥 [ P , Q ⊸ R ] → 𝓥× [ P ⨂Ext Q , R ∘F (⨂c ^opF) ] 
+            right nt = ⨂ext .F-hom (nt , 𝓥 .id) ⋆⟨ 𝓥× ⟩ eval
+
+            -- easier to prove this isomorphism and then use the universal property of the tensor
+            ⊸UP' : Iso (𝓥× [ P ⨂Ext Q , R ∘F (⨂c ^opF) ]) (𝓥 [ P , Q ⊸ R ]) 
+            ⊸UP' = iso 
+                    left 
+                    right 
+                    (λ _ → makeNatTransPath (funExt λ x → funExt λ Px → makeNatTransPath (funExt λ y → funExt λ Qy → refl)))
+                    (λ _ → makeNatTransPath (funExt λ (x , y) → funExt λ (Px , Qy) → refl))
 
             ⊸UP : Iso (𝓥 [ P ⨂ᴰ Q , R ]) (𝓥 [ P , Q ⊸ R ]) 
-            ⊸UP = iso 
-                    ⊸Intro
-                    ⊸IntroInv
-                    (λ nt → {!   !})
-                    {!   !}
-                   -- λ nt → maybe _ nt (makeNatTransPath (funExt λ{(x , y) → funExt λ{(Px , Qy) → 
-                   --     {! nt .N-ob (⨂c .F-ob (x , y)) (inc ((x , y) , (C .id , Px) , Qy))  !}}}))
-
-                       -- funExt⁻ (sym (uniqueness {!   !} {!   !} {!   !} {!   !} {!   !} {!   !} {!   !})) _))--sym (η≡ {!   !}) ) )
-
-                    {- 
-                    rec (R .F-ob x .snd)
-(mapout
- (natTrans src.Data.BiDCC.Mod.SepUP.η src.Data.BiDCC.Mod.SepUP.ηcom)
- x)
-(mapoutcoeq
- (natTrans src.Data.BiDCC.Mod.SepUP.η src.Data.BiDCC.Mod.SepUP.ηcom)
- x)
-(src.Data.DayConv.unsolved#meta.913 SMC P Q (Q ⊸ R) Q
- (natTrans
-  (λ x₁ Px →
-     natTrans
-     (λ y Qy →
-        nt .N-ob (⨂c .F-ob (x₁ , y)) (inc ((x₁ , y) , (C .id , Px) , Qy)))
-     (λ {y} {z} z→y i x₂ →
-        hcomp
-        (doubleComp-faces
-         (λ _ →
-            nt .N-ob (⨂c .F-ob (x₁ , z))
-            (inc ((x₁ , z) , (C .id , Px) , Q .F-hom z→y x₂)))
-         (λ i₁ →
-            nt .N-hom (⨂c .F-hom (id , z→y)) i₁
-            (inc ((x₁ , y) , (C .id , Px) , x₂)))
-         i)
-        (nt .N-ob (⨂c .F-ob (x₁ , z))
-         (hcomp
-          (doubleComp-faces
-           (λ _ → inc ((x₁ , z) , (C .id , Px) , Q .F-hom z→y x₂))
-           (λ i₁ →
-              hcomp
-              (doubleComp-faces
-               (λ _ → inc ((x₁ , y) , (⨂c .F-hom (C .id , z→y) ⋆ id , Px) , x₂))
-               (λ i₂ →
-                  hcomp
-                  (doubleComp-faces
-                   (λ _ →
-                      inc
-                      ((x₁ , y) ,
-                       (C .id ⋆ ⨂c .F-hom (C .id , z→y) , F-hom P id Px) , F-hom Q id x₂))
-                   (λ i₃ →
-                      inc
-                      ((x₁ , z) ,
-                       (hcomp
-                        (doubleComp-faces (λ _ → C .id ⋆ F-hom ⨂c (id , id)) (⋆IdR (C .id))
-                         i₃)
-                        (C .id ⋆ ⨂c .F-id i₃)
-                        , F-hom P (C .id) Px)
-                       , F-hom Q z→y x₂))
-                   i₂)
-                  (coeq ((x₁ , y) , (x₁ , z) , (C .id , z→y) , (C .id , Px) , x₂)
-                   i₂))
-               (~ i₁))
-              (inc
-               ((x₁ , y) ,
-                (hcomp
-                 (doubleComp-faces (λ _ → ⨂c .F-hom (C .id , z→y) ⋆ id)
-                  (λ i₂ → C .⋆IdL (⨂c .F-hom (C .id , z→y)) (~ i₂)) (~ i₁))
-                 (C .⋆IdR (⨂c .F-hom (C .id , z→y)) (~ i₁))
-                 , P .F-id i₁ Px)
-                , Q .F-id i₁ x₂)))
-           i)
-          (inc ((x₁ , z) , (C .id , P .F-id (~ i) Px) , Q .F-hom z→y x₂))))))
-  (λ {x = x₁} {y} y→x i x₂ →
-     makeNatTransPath
-     (λ i₁ x₃ x₄ →
-        hcomp
-        (doubleComp-faces
-         (λ _ →
-            nt .N-ob (⨂c .F-ob (y , x₃))
-            (inc ((y , x₃) , (C .id , P .F-hom y→x x₂) , x₄)))
-         (λ i₂ →
-            nt .N-hom (⨂c .F-hom (y→x , C .id)) i₂
-            (inc ((x₁ , x₃) , (C .id , x₂) , x₄)))
-         i₁)
-        (nt .N-ob (⨂c .F-ob (y , x₃))
-         (hcomp
-          (doubleComp-faces
-           (λ _ → inc ((y , x₃) , (C .id , P .F-hom y→x x₂) , x₄))
-           (λ i₂ →
-              hcomp
-              (doubleComp-faces
-               (λ _ →
-                  inc ((y , x₃) , (C .id , P .F-hom y→x x₂) , Q .F-hom (C .id) x₄))
-               (λ i₃ →
-                  inc
-                  ((x₁ , x₃) , (C .⋆IdR (⨂c .F-hom (y→x , C .id)) (~ i₃) , x₂) , x₄))
-               i₂)
-              (hcomp
-               (doubleComp-faces
-                (λ _ → inc ((x₁ , x₃) , (⨂c .F-hom (y→x , C .id) , x₂) , x₄))
-                (λ i₃ →
-                   hcomp
-                   (doubleComp-faces
-                    (λ _ →
-                       inc
-                       ((x₁ , x₃) ,
-                        (C .id ⋆ ⨂c .F-hom (y→x , C .id) , F-hom P id x₂) , F-hom Q id x₄))
-                    (λ i₄ →
-                       inc
-                       ((y , x₃) ,
-                        (hcomp
-                         (doubleComp-faces (λ _ → C .id ⋆ F-hom ⨂c (id , id)) (⋆IdR (C .id))
-                          i₄)
-                         (C .id ⋆ ⨂c .F-id i₄)
-                         , F-hom P y→x x₂)
-                        , F-hom Q (C .id) x₄))
-                    i₃)
-                   (coeq ((x₁ , x₃) , (y , x₃) , (y→x , C .id) , (C .id , x₂) , x₄)
-                    i₃))
-                (~ i₂))
-               (inc
-                ((x₁ , x₃) ,
-                 (C .⋆IdL (⨂c .F-hom (y→x , C .id)) i₂ , P .F-id i₂ x₂) ,
-                 Q .F-id i₂ x₄))))
-           i₁)
-          (inc ((y , x₃) , (C .id , P .F-hom y→x x₂) , Q .F-id (~ i₁) x₄)))))
-     i))
- (idTrans Q) .N-ob x p)
-                    -}
-
-                       -- funExt⁻ (sym (uniqueness {!   !} {!   !} {!   !} {!   !} {!   !} {!   !} {!   !})) _))--sym (η≡ {!   !}) ) )
-                    -- sym (η≡ {!   !} )) ) 
+            ⊸UP = compIso UP ⊸UP'
+ 
