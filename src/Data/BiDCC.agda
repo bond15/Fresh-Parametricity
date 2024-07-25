@@ -351,3 +351,31 @@ module src.Data.BiDCC where
 
             ⊸UP : Iso (𝓥 [ P ⨂ᴰ Q , R ]) (𝓥 [ P , Q ⊸ R ]) 
             ⊸UP = compIso (⨂UP {P}{Q}{R}) ⊸UP'
+
+{-  meh
+        open import Cubical.Categories.Adjoint
+        open AdjointUniqeUpToNatIso 
+        open NaturalBijection
+        open _⊣_
+
+        ⨂F : ob 𝓥 → Functor 𝓥 𝓥 
+        ⨂F P = (curryF (PshC SMC) (PshC SMC){Γ = PshC SMC} .F-ob 
+                (swapArgs (PshC SMC) (PshC SMC) {Γ = PshC SMC}.F-ob (Day-Functor SMC))) 
+                    .F-ob P
+        
+        ⊸F : ob 𝓥 → Functor 𝓥 𝓥 
+        ⊸F P .F-ob Q = P ⊸ Q
+        ⊸F P .F-hom f .N-ob c p = p ⋆⟨ 𝓥 ⟩ {!   !}
+        ⊸F P .F-hom f .N-hom = {!   !}
+        ⊸F P .F-id = {!   !}
+        ⊸F P .F-seq = {!   !}
+        
+        --swapArgs _ _ .F-ob (Day-Functor SMC ) 
+        open SepUP
+        ⊸Adj : {Q : ob 𝓥 } → ⨂F Q ⊣ ⊸F Q
+        ⊸Adj {Q} .adjIso {P}{R} = ⊸UP {P}{Q}{R} 
+        ⊸Adj .adjNatInD f k = 
+            makeNatTransPath (funExt λ x → funExt λ Px → 
+                makeNatTransPath (funExt λ y → funExt λ Qy → {!   !})) 
+        ⊸Adj .adjNatInC = {!   !} 
+-}

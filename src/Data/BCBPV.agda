@@ -84,6 +84,12 @@ module src.Data.BCBPV where
             𝓞[_,_] : ob 𝓥 → ob 𝓒 → Set ℓm
             𝓞[ v , c ] = (𝓞 .Bif-ob v c) .fst
 
+            open import Cubical.Categories.Adjoint
+            open AdjointUniqeUpToNatIso 
+            open NaturalBijection
+            open _⊣_
+
+            -- the existence of these isomorphisms are mentioned on page 210 of Levy's thesis
             ob₁ : {P : ob 𝓥}{Q : ob 𝓒} → Iso (𝓥 [ P , U .F-ob Q ]) 𝓞[ P , Q ] 
             ob₁ {P} {Q} = iso 
                             (λ nt x Px → nt .N-ob x Px .end x (C .id)) 
@@ -107,6 +113,11 @@ module src.Data.BCBPV where
 
             adjhom : {X : ob 𝓥}{Y : ob 𝓒} → Iso (𝓥 [ X , U .F-ob Y ]) (𝓒 [ F .F-ob X , Y ])
             adjhom = compIso ob₁ ob₂
+
+            F⊣U : F ⊣ U 
+            F⊣U .adjIso = invIso adjhom 
+            F⊣U .adjNatInD _ _ = makeNatTransPath (funExt λ _ → funExt λ _ → refl) 
+            F⊣U .adjNatInC _ _ = makeNatTransPath (funExt λ _ → funExt λ _ → refl) 
 
             -- computational function type
             -- TODO feed seq
@@ -155,24 +166,31 @@ module src.Data.BCBPV where
                 open DayUP
 
                 test : 𝓥× [ P ⨂Ext Q , U .F-ob R ∘F (⨂c ^opF) ] → 𝓥 [ P , U .F-ob (sep Q R) ]
-                test nt = natTrans η' {!   !} where
+                test nt = natTrans η' η'com where
                     η' : N-ob-Type P (U .F-ob (sep Q R)) 
                     η' x Px = record { fun = λ y y→x z Qz → nt .N-ob (y , z) (P .F-hom y→x Px , Qz) .end (⨂c .F-ob (y , z)) (C .id) } 
 
-                testInv : 𝓥 [ P , U .F-ob (sep Q R) ] → 𝓥× [ P ⨂Ext Q , U .F-ob R ∘F (⨂c ^opF) ]
-                testInv nt = natTrans η' {!   !} where 
-                    η' : N-ob-Type (P ⨂Ext Q) (U .F-ob R ∘F (⨂c ^opF)) 
-                    η' (x , y) (Px , Qy) = record { fun = goal } where 
-                        goal : (z : ob C) → C [ z , ⨂c .F-ob (x , y) ] → R .F-ob z .fst
-                        goal z z→x⊗y = {! R .F-hom z→x⊗y !} where 
+                    η'com : N-hom-Type P (U .F-ob (sep Q R)) η' 
+                    η'com f = funExt λ Px → end≡ ((sep Q R) ∘F Inc) λ z z→y  → 
+                        funExt λ w → funExt λ Qw → 
+                        cong (λ h → nt .N-ob (z , w) (h , Qw) .Ran.End.fun (⨂c .F-ob (z , w)) (C .id) ) (funExt⁻ (sym(P .F-seq f z→y )) Px)
 
-                            -- still a variance issue, but this time the map is not from the day convolution
-                            nope : SET ℓm [ F-ob R z , F-ob R (⨂c .F-ob (x , y)) ] 
-                            nope = R .F-hom z→x⊗y
 
-                            sub : fst (R .F-ob (⨂c .F-ob (x , y)))
-                            sub = nt .N-ob x Px .end x (C .id) y Qy
+                eval : 𝓥× [ (U .F-ob (sep Q R)) ⨂Ext Q , U .F-ob R ∘F (⨂c ^opF) ] 
+                eval .N-ob (x , y) (UQ→Rx , Qy) .end z z→x⊗y = goal where 
+                    goal : R .F-ob z .fst
+                    goal = {!   !}
                     
+                    have : R .F-ob (⨂c .F-ob (x , y)) .fst 
+                    have = UQ→Rx .end x (C .id) y Qy
+
+                    cantuse : SET ℓm [ F-ob R z , F-ob R ((⨂c ^opF) ⟅ x , y ⟆) ]
+                    cantuse = R .F-hom z→x⊗y
+                    
+                eval .N-hom = {!   !}
+
+                testInv : 𝓥 [ P , U .F-ob (sep Q R) ] → 𝓥× [ P ⨂Ext Q , U .F-ob R ∘F (⨂c ^opF) ]
+                testInv nt = ⨂ext .F-hom (nt , (𝓥 .id)) ⋆⟨ 𝓥× ⟩ eval
                 
                 goal : Iso (𝓥× [ P ⨂Ext Q , U .F-ob R ∘F (⨂c ^opF) ]) (𝓥 [ P , U .F-ob (sep Q R) ])
                 goal = iso 
