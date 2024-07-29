@@ -4,6 +4,7 @@
     \usepackage[parfill]{parskip}
     \usepackage[utf8]{inputenc}
     \usepackage{xcolor}
+    \usepackage{hyperref}
     
     % Related to math
     \usepackage{stmaryrd}
@@ -12,9 +13,117 @@
     \newcommand{\sep}{\mathrel{-\mkern-6mu*}}
     \newcommand{\blue}[1]{\textcolor{blue}{#1}}
     \newcommand{\red}[1]{\textcolor{red}{#1}}
+    \newcommand{\pshC}{\widehat{\mathcal{C}}}
+    \newcommand{\pshCC}{\widehat{\mathcal{C \times C}}}
+    \newcommand{\dayprod}{\otimes^{Day}}
 
 
 \begin{document}
+\section{Bicartesian Doubly Closed Category}
+Given a category $\mathcal{C}$, its presheaf category ($\pshC := [\mathcal{C}^{op}, Set]$)
+is bicartesian closed. Given a monoidal category ($\mathcal{C}, \otimes_C , I_C$), 
+its presheaf category is bicartesian closed and monoidal closed via the Day convolution. 
+The monoidal product is given by:
+\[
+    (P \dayprod Q)(x) = \int_{}^{y,z} \mathcal{C}[ x , y \otimes_C z ] 
+    \times P(y) \times Q(z)
+\]
+
+The Day monoidal product has the universal property that any maps out of it are in bijective
+correspondence with a family of maps natural in $x$ and $y$ 
+\href{https://github.com/bond15/Bunched-CBPV/blob/82136dc6f4f9e4034391877f0d959a6ff1b62dfc/src/Data/BiDCC.agda#L222}
+{(Agda)}: 
+\footnote{here $\overline{\times}$ is the \textit{external} product}
+
+
+\[
+    \pshC[P \dayprod Q , R] \;\cong \; \pshCC [ P \overline{\times} Q , R \circ \otimes_C ]\; \cong \; \Pi_{x, y : \;ob \;C}\; Set[P(x) \times Q(y) , R(x \otimes_C y)]
+\]
+
+The monoidal closed structure is given by: 
+\begin{align*}
+    (P \sep Q)(X) = \pshC[P , Q(X , -)]
+\end{align*}
+With the universal property that the closed structure is right adjoint to the tensor
+\href{https://github.com/bond15/Bunched-CBPV/blob/82136dc6f4f9e4034391877f0d959a6ff1b62dfc/src/Data/BiDCC.agda#L354}{(Agda)}: 
+\begin{align}
+    \pshC [ A \otimes_C B , C] \cong \pshC [ A , B \sep C]
+\end{align}
+
+Bicartesian doubly closed categories have been used in the denotational semantics of bunched type theories 
+\cite{pym_semantics_2002}\cite{bieringLogicBunchedImplications}\cite{ohearn_bunched_2003}.
+
+\section{Towards Bunched Call By Push Value with Dynamic Store}
+Categorical models of dynamic store use presheaf categories to model the dependence of the heap structure on a current \textit{world}
+\cite{CBPVbook}\cite{sterling_denotational_2023}\cite{kammarMonadFullGround2017}. Seemingly none of these existing models 
+attempt to combine a call by push value language with the separating type connectives, $\otimes$ and $\sep$, used in bunched type theories.
+Our investigation into possible models of such a language have run into some potential issues. To illustrate this, we will start with the 
+model for a call by push value language with dynamic store presented in chapter 7 of Levy's thesis.
+
+\subsection{Definitions}
+Let ($C, \otimes_C , I_C$) be a monoidal category, the value category be $\mathcal{V} := [C , Set]$, computation category $\mathcal{C} := [C^{op}, Set]$, and use the \textit{standard}
+monad for ground dynamic store with $F : \mathcal{V} \rightarrow \mathcal{C}$ as:
+\[
+    F(A)(x) := \Sigma_{y : ob \;C}\Sigma_{f : C[ x , y ]}A(y)    
+\]
+and $U : \mathcal{C} \rightarrow \mathcal{V}$ as :
+\[
+    U(\underline{B})(x) := \Pi_{y : ob \; C}\Pi_{f : C [ x , y]}\underline{B}(y)   
+\]
+
+The oblique morphisms in this model are given by families of maps:
+\[
+    \mathcal{O}[A , \underline{B}] := \Pi_{x : ob \; C} Set[A(x) , \underline{B}(x)]   
+\]
+
+we have the following isomorphims:
+\[
+    \mathcal{V}[A , U(\underline{B})] \cong \mathcal{O}[A , \underline{B}] \cong \mathcal{C}[F(A) , \underline{B}]   
+\]
+And we can attempt to define a computation separating function by:
+\[
+    (A \sep \underline{B})(x) := \Pi_{y : ob \;C} Set[A(y), \underline{B}(x \otimes_C y)]
+\]
+\subsection{Problems with an Abstract Monoidal Category}
+Before committing to the category 
+of worlds used in Levy's model, we will work with an arbitrary monoidal category ($C, \otimes_C , I_C$). 
+\subsubsection{Issue 1: Universal Property of Tensor for Oblique Morphisms}
+Let's attempt to show the following:
+\[
+  \mathcal{O}[P \otimes Q , \underline{R}] \cong \mathcal{O\times}[P \overline{\times} Q , \underline{R} \circ \otimes_C]  
+\]
+where 
+\[
+    \mathcal{O\times}[P \overline{\times} Q , \underline{R} \circ \otimes_C] 
+    := \Pi_{x , y : ob \;C}Set[P(x)\times Q(y) , \underline{R}(x \otimes_C y)]
+\]
+
+A problem arises when trying to define the backwards map of this isomorphims. 
+Given $m : \mathcal{O\times}[P \overline{\times} Q , \underline{R} \circ \otimes_C]$ and $x : ob \; C$, we need to define a map
+$Set[(P \otimes Q)(x), \underline{R}(x)]$. This is a map out of a coequalizer 
+\footnote{since coends in $Set$ can be encoded as coequalizers}
+which we can attempt to give as a map induced from:
+\[
+    (f : y\otimes_C z \rightarrow x , p : P(y) , q : Q(z)) \mapsto \;? : \underline{R}(x)
+\]
+However, using the data we currently have, we can only construct
+\[
+    m(y)(z)(p,q) : \underline{R} (y \otimes_C z)    
+\]
+and since $\underline{R}$ is contravariant, we can't use $\underline{R}(f) : \underline{R}(x) \rightarrow \underline{R}(y \otimes_C z)$.
+This is not surprising since the proof of this universal property in the value category 
+$\mathcal{V}[P \otimes Q , R] \cong \mathcal{V\times}[P \overline{\times} Q , R \circ \otimes_C]$
+uses the functorial action of $R$ on $f$ 
+(see \href{https://github.com/bond15/Bunched-CBPV/blob/d4de5ebe3a2a42499b24c13a8d2da7f3a2cc1b36/src/Data/BiDCC.agda#L120}{here})
+\footnote{note the difference in variance is due to the fact this proof is for presheaves and not covariant presheaves}
+So by swapping the variance of $R$ (now $\underline{R}$ since it is from the computation category) this proof should break.
+Seemingly, this proof won't go through when we assume a generic monoidal category $C$. Perhaps we can recover this property if 
+we work with a specific concrete category?
+
+\subsubsection{Issue 2: Universal Property of the Separating Function Type}
+
+
+
 \section{Issue}
 There is a variance issue when trying to add a \textbf{computational} separating 
 function type to Levy's dynamic store model\cite{CBPVbook}
