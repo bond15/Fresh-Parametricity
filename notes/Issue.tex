@@ -121,8 +121,43 @@ Seemingly, this proof won't go through when we assume a generic monoidal categor
 we work with a specific concrete category?
 
 \subsubsection{Issue 2: Universal Property of the Separating Function Type}
-
-
+This is just another perspective on the variance issue above. We'd like to show
+\[
+    \mathcal{O}[P \otimes Q , \underline{R}] \cong \mathcal{O}[P , Q \sep \underline{R}]    
+\]
+Since we don't have the universal property of tensor for oblique morphisms, we can try to get at this proof via the 
+universal property of tensor in the value category. Note that we have
+\[
+    \mathcal{O}[P \otimes Q , \underline{R}] \cong \mathcal{V}[P \otimes Q , U(\underline{R})] \cong \mathcal{V\times}[P \overline{\times} Q , U(\underline{R}) \circ \otimes_C] 
+\]
+and 
+\[
+    \mathcal{O}[P , Q \sep \underline{R}] \cong \mathcal{V}[P , U(Q \sep \underline{R})]
+\]
+So we can try to show 
+\[
+    \mathcal{V\times}[P \overline{\times} Q , U(\underline{R}) \circ \otimes_C] \cong \mathcal{V}[P , U(Q \sep \underline{R})]
+\]
+Again, we fail to define the backwards direction of this isomorphim due to a variance issue with $\underline{R}$. 
+Given $m : \mathcal{V}[P , U(Q \sep \underline{R})]$, it suffices to construct a map 
+$eval : \mathcal{V\times}[ U(Q \sep \underline{R}) \overline{\times} Q , U(\underline{R}) \circ \otimes_C] $ with components 
+\[
+    (x , y)(f : U(Q \sep \underline{R})(x), q : Q(y)) \mapsto \;? \;: \;  (U(\underline{R}))(x \otimes_C y)    
+\]
+unfolding some of the definitions, we have 
+\begin{align*}
+    f &: \Pi_{z : ob \;C}\Pi_{g : C[x , z]}(\Pi_{w : ob \; C}Set[Q(w), \underline{R}(z \otimes_c w)])\\
+    ? &: \Pi_{z : ob \;C}\Pi_{g : C[x \otimes_C y, z]}(R(z))
+\end{align*}
+Thus we have to define $? : \underline{R}(z)$ from the following data:
+\begin{align*}
+    &x,y,z : ob \;C \\
+    &q : Q(y)\\
+    &f : \Pi_{z : ob \;C}\Pi_{g : C[x , z]}(\Pi_{w : ob \; C}Set[Q(w), \underline{R}(z \otimes_c w)])\\
+    &g : C[x\otimes_C y , z]
+\end{align*}
+The \textit{obvious} thing do to would be to use $f (x)(id_x)(y)(q) : \underline{R}(x \otimes_C y)$ and $\underline{R}(g)$, 
+but the variance of $\underline{R}$ is working against us.
 
 \section{Issue}
 There is a variance issue when trying to add a \textbf{computational} separating 
