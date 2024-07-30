@@ -56,12 +56,12 @@ module src.Data.Direct2 where
     -}
 
     -- exists future
-    module Lan {ℓC ℓC' : Level} (W : Category ℓC ℓC')(isSetWob : isSet (ob W)) where
+    module Lan {ℓC ℓC' : Level} (W : Category ℓC ℓC')(isGrpWob : isGroupoid (ob W)) where
 
         ℓ =  (ℓ-max ℓC ℓC') 
 
         |W| : Category ℓC ℓC 
-        |W| = (DiscreteCategory (ob W , isSet→isGroupoid isSetWob))
+        |W| = (DiscreteCategory (ob W , isGrpWob))
         
         Inc : Functor |W| W
         Inc = DiscFunc λ x → x
@@ -77,7 +77,8 @@ module src.Data.Direct2 where
                 Sig = Σ[ w₂ ∈ ob W ] Σ[ g ∈ W [ w₁ , w₂ ] ] A .F-ob w₂ .fst
 
                 isSetSig : isSet Sig 
-                isSetSig = isSetΣ isSetWob  λ w → isSetΣ (W .isSetHom) λ f → A .F-ob w .snd
+                isSetSig = {!   !}
+                    --isSetΣ isSetWob  λ w → isSetΣ (W .isSetHom) λ f → A .F-ob w .snd
 
                 -- trivial quotient?
                 module _ {w₂ w₃ : ob W} 
@@ -159,11 +160,11 @@ module src.Data.Direct2 where
 
 
     -- forall past
-    module Ran {ℓC ℓC' : Level} (W : Category ℓC ℓC')(isSetWob : isSet (ob W)) where
+    module Ran {ℓC ℓC' : Level} (W : Category ℓC ℓC')(isGrpWob : isGroupoid (ob W)) where
         ℓ = (ℓ-max ℓC ℓC') 
         
         |W| : Category ℓC ℓC 
-        |W| = (DiscreteCategory (ob W , isSet→isGroupoid isSetWob))
+        |W| = (DiscreteCategory (ob W , isGrpWob))
         
         Inc : Functor |W| W
         Inc = DiscFunc λ x → x

@@ -379,3 +379,4 @@ module src.Data.BiDCC where
                 makeNatTransPath (funExt λ y → funExt λ Qy → {!   !})) 
         ⊸Adj .adjNatInC = {!   !} 
 -}
+ 

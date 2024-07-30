@@ -1,4 +1,4 @@
-{-# OPTIONS --type-in-type #-}
+{-# OPTIONS --type-in-type --lossy-unification #-}
 module src.SimpleState where 
     open import src.Data.FinSet
     open import Cubical.Foundations.HLevels hiding (extend)
@@ -181,8 +181,10 @@ module src.SimpleState where
             _⨂_ : Functor (Inj ×C Inj) Inj
             _⨂_ .F-ob (X , Y) = ((fst X ⊎ fst Y)) , (isFinSet⊎ X Y)
             _⨂_ .F-hom{X , Y}{W , Z} (f , g) = (map (fst f) (fst g)) , {!   !}
-            _⨂_ .F-id = {!  refl !}
-            _⨂_ .F-seq = {!   !}
+            _⨂_ .F-id = Σ≡Prop ((λ x → isPropIsEmbedding)) (funExt λ{(inl x) → refl
+                                                                   ; (inr x) → refl })
+            _⨂_ .F-seq f g = Σ≡Prop (λ x → isPropIsEmbedding) (funExt λ{(inl x) → refl
+                                                                   ; (inr x) → refl })
 
             open import Cubical.Data.Empty
             emptyFin* : isFinSet {ℓS} (Lift ⊥)
@@ -226,7 +228,33 @@ module src.SimpleState where
             _⊸_ A B .F-ob X = (∀ (Y : ob Inj) → (SET ℓS) [ A .F-ob Y , B .F-ob (_⨂_ .F-ob (X , Y)) ]) , isSetΠ  λ _ → (SET ℓS) .isSetHom
             _⊸_ A B .F-hom {X} {Y} f FX Z AZ = B .F-hom (_⨂_ .F-hom (f , (Inj .id))) (FX Z AZ)
             _⊸_ A B .F-id = {!   !}
+                --funExt λ e → funExt λ x → funExt λ Ax → cong (λ h → B .F-hom h (e x Ax)) ((_⨂_ .F-id)) ∙ funExt⁻ (B .F-id) _
             _⊸_ A B .F-seq = {!   !}
+
+            open import src.Data.NatFam
+            open import src.Models.DayConvUP renaming (_⨂ᴰᵥ_ to _⨂ᴰ_)
+
+            fact : {P Q R : ob 𝒱} → Iso (𝓥 [ P ⨂ᴰᵥ Q , R ]) (NatFam P Q R) 
+            fact {P}{Q}{R}= UP P Q R
+
+            ⊸Intro : {P Q R : ob 𝒱} → 𝒱 [ P ⨂ᴰᵥ Q , R ] → 𝒱 [ P , Q ⊸ R ]
+            ⊸Intro {P}{Q}{R} nt = 
+                natTrans (λ x x₁ y x₂ → nt .N-ob (_⨂_ .F-ob (x , y)) (incs ((x , y) , (((Inj .id) , x₁) , x₂)) ))
+                {!   !}
+
+            eval⊸ : {P Q R : ob 𝒱} →  𝒱 [ (Q ⊸ R) ⊗ᴰ Q , R ] 
+            eval⊸ = fact .inv (natFam (λ{x y (f , q) → f y q}) {!   !})
+
+            ⊸IntroInv : {P Q R : ob 𝒱} → 𝒱 [ P , Q ⊸ R ] → 𝒱 [ P ⨂ᴰᵥ Q , R ] 
+            ⊸IntroInv {P}{Q}{R} nt = 
+                Day-Functor (strmon ^opMon) .F-hom (nt , (𝒱 .id)) ⋆⟨ 𝒱 ⟩ eval⊸
+            
+            ⊸UP : {P Q R : ob 𝒱} → Iso (𝒱 [ P , Q ⊸ R ])  (𝒱 [ P ⨂ᴰᵥ Q , R ])
+            ⊸UP {P}{Q}{R}= iso 
+                    ⊸IntroInv 
+                    ⊸Intro 
+                   (λ b  → makeNatTransPath {! funExt λ x → ?  !}) 
+                    {!   !}
 
             test2 : (X : ob Inj) → (Ref ⊸ BoolF) .F-ob X .fst
             test2 X = λ Y y → lift true

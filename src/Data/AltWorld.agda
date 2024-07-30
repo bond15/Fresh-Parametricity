@@ -9,9 +9,43 @@ module src.Data.AltWorld where
 
     module _ {ℓS} where
         open Categoryᴰ
-        open import Cubical.Categories.Displayed.Instances.Sets.Base
         open import Cubical.Categories.Displayed.Constructions.TotalCategory
         open import Cubical.Categories.Constructions.TotalCategory
+
+
+        module retry {SynTy : hSet ℓS } where 
+            open Category
+            open import Cubical.Data.Sigma
+            open import src.Data.FinSet
+            open import Cubical.Data.FinSet
+            open import Cubical.Data.FinSet.Constructors
+            open import Cubical.Functions.Embedding
+
+
+            W : Category {!  FinSet !} {!   !} 
+            W .ob = Σ (FinSet ℓS) λ X → SynTy .fst → X .fst
+            W .Hom[_,_] (X , m1) (Y , m2) = Σ (X .fst ↪ Y .fst) λ i → m1 ≡ {! i ∘S   !}
+            W .id = {!   !}
+            W ._⋆_ = {!   !}
+            W .⋆IdL = {!   !}
+            W .⋆IdR = {!   !}
+            W .⋆Assoc = {!   !}
+            W .isSetHom = {!   !}
+            
+       {-} module hmm {SynTy : hSet ℓS }{ℓ ℓ'}where 
+            open import Cubical.Foundations.HLevels hiding (extend)
+            open import Cubical.Foundations.Prelude
+            open Categoryᴰ
+            SETᴰ : Categoryᴰ (SET ℓ) {!   !} {!   !} 
+            SETᴰ .ob[_] X = SynTy .fst → X .fst 
+            SETᴰ .Hom[_][_,_] f P Q = ∀ x → P x  →  Q (f x) .fst
+            SETᴰ .idᴰ = λ x z → z
+            SETᴰ ._⋆ᴰ_ {f = f} {g} fᴰ gᴰ x p = gᴰ (f x) (fᴰ x p)
+            SETᴰ .⋆IdLᴰ fᴰ = refl
+            SETᴰ .⋆IdRᴰ fᴰ = refl
+            SETᴰ .⋆Assocᴰ fᴰ gᴰ hᴰ = refl
+            SETᴰ .isSetHomᴰ {yᴰ = Q} = isSetΠ λ x → isSetΠ λ xᴰ → Q _ .snd -}
+        open import Cubical.Categories.Displayed.Instances.Sets.Base
 
         -- we want a subcategory of Setᴰ where the domain is fixed to a specific type
         -- coslice of SET?
@@ -63,3 +97,4 @@ module src.Data.AltWorld where
 
         w₁ : ob World 
         w₁ = (SynTy , {!   !}) , {!   !}
+ 

@@ -257,15 +257,19 @@ module src.Models.WithWeakening.Denotation {ℓS} where
         sepProdElim₁ : {Γ Δ A₁ A₂ : ob 𝒱} → 
             value (Γ  ⨂ᴰᵥ Δ) (A₁ ⨂ᴰᵥ A₂) → 
             value (Γ  ⨂ᴰᵥ Δ) A₁ 
-        sepProdElim₁ M = M ⋆⟨ 𝒱 ⟩ {!   !}  
+        sepProdElim₁ {Γ}{Δ}{A₁}{A₂} M = M ⋆⟨ 𝒱 ⟩ {!   !}  where 
+            open SemicartesianStrictMonCat semimon
         -- semicartesian projection
         -- but how does thas split up worlds?
 
         sepIntro :  {Γ A : ob 𝒱}{B : ob 𝒞} → computation (Γ ⨂ᴰᵥ A) B → computation Γ (sep A B) 
         sepIntro record { α = α } = record { α = λ w Γw w' Aw' → α (_⨂_ .F-ob (w , w')) (SetCoequalizer.inc ((w , w') , ( W .id , Γw) , Aw')) }
 
-        sepIntro' : {Γ A : ob 𝒱}{B : ob 𝒞} → computation Γ (sep A B) → computation (Γ ⨂ᴰᵥ A) B
-        sepIntro' {Γ} {A} {B} record { α = α } = record { α = goal } where 
+        sepIntroInv : {Γ A : ob 𝒱}{B : ob 𝒞} → computation Γ (sep A B) → computation (Γ ⨂ᴰᵥ A) B
+        sepIntroInv {Γ} {A} {B} record { α = α } = record { α = goal } where 
+            goal : (w : ob W) → SET ℓ [ (Γ ⨂ᴰᵥ A) .F-ob w , B .F-ob w ]
+            goal = {!   !}
+        {-}
             goal : (w : ob W) → SET ℓ [ (Γ ⨂ᴰᵥ A) .F-ob w , B .F-ob w ]
             goal w (SetCoequalizer.inc ((w₂ , w₃) , (w→w₂⊗w₃ , Γw₂) , Aw₃)) = working where 
                 open SemicartesianStrictMonCat semimon
@@ -279,7 +283,10 @@ module src.Models.WithWeakening.Denotation {ℓS} where
                 
             goal w (coeq a i) = {!   !}
             goal w (squash c c₁ p q i i₁) = {!   !}        
+        -}
 
+
+        {-}
         sepUP : {Γ A : ob 𝒱}{B : ob 𝒞} → Iso (computation (Γ ⨂ᴰᵥ A) B) (computation Γ (sep A B))
         sepUP {Γ}{A}{B}= iso 
                     sepIntro 
@@ -288,6 +295,7 @@ module src.Models.WithWeakening.Denotation {ℓS} where
                     (λ{record { α = α } → comp≡ (funExt λ w → funExt λ {(SetCoequalizer.inc ((w₂ , w₃) , (w→w₂⊗w₃ , Γw₂) , Aw₃)) → {!  refl!}
                                                                       ; (coeq a i) → {!   !}
                                                                       ; (squash x x₁ p q i i₁) → {!   !}}) })
+        -}
 
         -- morphism in the day convolution is the wrong direction..?
         -- day convolution needed in the computation category?
