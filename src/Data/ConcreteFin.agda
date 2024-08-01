@@ -51,30 +51,33 @@ module src.Data.ConcreteFin where
 
             open UniversalProperty
             open import Cubical.Categories.Constructions.BinProduct
+
+            mapout : (m : 𝓞× P Q R)(x : ob C) → 
+                Σ[ X ∈ ob C × ob C ] fst (diagram {MC = (SMC ^opMon)} P Q x ⟅ X , X ⟆b) → R .F-ob x .fst
+            mapout m x ((y , z) , (y⊗z→x , p) , q) = R .F-hom (inl , isEmbedding-inl) (m x x (p' , q')) where 
+                p' : P .F-ob x . fst
+                p' = P .F-hom ((inl , isEmbedding-inl) ⋆⟨ C ^op ⟩ y⊗z→x) p
+
+                q' : Q .F-ob x .fst 
+                q' = Q .F-hom ((inr , isEmbedding-inr) ⋆⟨ (C ^op) ⟩ y⊗z→x) q
+
+            mapoutcoeq : (m : 𝓞× P Q R)(x : ob C) → 
+                (a : Σ[ X ∈ ob C × ob C ] 
+                                Σ[ Y ∈ ob C × ob C ]  
+                                Σ[ f ∈ (C ×C C)[ Y , X ] ] 
+                                fst (diagram {MC = SMC ^opMon} P Q x ⟅ X , Y ⟆b)) 
+                →  mapout m x (lmap (diagram {MC = SMC ^opMon} P Q x) a) ≡ mapout m x (rmap (diagram{MC = SMC ^opMon} P Q x) a)
+            mapoutcoeq m x ((y , z) , (y' , z') , (y'→y , z'→z) , (x←y'⊗z' , Py) , Qz) = 
+                cong (λ h → R .F-hom ((inl , isEmbedding-inl)) (m x x h)) 
+                    (≡-× ( (funExt⁻ (sym (P .F-seq _ _)) Py ∙ {!   !}) ∙  funExt⁻ ( (P .F-seq y'→y _)) Py) 
+                            {!  rmap (diagram P Q x ) ((y , z) , (y' , z') , (y'→y , z'→z) , (x←y'⊗z' , Py) , Qz)!})
+
             bkwrd : 𝓞× P Q R → 𝓞[ P ⨂ᴰ Q , R ]
             bkwrd m x = 
                 inducedHom 
                     (R .F-ob x .snd) 
-                    mapout 
-                    mapoutcoeq where 
-
-                mapout : Σ[ X ∈ ob C × ob C ] fst (diagram {MC = (SMC ^opMon)} P Q x ⟅ X , X ⟆b) → R .F-ob x .fst
-                mapout ((y , z) , (y⊗z→x , p) , q) = R .F-hom (inl , isEmbedding-inl) (m x x (p' , q')) where 
-                    p' : P .F-ob x . fst
-                    p' = P .F-hom ((inl , isEmbedding-inl) ⋆⟨ C ^op ⟩ y⊗z→x) p
-
-                    q' : Q .F-ob x .fst 
-                    q' = Q .F-hom ((inr , isEmbedding-inr) ⋆⟨ (C ^op) ⟩ y⊗z→x) q
-
-                mapoutcoeq : (a : Σ[ X ∈ ob C × ob C ] 
-                                  Σ[ Y ∈ ob C × ob C ]  
-                                  Σ[ f ∈ (C ×C C)[ Y , X ] ] 
-                                    fst (diagram {MC = SMC ^opMon} P Q x ⟅ X , Y ⟆b)) 
-                    →  mapout (lmap (diagram {MC = SMC ^opMon} P Q x) a) ≡ mapout (rmap (diagram{MC = SMC ^opMon} P Q x) a)
-                mapoutcoeq ((y , z) , (y' , z') , (y'→y , z'→z) , (x←y'⊗z' , Py) , Qz) = 
-                    cong (λ h → R .F-hom ((inl , isEmbedding-inl)) (m x x h)) 
-                        (≡-× ( (funExt⁻ (sym (P .F-seq _ _)) Py ∙ {!   !}) ∙  funExt⁻ ( (P .F-seq y'→y _)) Py) 
-                             {!  rmap (diagram P Q x ) ((y , z) , (y' , z') , (y'→y , z'→z) , (x←y'⊗z' , Py) , Qz)!})
+                    (mapout m x) 
+                    (mapoutcoeq m x)
                     
             frwd : 𝓞[ P ⨂ᴰ Q , R ] → 𝓞× P Q R 
             frwd  o x y (Px , Qy) = o (⊗C .F-ob (x , y)) (inc ((x , y) , (((C .id) , Px) , Qy)))
@@ -87,4 +90,16 @@ module src.Data.ConcreteFin where
                     -- R .F-hom inl (b (x ⊎ y) (x ⊎ y) (P .F-hom (id ; inl) p , Q .F-hom (id , inr q)))
                     -- ≡ b x y (p , q)
                     (λ b → funExt λ x → funExt λ y →  funExt λ{(p , q) → {!   !} }  ) 
-                    {!   !}
+                    (λ b → funExt λ x → sym (uniqueness 
+                                                (lmap (diagram {MC = SMC ^opMon} P Q x)) 
+                                                (rmap (diagram {MC = SMC ^opMon} P Q x))
+                                                (R .F-ob x .snd) 
+                                                (mapout (frwd b) x)
+                                                (mapoutcoeq (frwd b)x) 
+                                                (b x) 
+                                                {-
+                                                R .F-hom inl (b (x ⊎ y) (inc ((x , x), (id , P.F-hom (x←y⊗z ∘ inl) Py), Q .F-hom (x←y⊗z ∘ inr) Qz )))
+                                                ≡ 
+                                                b x (inc ((y , z) , (x←y⊗z , Py) , Qz))
+                                                -}
+                                                λ{ ((y , z) , (x←y⊗z , Py) , Qz) → {!  i !}}))

@@ -160,7 +160,7 @@ The \textit{obvious} thing do to would be to use $f (x)(id_x)(y)(q) : \underline
 but the variance of $\underline{R}$ is working against us.
 
 \subsection{Problems with Concrete Models}
-Now we consider substituting the monoidal category ($C, \otimes_C , I_C$) with ($FinSet_{mono}, \oplus , \emptyset $)
+Now we consider substituting the monoidal category ($C, \otimes_C , I_C$) with ($FinSet_{mono}^{op}, \oplus , \emptyset $)
 where $\oplus$ is given by disjoint union of sets.. 
 This category is used to represent single sorted heap configurations. 
 
@@ -191,13 +191,66 @@ We can then use $m$ at $(z , z)$
     m(z)(z)(p' , q') : \underline{R}(z \uplus z)
 \]
 and \red{\textbf{arbitrarily}} restrict the resulting element of $\underline{R}(z \uplus z)$ to $\underline{R}(z)$ 
-using $\underline{R}(inl)$ \red{or} $\underline{R}(inr)$. But does
+using $\underline{R}(inl)$ \red{or} $\underline{R}(inr)$. This does satisfy the coequalizer requirement. 
+To define a map out of the day convolution product, we can define a map on the underlying \textit{diagram}
+ and then prove a coequalizer condition. Given:
+ \begin{align*}
+    &y \;z \;y'\; z' : ob \;C \\
+    &f : C[y' , y] \\ 
+    &g : C[z' , z] \\
+    &(h : C[x , y'\otimes_c z'], p : P(y), q: Q(z))
+ \end{align*}
+Any map, $m$, out of the diagram must satisfy
+\[
+    m (h ; (f \otimes_c g), p , q) = m (h , P(f)(p), Q(g)(q))
+\]
+Concretely, in this case:
+\begin{align*}
+    &R(inl)(m\;x \;x (P(inl ; f\otimes_c g ; h)(p) , Q(inr ; f\otimes_c g , h)(q)))  \\
+    &=\\
+    &R(inl)(m \;x \;x (P(f ; inl ; h)(p),Q(g ; inr ; h)(q)))
+\end{align*}
+
+However, the section and retraction of the isomorphim looks less promising. 
+It seems we are missing some kind of naturality condition.
+
+Section:
+\begin{align*}
+    &\textrm{Given:}\\
+    &b : \mathcal{O\times}[P \overline{\times} Q , \underline{R} \circ \oplus]\\
+    &x\;y : ob \;FinSet_{mono}\\
+    &p : P(x)\\
+    &q : Q(y)\\
+    &\textrm{Show:}\\
+    &R(inl)(b (x \uplus y)(x \uplus y)(P(inl)(p),Q(inr)(q))) = b\; x\; y\;(p ,q)
+\end{align*}
+
+Retraction:
+\begin{align*}
+    &\textrm{Given:}\\
+    &b : \mathcal{O}[P \otimes Q , \underline{R}]\\
+    &x \;y \;z : ob \;FinSet_{mono}\\
+    &f : FinSet_{mono}[y \uplus z , x]\\
+    &p : P(y)\\
+    &q : Q(z)\\
+    &\textrm{Show:}\\
+    &R(inl)(b (x \uplus y)[(id , P(inl ; f)(p), Q(inr ; f)(q))]) = b \; x \; [(f , p , q)]
+\end{align*}
 
 \textbf{Attempt 2}\\
+We reconsider the backwards direction, given 
+\[
+    m : \Pi_{x , y : ob \;C} Set[P(x)\times Q(y), \underline{R}(x \uplus y)]
+\]
+we need to construct components of the form $?_z : Set[(P\otimes Q)(z),  \underline{R}(z)]$. 
+To map out of the coequalizer, we can define a map
+\[
+    (f: x\uplus y \rightarrow z , p : P(x), q : Q(y)) \mapsto \; ? : \underline{R}(z)
+\]
 We can recognize that since $f$ is injective and the domain is a disjoint union, $z$ is partitioned into three parts
 \begin{align*}
-    z_x :& \textrm{ the range of } g\\
-    z_y :& \textrm{ the range of } h\\
+    z_x :& \textrm{ the range of f restricted to x}\\
+    z_y :& \textrm{ the range of f restricted to y}\\
     z_{miss} :& \; z - (z_x \uplus z_y)\\
     \textrm{where } & z \cong z_x \uplus z_y \uplus z_{miss}
 \end{align*}
@@ -205,6 +258,14 @@ Thus we can \red{\textbf{arbitrarily}} promote $p$ to $p' : P(z_x \uplus z_{miss
 \begin{align*}
     m (z_x \uplus z_{miss})(z_y)(p' , q)\\
     m (z_x)(z_y \uplus z_{miss})(p , q')
+\end{align*}
+Choose the first option, check the coequalizer condition.
+\begin{align*}
+    &p : P(y) , q : Q(z)\\
+    &f : y \rightarrow y' \\
+    &g : z \rightarrow z'\\
+    &m (x_{y} \uplus x_{miss})(x_{z})(P(y\rightarrow(x_{y} \uplus x_{miss}))(p) , q) 
+    = m (x_{y'} \uplus x_{miss})(x_{z'})(P(),Q(g)(q))
 \end{align*}
 
 \bibliographystyle{acm}
