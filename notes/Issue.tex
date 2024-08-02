@@ -57,7 +57,8 @@ Bicartesian doubly closed categories have been used in the denotational semantic
 Categorical models of dynamic store use presheaf categories to model the dependence of the heap structure on a current \textit{world}
 \cite{CBPVbook}\cite{sterling_denotational_2023}\cite{kammarMonadFullGround2017}. Seemingly none of these existing models 
 attempt to combine a call by push value language with the separating type connectives, $\otimes$ and $\sep$, used in bunched type theories.
-Our investigation into possible models of such a language have run into some potential issues. To illustrate this, we will start with the 
+Our investigation into possible models of such a language have run into some potential issues when attempting to define the computational separating function type.
+To illustrate this, we will start with the 
 model for a call by push value language with dynamic store presented in chapter 7 of Levy's thesis.
 
 \subsection{Definitions}
@@ -65,7 +66,7 @@ Let ($C, \otimes_C , I_C$) be a monoidal category, the value category be $\mathc
 computation category $\mathcal{C} := [C , Set]$, and use the \textit{standard}
 monad for ground dynamic store with $F : \mathcal{V} \rightarrow \mathcal{C}$ as:
 \[
-    F(A)(x) := \Sigma_{y : ob \;C^{op}}\Sigma_{f : C^{op}[ x , y ]}A(y)    
+    F(A)(x) := \Sigma_{y : ob \;C}\Sigma_{f : C^{op}[ x , y ]}A(y)    
 \]
 and $U : \mathcal{C} \rightarrow \mathcal{V}$ as :
 \[
