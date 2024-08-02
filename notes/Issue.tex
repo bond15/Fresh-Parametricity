@@ -61,14 +61,15 @@ Our investigation into possible models of such a language have run into some pot
 model for a call by push value language with dynamic store presented in chapter 7 of Levy's thesis.
 
 \subsection{Definitions}
-Let ($C, \otimes_C , I_C$) be a monoidal category, the value category be $\mathcal{V} := [C , Set]$, computation category $\mathcal{C} := [C^{op}, Set]$, and use the \textit{standard}
+Let ($C, \otimes_C , I_C$) be a monoidal category, the value category be $\mathcal{V} := [C^{op} , Set]$, 
+computation category $\mathcal{C} := [C , Set]$, and use the \textit{standard}
 monad for ground dynamic store with $F : \mathcal{V} \rightarrow \mathcal{C}$ as:
 \[
-    F(A)(x) := \Sigma_{y : ob \;C}\Sigma_{f : C[ x , y ]}A(y)    
+    F(A)(x) := \Sigma_{y : ob \;C^{op}}\Sigma_{f : C^{op}[ x , y ]}A(y)    
 \]
 and $U : \mathcal{C} \rightarrow \mathcal{V}$ as :
 \[
-    U(\underline{B})(x) := \Pi_{y : ob \; C}\Pi_{f : C [ x , y]}\underline{B}(y)   
+    U(\underline{B})(x) := \Pi_{y : ob \; C}\Pi_{f : C^{op}[ x , y]}\underline{B}(y)   
 \]
 
 The oblique morphisms in this model are given by families of maps:
@@ -104,13 +105,13 @@ $Set[(P \otimes Q)(x), \underline{R}(x)]$. This is a map out of a coequalizer
 \footnote{since coends in $Set$ can be encoded as coequalizers}
 which we can attempt to give as a map induced from:
 \[
-    (f : y\otimes_C z \rightarrow x , p : P(y) , q : Q(z)) \mapsto \;? : \underline{R}(x)
+    (f : C[x , y\otimes_C z] , p : P(y) , q : Q(z)) \mapsto \;? : \underline{R}(x)
 \]
 However, using the data we currently have, we can only construct
 \[
     m(y)(z)(p,q) : \underline{R} (y \otimes_C z)    
 \]
-and since $\underline{R}$ is contravariant, we can't use $\underline{R}(f) : \underline{R}(x) \rightarrow \underline{R}(y \otimes_C z)$.
+and since $\underline{R}$ is covariant in $C$, we can't use $\underline{R}(f) : \underline{R}(x) \rightarrow \underline{R}(y \otimes_C z)$.
 This is not surprising since the proof of this universal property in the value category 
 $\mathcal{V}[P \otimes Q , R] \cong \mathcal{V\times}[P \overline{\times} Q , R \circ \otimes_C]$
 uses the functorial action of $R$ on $f$ 
@@ -146,15 +147,15 @@ $eval : \mathcal{V\times}[ U(Q \sep \underline{R}) \overline{\times} Q , U(\unde
 \]
 unfolding some of the definitions, we have 
 \begin{align*}
-    f &: \Pi_{z : ob \;C}\Pi_{g : C[x , z]}(\Pi_{w : ob \; C}Set[Q(w), \underline{R}(z \otimes_c w)])\\
-    ? &: \Pi_{z : ob \;C}\Pi_{g : C[x \otimes_C y, z]}(R(z))
+    f &: \Pi_{z : ob \;C}\Pi_{g : C^{op}[x , z]}(\Pi_{w : ob \; C}Set[Q(w), \underline{R}(z \otimes_c w)])\\
+    ? &: \Pi_{z : ob \;C}\Pi_{g : C^{op}[x \otimes_C y, z]}(R(z))
 \end{align*}
 Thus we have to define $? : \underline{R}(z)$ from the following data:
 \begin{align*}
     &x,y,z : ob \;C \\
     &q : Q(y)\\
-    &f : \Pi_{z : ob \;C}\Pi_{g : C[x , z]}(\Pi_{w : ob \; C}Set[Q(w), \underline{R}(z \otimes_c w)])\\
-    &g : C[x\otimes_C y , z]
+    &f : \Pi_{z : ob \;C}\Pi_{g : C^{op}[x , z]}(\Pi_{w : ob \; C}Set[Q(w), \underline{R}(z \otimes_c w)])\\
+    &g : C^{op}[x\otimes_C y , z]
 \end{align*}
 The \textit{obvious} thing do to would be to use $f (x)(id_x)(y)(q) : \underline{R}(x \otimes_C y)$ and $\underline{R}(g)$, 
 but the variance of $\underline{R}$ is working against us.
