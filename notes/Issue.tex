@@ -159,12 +159,63 @@ Thus we have to define $? : \underline{R}(z)$ from the following data:
 The \textit{obvious} thing do to would be to use $f (x)(id_x)(y)(q) : \underline{R}(x \otimes_C y)$ and $\underline{R}(g)$, 
 but the variance of $\underline{R}$ is working against us.
 
+\subsubsection{Issue 3: Problem with Action Laws}
+The following three isomorphims should hold:
+\begin{align*}
+    I_{D} \sep^{c} Q &\cong Q\\
+    P \otimes_D P' \sep^{c} Q &\cong P \sep^{c} P' \sep^{c} Q\\
+    U(P \sep^{c}Q) &\cong P \sep^{v} UQ
+\end{align*}
+where $P , P' : ob \;\mathcal{V}$, $Q : ob \; \mathcal{C}$, and $\otimes_D,I_D:= Yoneda(I_C) = C[- , I_C]$ are the day convolution product and its identity.
+The top two isomorphims come from the requirement that CBPV function types should be an action 
+of $\mathcal{V}^{op}$ on $\mathcal{C}$. Let's see how the first isomorphism fails. 
+Defining the forward direction by its components:
+\begin{align*}
+    &(x : ob \; C)(f : \Pi_{y : ob \;C}Set[C[y , I_C], Q(x \otimes_C y)]) \mapsto \;?\; : Q(x)
+\end{align*}
+we have
+\[
+  f(I_C)(id_{I_C}) : Q(x \otimes_C I_C)  
+\]
+from which we can obtain
+\[
+  Q(x \otimes_C I_C \xrightarrow{idr} x)(f(I_C)(id_{I_C}) : Q(x \otimes_C I_C)) : Q(x)  
+\]
+In attempting to define the backwards direction, we run into issues.
+\[
+    (x : ob \; C)(q : Q(x))(y : ob \;C)(f : C[y , I_C]) \mapsto \;?\; : Q (x \otimes_C y)    
+\]
+We'd expect to use the functorial action of $Q$ on morphisms of $C$
+\[
+    Q(g)(q) : Q(x \otimes_C y)
+\]
+but we'd need a morphism $g : C [ x , x\otimes_C y]$. 
+Note that \textbf{if the direction of $f$ were inverted}, we'd be able to define this by 
+\[
+  g := x \xrightarrow{idr^{-1}} x \otimes_C I_C \xrightarrow{id_x \otimes_C f} x \otimes_C y  
+\]
+
 \subsection{Problems with Concrete Models}
 Now we consider substituting the monoidal category ($C, \otimes_C , I_C$) with ($FinSet_{mono}^{op}, \oplus , \emptyset $)
 where $\oplus$ is given by disjoint union of sets.. 
 This category is used to represent single sorted heap configurations. 
 
+\subsubsection{Action Laws with Concrete Category}
+Again we attempt to show $I_{D} \sep^{c} Q \cong Q$. The forward direction holds following the abstract case.
+It seems we can't define the backwards direction.
+\[
+    (x : ob \;C)(r : Q(x))(y : ob \;C)(! : C[ \emptyset, y] ) \mapsto \; ? \; : Q(x \uplus y)
+\]
+again, we'd expect to use the functorial action of $Q$
+\[
+    Q(g)(r) : Q (x \uplus y)    
+\]
+where $g : C[x \uplus y , x]$, but we have \red{no hope of defining this morphism}! \red{HARD STOP}.
+Notice that even if the given map was inverted as we desired in the abstract case, that is, $C[y , \emptyset]$ 
+instead of $C[\emptyset , y]$, then we could define this backwards isomorphim using \red{absurd}!
+
 \subsubsection{Universal Property of Tensor for Oblique Morphisms}
+See Agda file \href{https://github.com/bond15/Bunched-CBPV/blob/cc0cb155be26ca383343247485e462ec2377dfe6/src/Data/ConcreteFin.agda#L85}{here}.
 Again, we will attempt to show the following:
 \[
     \mathcal{O}[P \otimes Q , \underline{R}] \cong \mathcal{O\times}[P \overline{\times} Q , \underline{R} \circ \oplus]  
