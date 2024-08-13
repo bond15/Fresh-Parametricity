@@ -86,6 +86,117 @@ And we can attempt to define a computation separating function by:
 \[
     (A \sep \underline{B})(x) := \Pi_{y : ob \;C} Set[A(y), \underline{B}(x \otimes_C y)]
 \]
+
+\subsection{Issue with Monad Strength Relative to Day Tensor}
+We have a monad on $\mathcal{V}$ via the adjunction between $F$ and $U$.
+\[
+    T(A)(x) := \Pi_{y : ob \; C}\Pi_{f : C^{op}[ x , y]}\Sigma_{z : ob \;C}\Sigma_{g : C^{op}[ y , z ]}A(z) 
+\]
+\subsubsection{Abstract}
+It seems we cannot define the strength map:
+\[
+    str\otimes_{P,Q} : \mathcal{V}[ P \otimes T(Q), T (P \otimes Q)]
+\]
+via the universal property of tensor, it suffices to construct components of the form:
+\[
+    Set[P(x) \times T(Q)(y) ,T(P \otimes Q)(x \otimes_C y) ]
+\]
+introducing terms and unfolding definitions, we have:
+\begin{align*}
+    &p : P(x)\\
+    &q : T(Q)(y) = \Pi_{u : ob \; C}\Pi_{f : C^{op}[ y , u]}\Sigma_{v : ob \;C}\Sigma_{g : C^{op}[ u , v ]}Q(v)\\
+    &h : C^{op}[x\otimes_C y , z]
+\end{align*}
+we get to choose some future world $w$ of $z$, $C^{op}[z , w]$, 
+at which we must provide 
+\[ 
+    ? : (P \otimes Q)(w) = \int_{}^{r,s} \mathcal{C}[ w , r \otimes_C s ] 
+\times P(r) \times Q(s)
+\]
+How to proceed? Notice that in order to \textit{extract} a value $Q(\_)$ from $q$,
+we need to provide a morphism $C^{op}[y , u]$ for some $u$. 
+Working abstractly with no additional assumptions about $C$, all we can provide is $id_y$ which yields:
+\[
+    q(y)(id_y) : \Sigma_{v : ob \;C}\Sigma_{g : C^{op}[ y , v ]}Q(v)  
+\]
+Then our context becomes:
+\begin{align*}
+    &p : P(x)\\
+    &g : C^{op}[ y , v ]\\
+    &q' : Q(v)\\
+    &h : C^{op}[x\otimes_C y , z]
+\end{align*}
+We still need to choose some future world $w$ of $z$.
+From the data available to us, it seems we are stuck using identity, $id_z$, once again.
+This leaves us with the obligation:
+\[
+    ? : (P \otimes Q)(z) = \int_{}^{r,s} \mathcal{C}[ z , r \otimes_C s ] 
+\times P(r) \times Q(s)
+\]
+The choice of $r$ seems forced to be $x$ for which we have $p: P(x)$.
+The natural choices for $s$ would be $v$ or $y$, but it seems we've hit a variance issue yet again.
+Observe that \red{if $g: C^{op}[ y , v ]$ was instead $g : C^{op}[v , y]$} we'd have
+\[
+    ((id \otimes_C g) ;h , p , q') = (h , p , Q(g)(q'))
+\]
+which are equal relative to coend quotient.
+\subsubsection{Concrete}
+Now we consider substituting the monoidal category ($C, \otimes_C , I_C$) with ($FinSet_{mono}^{op}, \uplus , \emptyset $)
+where $\uplus$ is disjoint union of sets.
+This category is used to represent single sorted dynamic heap configurations. 
+Take $\mathcal{FS}$ as shorthand for $FinSet_{mono}$. Start again with the assumptions.
+\begin{align*}
+    &p : P(x)\\
+    &q : T(Q)(y) = \Pi_{u : ob \; \mathcal{FS}}\Pi_{f : \mathcal{FS}[ y , u]}\Sigma_{v : ob \;\mathcal{FS}}\Sigma_{g : \mathcal{FS}[ u , v ]}Q(v)\\
+    &h : \mathcal{FS}[x\uplus y , z]
+\end{align*}
+By working with a concrete category, we have a few more paths available to us.
+\paragraph{Partition Method}
+We recognize that since $h$ is injective and the domain is a disjoint union, $z$ is partitioned into three parts
+\begin{align*}
+    z_x :& \textrm{ the range of h restricted to x}\\
+    z_y :& \textrm{ the range of h restricted to y}\\
+    z_m :& \; z - (z_x \uplus z_y)\\
+    \textrm{where } & z \cong z_x \uplus z_y \uplus z_m
+\end{align*}
+Thus we have maps
+\begin{align*}
+    &h_x: \mathcal{FS}[x , z_x]\\
+    &h_y: \mathcal{FS}[y , z_y]
+\end{align*}
+The map $h_y$ can be used for $q$
+\begin{align*}
+        &q(y)(id_y) : \Sigma_{v : ob \;\mathcal{FS}}\Sigma_{g : \mathcal{FS}[ y , v ]}Q(v)\\
+        &\textrm{or}\\
+        &\blue{q(z_y)(h_y) : \Sigma_{v : ob \;\mathcal{FS}}\Sigma_{g : \mathcal{FS}[ z_y , v ]}Q(v)}
+\end{align*}
+
+Context:
+\begin{align*}
+    &p : P(x)\\
+    &\blue{q' : Q(v)}\\
+    &\blue{g : \mathcal{FS}[ z_y , v ]}\\
+    &q' : Q(v)\\
+    &g : \mathcal{FS}[ y , v ]\\
+    &h : \mathcal{FS}[x\uplus y , z]\\
+    &h_x: \mathcal{FS}[x , z_x]\\
+    &h_y: \mathcal{FS}[y , z_y]
+\end{align*}
+Again, there is still no obvious choice of future world $w$ of $z$ besides $z$.
+Thus our obligation is:
+\[
+    ? : (P \otimes Q)(z) = \int_{}^{r,s} \mathcal{FS}[r \uplus s,z ] 
+    \times P(r) \times Q(s)
+\]
+
+\paragraph{Projection Method}
+
+
+
+
+
+
+
 \subsection{Problems with an Abstract Monoidal Category}
 Before committing to the category 
 of worlds used in Levy's model, we will work with an arbitrary monoidal category ($C, \otimes_C , I_C$). 
@@ -199,8 +310,8 @@ Note that \textbf{if the direction of $f$ were inverted}, we'd be able to define
 
 \subsection{Problems with Concrete Models}
 Now we consider substituting the monoidal category ($C, \otimes_C , I_C$) with ($FinSet_{mono}^{op}, \oplus , \emptyset $)
-where $\oplus$ is given by disjoint union of sets.. 
-This category is used to represent single sorted heap configurations. 
+where $\oplus$ is given by disjoint union of sets. 
+This category is used to represent single sorted dynamic heap configurations. 
 
 \subsubsection{Action Laws with Concrete Category}
 Again we attempt to show $I_{D} \sep^{c} Q \cong Q$. The forward direction holds following the abstract case.

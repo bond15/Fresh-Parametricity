@@ -36,24 +36,64 @@ module src.Data.ConcreteFin where
         open import src.Data.FinSet
         open import src.Data.Semicartesian
 
+
         open Monoidal
         open import src.Data.BCBPV
-        open src.Data.BCBPV.Mod {ℓ-suc ℓ'} {ℓ'}(SMC ^opMon) isGroupoidFinSet
+        opmon : StrictMonCategory (ℓ-suc ℓ') ℓ' 
+        opmon = SMC ^opMon
+        open src.Data.BCBPV.Mod {ℓ-suc ℓ'} {ℓ'}opmon isGroupoidFinSet
         open import src.Data.BiDCC 
-        open src.Data.BiDCC.Mod {ℓ-suc ℓ'} {ℓ'}(SMC ^opMon)
+        open src.Data.BiDCC.Mod {ℓ-suc ℓ'} {ℓ'}opmon
+
 
 
         module _ {P Q : ob 𝓥}{R : ob 𝓒} where
 
             open import Cubical.Data.Sum
-            C = StrictMonCategory.C {ℓ-suc ℓ'} {ℓ'} (SMC ^opMon)
-            ⊗C = StrictMonCategory.sms (SMC ^opMon) .StrictMonStr.tenstr .TensorStr.─⊗─ 
+            C = StrictMonCategory.C {ℓ-suc ℓ'} {ℓ'} opmon
+            ⊗C = StrictMonCategory.sms opmon .StrictMonStr.tenstr .TensorStr.─⊗─ 
+            Cunit = StrictMonCategory.sms opmon .StrictMonStr.tenstr .TensorStr.unit
+            idr = StrictMonCategory.sms opmon .StrictMonStr.idr
+            𝓥unit = I⨂ opmon
+
+            private 
+                open import Cubical.Data.Unit
+                testF : (A : ob 𝓥) → 𝓒 [ Constant _ _ (Unit* , isSetUnit*) , F .F-ob A ]
+                testF A .N-ob x tt* = y , f , {!   !} where
+                    postulate y : ob (FinSetMono {_})
+                    f : (C ^op) [ x , y ]
+                    f = {!   !} , {!   !}
+                    
+                testF A .N-hom f = {!   !}
+
+            lemma : {x : ob C} → R .F-ob (⊗C .F-ob (x , Cunit)) .fst ≡ R .F-ob x .fst 
+            lemma = cong (λ h → R .F-ob h .fst) (idr _)
+
+            test1 : CatIso 𝓒 (sep 𝓥unit R) R 
+            test1 = (natTrans (λ x sepIR → R .F-hom (inl , isEmbedding-inl) (sepIR Cunit (lift (C .id))) ) {!   !}),
+            --transport lemma (sepIR Cunit (lift (C .id)) )) {!   !}) , 
+                                                                -- Issue, needs map x ⊎ y → x
+                                                                -- we could construct if we were given y→Ø instead..
+                                                                -- but y→Ø should never be inhabited!
+                                                                -- except when y ≡ Ø ?
+                        (isiso (natTrans (λ x Rx y Ø→y → R .F-hom {! ⊗C .F-hom ((C .id) , Ø→y) !} Rx) {! Ø→y  !}) {!   !} {!   !})
+
+            open import Cubical.Data.Unit
+            ×unit : ob 𝓥 
+            ×unit = Constant _ _ (Unit* , isSetUnit*)
+
+            example : CatIso 𝓒 (fun ×unit R) R 
+            example = (natTrans (λ x tt→Rx → tt→Rx tt*) λ _ → refl) , 
+                     isiso (natTrans (λ{x Rx tt* → Rx}) λ _ → refl) 
+                     (makeNatTransPath refl) (makeNatTransPath refl) 
+
+{- seemingly no UP ⨂ for oblique morphisms 
 
             open UniversalProperty
             open import Cubical.Categories.Constructions.BinProduct
 
             mapout : (m : 𝓞× P Q R)(x : ob C) → 
-                Σ[ X ∈ ob C × ob C ] fst (diagram {MC = (SMC ^opMon)} P Q x ⟅ X , X ⟆b) → R .F-ob x .fst
+                Σ[ X ∈ ob C × ob C ] fst (diagram {MC = opmon} P Q x ⟅ X , X ⟆b) → R .F-ob x .fst
             mapout m x ((y , z) , (y⊗z→x , p) , q) = R .F-hom (inl , isEmbedding-inl) (m x x (p' , q')) where 
                 p' : P .F-ob x . fst
                 p' = P .F-hom ((inl , isEmbedding-inl) ⋆⟨ C ^op ⟩ y⊗z→x) p
@@ -103,3 +143,5 @@ module src.Data.ConcreteFin where
                                                 b x (inc ((y , z) , (x←y⊗z , Py) , Qz))
                                                 -}
                                                 λ{ ((y , z) , (x←y⊗z , Py) , Qz) → {!  i !}}))
+
+-}
