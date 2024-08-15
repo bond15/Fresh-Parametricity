@@ -88,6 +88,9 @@ And we can attempt to define a computation separating function by:
 \]
 
 \subsection{Issue with Monad Strength Relative to Day Tensor}
+One consequence of this is that in an algebra model of bunched CBPV (using monad T and day convolution for tensor), 
+we can't define the monoidal closed structure in a similar way to the exponential (using strength and eval).
+
 We have a monad on $\mathcal{V}$ via the adjunction between $F$ and $U$.
 \[
     T(A)(x) := \Pi_{y : ob \; C}\Pi_{f : C^{op}[ x , y]}\Sigma_{z : ob \;C}\Sigma_{g : C^{op}[ y , z ]}A(z) 
@@ -139,7 +142,7 @@ Observe that \red{if $g: C^{op}[ y , v ]$ was instead $g : C^{op}[v , y]$} we'd 
 \[
     ((id \otimes_C g) ;h , p , q') = (h , p , Q(g)(q'))
 \]
-which are equal relative to coend quotient.
+which are equal relative to the coend quotient.
 \subsubsection{Concrete}
 Now we consider substituting the monoidal category ($C, \otimes_C , I_C$) with ($FinSet_{mono}^{op}, \uplus , \emptyset $)
 where $\uplus$ is disjoint union of sets.
@@ -188,12 +191,41 @@ Thus our obligation is:
     ? : (P \otimes Q)(z) = \int_{}^{r,s} \mathcal{FS}[r \uplus s,z ] 
     \times P(r) \times Q(s)
 \]
+\blue{This seems to be a messier version of the \textit{projection} method below}
 
 \paragraph{Projection Method}
-
-
-
-
+\begin{align*}
+    &p : P(x)\\
+    &q : T(Q)(y) = \Pi_{u : ob \; \mathcal{FS}}\Pi_{f : \mathcal{FS}[ y , u]}\Sigma_{v : ob \;\mathcal{FS}}\Sigma_{g : \mathcal{FS}[ u , v ]}Q(v)\\
+    &h : \mathcal{FS}[x\uplus y , z]
+\end{align*}
+we have morphisms
+\begin{align*}
+    & j : \mathcal{FS}[x , z]\\
+    & k : \mathcal{FS}[y , z]
+\end{align*}
+via precomposing $h$ with $inl$ and $inr$. We can use $k$ with $q$ yielding
+\begin{align*}
+    &q' : Q(v)\\
+    &g : \mathcal{FS}[ z , v ]\\
+\end{align*}
+This time we have another choice of future world from $z$, being $v$. 
+$Q$ is covariant w.r.t $\mathcal{FS}$, so we have no way to transport $q' : Q(v)$ back to any
+previous world of $v$.
+\[
+  (h ; g , p, \red{Q(k ; g)(q')})  
+\]
+We can perform an arbitrary \textit{hack}\footnote{see section 2.4.2 for similar reasoning}
+by noting that we can lift $p: P(x)$ to $p' = P(j ; g)(p) : P(v)$ which we can use to construct an element of 
+\[
+    (P \otimes Q)(v \uplus_C v) = \int_{}^{r,s} \mathcal{FS}[r \uplus s, v \uplus v] 
+    \times P(r) \times Q(s)
+\]
+via $(id_v \uplus id_v, P(j ; g)(p), q')$. 
+Then, using the contravariance of $F(P \otimes Q)$, 
+we can go from $F(P \otimes Q)(v \uplus v)$ to $F(P \otimes Q)(v)$ via $g ; inl$ or $g ; inr$.
+\red{TODO: I believe this definition of components fails naturality. Check in detail. 
+Might be easier to check the left unitor or monadic unit laws}
 
 
 
