@@ -185,7 +185,7 @@ Context:
     &h_x: \mathcal{FS}[x , z_x]\\
     &h_y: \mathcal{FS}[y , z_y]
 \end{align*}
-We can choose future world $z_{xm} \uplus v$ where $z_{xm} = z - z_y$.
+We can choose future world $z_{xm} \uplus v$ where $z_{xm} = z_x \uplus z_m$.
 Thus our obligation is:
 \[
     ? : (P \otimes Q)(z_{xm} \uplus v) = \int_{}^{r,s} \mathcal{FS}[r \uplus s,z_{xm} \uplus v ] 
@@ -197,7 +197,7 @@ chosing $r = z_{xm}$ and $s = v$:
 \]
 which we can satisfy by 
 \[
-  (id, P(x\rightarrow z_{xm})(p), q')  
+  (id, P(h_x ; inl)(p), q')  
 \]
 The arbitrary choice here is that either $p$ or $q$ gets \textit{the extra space} in $z$.
 \blue{This seems to be a messier version of the \textit{projection} method below. }
