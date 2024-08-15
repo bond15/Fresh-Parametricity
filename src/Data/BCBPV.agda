@@ -130,6 +130,29 @@ module src.Data.BCBPV where
         F⊣U .adjNatInD _ _ = makeNatTransPath (funExt λ _ → funExt λ _ → refl) 
         F⊣U .adjNatInC _ _ = makeNatTransPath (funExt λ _ → funExt λ _ → refl) 
 
+        open import Cubical.Categories.Adjoint.Monad
+        open import Cubical.Categories.Monad.Base
+
+        T : Functor 𝓥 𝓥
+        T = U ∘F F
+
+        M : Monad 𝓥
+        M = T , (MonadFromAdjunction F U (adj'→adj F U F⊣U))
+
+        module _ where 
+            private 
+
+                open IsMonad (M .snd) renaming (η to ret)
+
+                ret' : {A : ob 𝓥} → 𝓥 [ A , T .F-ob A ]
+                ret' {A} .N-ob x Ax .end y x→y = y , (C .id , A .F-hom x→y Ax)
+                ret' {A} .N-hom = {!   !}
+
+                _  :{A : ob 𝓥} → ret' {A} ≡ ret .N-ob A
+                _ = makeNatTransPath (funExt λ x → funExt λ Ax → refl)
+
+
+
         𝓞× : ob 𝓥 → ob 𝓥 → ob 𝓒 → Set ℓm
         𝓞× v₁ v₂ c = ∀ (x y : ob C) → v₁ .F-ob x .fst × v₂ .F-ob y .fst → c .F-ob (⨂c .F-ob (x , y)) .fst
 
@@ -276,9 +299,6 @@ module src.Data.BCBPV where
 
         -- from 8-8-24 meeting
         module str (P Q : ob 𝓥)where
-
-            T : Functor 𝓥 𝓥 
-            T = U ∘F F
 
             ×str : 𝓥 [ P ×p T .F-ob Q , T .F-ob (P ×p Q) ]
             ×str .N-ob x (Px , TQx) .end y y→x = z , (z→y , Pz , Qz) where 

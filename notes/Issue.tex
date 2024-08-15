@@ -169,29 +169,38 @@ Thus we have maps
 \end{align*}
 The map $h_y$ can be used for $q$
 \begin{align*}
-        &q(y)(id_y) : \Sigma_{v : ob \;\mathcal{FS}}\Sigma_{g : \mathcal{FS}[ y , v ]}Q(v)\\
-        &\textrm{or}\\
-        &\blue{q(z_y)(h_y) : \Sigma_{v : ob \;\mathcal{FS}}\Sigma_{g : \mathcal{FS}[ z_y , v ]}Q(v)}
+        %&q(y)(id_y) : \Sigma_{v : ob \;\mathcal{FS}}\Sigma_{g : \mathcal{FS}[ y , v ]}Q(v)\\
+       %&\textrm{or}\\
+        &q(z_y)(h_y) : \Sigma_{v : ob \;\mathcal{FS}}\Sigma_{g : \mathcal{FS}[ z_y , v ]}Q(v)
 \end{align*}
 
 Context:
 \begin{align*}
     &p : P(x)\\
-    &\blue{q' : Q(v)}\\
-    &\blue{g : \mathcal{FS}[ z_y , v ]}\\
     &q' : Q(v)\\
-    &g : \mathcal{FS}[ y , v ]\\
+    &g : \mathcal{FS}[ z_y , v ]\\
+    %&q' : Q(v)\\
+    %&g : \mathcal{FS}[ y , v ]\\
     &h : \mathcal{FS}[x\uplus y , z]\\
     &h_x: \mathcal{FS}[x , z_x]\\
     &h_y: \mathcal{FS}[y , z_y]
 \end{align*}
-Again, there is still no obvious choice of future world $w$ of $z$ besides $z$.
+We can choose future world $z_{xm} \uplus v$ where $z_{xm} = z - z_y$.
 Thus our obligation is:
 \[
-    ? : (P \otimes Q)(z) = \int_{}^{r,s} \mathcal{FS}[r \uplus s,z ] 
+    ? : (P \otimes Q)(z_{xm} \uplus v) = \int_{}^{r,s} \mathcal{FS}[r \uplus s,z_{xm} \uplus v ] 
     \times P(r) \times Q(s)
 \]
-\blue{This seems to be a messier version of the \textit{projection} method below}
+chosing $r = z_{xm}$ and $s = v$:
+\[
+    ? : \mathcal{FS}[z_{xm} \uplus v,z_{xm} \uplus v ] \times P(z_{xm}) \times Q(v)
+\]
+which we can satisfy by 
+\[
+  (id, P(x\rightarrow z_{xm})(p), q')  
+\]
+The arbitrary choice here is that either $p$ or $q$ gets \textit{the extra space} in $z$.
+\blue{This seems to be a messier version of the \textit{projection} method below. }
 
 \paragraph{Projection Method}
 \begin{align*}
@@ -221,7 +230,7 @@ by noting that we can lift $p: P(x)$ to $p' = P(j ; g)(p) : P(v)$ which we can u
     (P \otimes Q)(v \uplus_C v) = \int_{}^{r,s} \mathcal{FS}[r \uplus s, v \uplus v] 
     \times P(r) \times Q(s)
 \]
-via $(id_v \uplus id_v, P(j ; g)(p), q')$. 
+via $(id, P(j ; g)(p), q')$. 
 Then, using the contravariance of $F(P \otimes Q)$, 
 we can go from $F(P \otimes Q)(v \uplus v)$ to $F(P \otimes Q)(v)$ via $g ; inl$ or $g ; inr$.
 \red{TODO: I believe this definition of components fails naturality. Check in detail. 

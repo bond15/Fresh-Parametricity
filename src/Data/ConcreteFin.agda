@@ -87,6 +87,141 @@ module src.Data.ConcreteFin where
                      isiso (natTrans (λ{x Rx tt* → Rx}) λ _ → refl) 
                      (makeNatTransPath refl) (makeNatTransPath refl) 
 
+
+            
+            open import src.Data.Direct2 
+            open Ran C isGroupoidFinSet hiding (Inc* ; Inc)
+            open End renaming (fun to end)
+            open DayUP
+            open Iso hiding (fun)
+
+            ret : {A : ob 𝓥} → 𝓥 [ A , T .F-ob A ]
+            ret {A} .N-ob x Ax .end y x→y = y , (C .id , A .F-hom x→y Ax)
+            ret {A} .N-hom = {!   !}
+
+            FS = C ^op
+
+            ⊗str' : {P Q : ob 𝓥}  → 𝓥× [ P ⨂Ext T .F-ob Q , T .F-ob (P ⨂ᴰ Q) ∘F (⊗C ^opF) ] 
+            ⊗str' {P}{Q}.N-ob (x , y) (Px , TQy) .end z x⊗y→z = goal where 
+
+                j : FS [ x , z ]
+                j = (inl , isEmbedding-inl) ⋆⟨ FS ⟩ x⊗y→z
+
+                k : FS [ y , z ]
+                k = (inr , isEmbedding-inr) ⋆⟨ FS ⟩ x⊗y→z 
+
+                zz : FS [ z , ⊗C .F-ob (z , z) ]
+                zz = inl , isEmbedding-inl
+
+                v : ob FS
+                v = TQy .end z k .fst
+
+                g : FS [ z , v ]
+                g = TQy .end z k .snd .fst
+
+                Qv : Q .F-ob v .fst 
+                Qv = TQy .end z k .snd .snd
+
+                sub : F .F-ob (P ⨂ᴰ Q) .F-ob (⊗C .F-ob (z , z)) .fst 
+                sub = (⊗C .F-ob (z , z)) , ((C .id) , (inc ((z , z) , ((C .id) , (P .F-hom j Px)) , (Q .F-hom {!   !} {!   !}))))
+
+                goal : F .F-ob (P ⨂ᴰ Q) .F-ob z .fst
+                goal = F .F-ob (P ⨂ᴰ Q) .F-hom zz sub
+                    --z , (C .id) , (inc ((z , z) , ((({! inl  !} , {!   !}) , {!   !}) , {!   !})))
+
+{-
+                v : ob FS
+                v = TQy .end z k .fst
+
+                g : FS [ z , v ]
+                g = TQy .end z k .snd .fst
+
+                Qv : Q .F-ob v .fst 
+                Qv = TQy .end z k .snd .snd
+
+                yv : FS [ y , v ]
+                yv = k ⋆⟨ FS ⟩ g 
+                
+                d : (P ⨂ᴰ Q) .F-ob v .fst
+                d = inc ((x , y) , (((x⊗y→z ⋆⟨ FS ⟩ g) , Px) , (Q .F-hom {! yv !} Qv)))
+
+                option1 : F .F-ob (P ⨂ᴰ Q) .F-ob z .fst
+                option1 = v , (g , d)
+
+                d' : (P ⨂ᴰ Q) .F-ob z .fst
+                d' = (inc ((x , y) , ((x⊗y→z , Px) , Q .F-hom {!  !} Qv)))
+
+                option2 : F .F-ob (P ⨂ᴰ Q) .F-ob z .fst
+                option2 = z , ((FS .id) , d')
+
+                --d3 : (P ⨂ᴰ Q) .F-ob (⊗C .F-ob (z , z)) .fst
+                --d3 = (inc ((x , y) , ((⊗C .F-hom (j , k) , Px) , {!   !})))
+                
+                d3 : (P ⨂ᴰ Q) .F-ob (⊗C .F-ob (v , v)) .fst
+                d3 = (inc ((v , v) , ((⊗C .F-hom ((C .id) , (C .id)) , P .F-hom (j ⋆⟨ FS ⟩ g) Px) , Qv)))
+
+                option3' : F .F-ob (P ⨂ᴰ Q) .F-ob (⊗C .F-ob (v , v)) .fst
+                option3' = (⊗C .F-ob (v , v)) , (C .id , d3)
+
+                option3 : F .F-ob (P ⨂ᴰ Q) .F-ob z .fst
+                option3 = F .F-ob (P ⨂ᴰ Q) .F-hom (g ⋆⟨ FS ⟩ (inl , isEmbedding-inl)) option3'
+-}
+
+            ⊗str' .N-hom {(x , x')}{(y , y')} (x→y , x'→y') = funExt λ{(Px , TQx') → {!   !}}
+            
+            ⊗str : {P Q : ob 𝓥} → 𝓥 [ P ⨂ᴰ T .F-ob Q , T .F-ob (P ⨂ᴰ Q) ] 
+            ⊗str {P} {Q} = ⨂UP .inv ⊗str' 
+
+            _ = {! ⨂UP .inv ⊗str'  !}
+            {- sanity check}
+            ⊗str {P} {Q} .N-ob x (inc ((y , z) , ((y⊗z→x , Py), TQz ))) = 
+                record { fun = λ w x→w → w , ((C .id) , 
+                    inc ((y , z) , ((y⊗z→x ⋆⟨ FS ⟩ x→w , Py) , Q .F-hom {! TQz .end z (C .id) .snd .fst !} (TQz .end z (C .id) .snd .snd)))) }
+                    
+            ⊗str {P} {Q} .N-ob x (coeq a i) = {!   !}
+            ⊗str {P} {Q} .N-ob x (squash p p₁ p₂ q i i₁) = {!   !}
+            ⊗str {P}{Q} .N-hom = {!   !}
+            -}
+
+
+
+            str⊗Unitor : CatIso 𝓥 (𝓥unit ⨂ᴰ T .F-ob P) (T .F-ob (𝓥unit ⨂ᴰ P)) 
+            str⊗Unitor = ⊗str , isiso b {!   !} {!   !} where
+
+                b : 𝓥 [ T .F-ob (𝓥unit ⨂ᴰ P) , 𝓥unit ⨂ᴰ T .F-ob P ] 
+                b .N-ob x e = inc (({! e .end x (C .id)  !} , {!   !}) , (({!  !} , {!   !}) , {!   !})) where 
+                    y : ob FS 
+                    y = e .end x (C .id) .fst
+
+                    x→y : FS [ x , y ]
+                    x→y = e .end x (C .id) .snd .fst
+
+                    Py : (𝓥unit ⨂ᴰ P) .F-ob y .fst 
+                    Py = e .end x (C .id) .snd .snd
+
+                b .N-hom = {!   !}
+
+            ⨂map' : {X Y W Z : ob 𝓥} → 𝓥 [ X , W ] → 𝓥 [ Y , Z ] → 𝓥× [ X ⨂Ext Y , (W  ⨂ᴰ Z) ∘F (⊗C ^opF) ]
+            ⨂map' {X}{Y}{W}{Z} n m .N-ob (x , y) (Xx , Yy) = inc (((x , y)) , (C .id , n .N-ob x Xx) , m .N-ob y Yy)
+            ⨂map' {X}{Y}{W}{Z} n m .N-hom = {!   !}
+
+            ⨂map : {A B C D : ob 𝓥} → 𝓥 [ A , C ] → 𝓥 [ B , D ] → 𝓥 [ A ⨂ᴰ B , C  ⨂ᴰ D ]
+            ⨂map {A}{B}{C}{D} n m = ⨂UP .inv (⨂map' n m) 
+            
+            m : {A B : ob 𝓥} → 𝓥 [ A ⨂ᴰ B , A ⨂ᴰ (T .F-ob B) ]
+            m {A} {B} = Day-Functor opmon .F-hom ((𝓥 .id) , (ret {B})) 
+           
+           -- m' : {A B : ob 𝓥} → 𝓥× [ A ⨂Ext B , AT .F-ob (P ⨂ᴰ Q) ∘F (⊗C ^opF) ] 
+           -- m' {A} {B} = ⨂UP .inv {!   !}
+            --(natTrans (λ{(x , y) (Ax , By) → 
+            --    inc ((x , y) , (((⊗C .F-hom ((C .id) , (C .id))) , Ax) , ret {B} .N-ob y By))}) {!   !})
+
+            strUnit : {A B : ob 𝓥} → (⨂map (𝓥 .id) (ret {B})) ⋆⟨ 𝓥 ⟩ ⊗str {A} {B} ≡ ret {A ⨂ᴰ B}
+            strUnit {A} {B} = makeNatTransPath (funExt λ x → funExt λ A⨂Bx → {!   !})
+
+
+            
+
 {- seemingly no UP ⨂ for oblique morphisms 
 
             open UniversalProperty
@@ -144,4 +279,4 @@ module src.Data.ConcreteFin where
                                                 -}
                                                 λ{ ((y , z) , (x←y⊗z , Py) , Qz) → {!  i !}}))
 
--}
+-}   
