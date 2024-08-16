@@ -233,9 +233,15 @@ by noting that we can lift $p: P(x)$ to $p' = P(j ; g)(p) : P(v)$ which we can u
 via $(id, P(j ; g)(p), q')$. 
 Then, using the contravariance of $F(P \otimes Q)$, 
 we can go from $F(P \otimes Q)(v \uplus v)$ to $F(P \otimes Q)(v)$ via $g ; inl$ or $g ; inr$.
-\red{TODO: I believe this definition of components fails naturality. Check in detail. 
-Might be easier to check the left unitor or monadic unit laws}
+\red{TODO: I believe this definition of components fails naturality.}
 
+\red{This definition fails to satisfy the following equation: }
+\[
+  A \otimes B \xrightarrow{A \otimes \eta_B} A \otimes T(B) \xrightarrow{str_{A,B}} T(A \otimes B) 
+  = A \otimes B \xrightarrow{\eta_{A\otimes B}}T(A \otimes B)
+\]
+See \href{https://github.com/bond15/Bunched-CBPV/blob/b77d06a7207a6d42b86633f52a9fe93f6beaafd1/src/Data/ConcreteFin.agda#L197}{Agda}.
+ Equality fails at the first component of the tuple, $z \uplus z \neq z$.
 
 
 \subsection{Problems with an Abstract Monoidal Category}
