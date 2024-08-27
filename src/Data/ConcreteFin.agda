@@ -265,7 +265,7 @@ module src.Data.ConcreteFin where
                 ⨂≡map (makeNatTransPath 
                     (funExt λ{(x , y) → funExt λ{(Ax , By)→ 
                         end≡ _ λ z x⊗y→z  → 
-                            -- RHS (z , FS .id , A⨂B(x⊗y→z)(inc (x , y) (id , Ax , By)))
+                            -- RHS (z , FS .id , A⨂B(x⊗y→z)(inc (x , y) (id , Ax , By)))?
                             -- Projection 
                             -- first components are not equal
                             -- z ⊎ z != z
@@ -278,7 +278,7 @@ module src.Data.ConcreteFin where
                             -- first and second components are equal
                             -- B(g')(q') = By ... unclear..
                             -- dayfact {MC = opmon} A B ?
-                            ΣPathP (refl , ΣPathP (refl , day-ap {MC = opmon} A B {!   !} refl {!   !})) }}))
+                            ΣPathP (refl , ΣPathP (refl , day-ap {MC = opmon} A B {!ret .N-ob (A ⨂ᴰ B)   !} refl {!   !})) }}))
             
 
 {- seemingly no UP ⨂ for oblique morphisms 
