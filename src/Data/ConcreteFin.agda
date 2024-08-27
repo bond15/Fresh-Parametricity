@@ -97,75 +97,141 @@ module src.Data.ConcreteFin where
 
             FS = C ^op
 
-            ⊗str' : {P Q : ob 𝓥}  → 𝓥× [ P ⨂Ext T .F-ob Q , T .F-ob (P ⨂ᴰ Q) ∘F (⊗C ^opF) ] 
-            ⊗str' {P}{Q}.N-ob (x , y) (Px , TQy) .end z x⊗y→z = goal where 
+            module Projection where 
+                ⊗str' : {P Q : ob 𝓥}  → 𝓥× [ P ⨂Ext T .F-ob Q , T .F-ob (P ⨂ᴰ Q) ∘F (⊗C ^opF) ] 
+                ⊗str' {P}{Q}.N-ob (x , y) (Px , TQy) .end z x⊗y→z = goal where 
 
-                j : FS [ x , z ]
-                j = (inl , isEmbedding-inl) ⋆⟨ FS ⟩ x⊗y→z
+                    j : FS [ x , z ]
+                    j = (inl , isEmbedding-inl) ⋆⟨ FS ⟩ x⊗y→z
 
-                k : FS [ y , z ]
-                k = (inr , isEmbedding-inr) ⋆⟨ FS ⟩ x⊗y→z 
+                    k : FS [ y , z ]
+                    k = (inr , isEmbedding-inr) ⋆⟨ FS ⟩ x⊗y→z 
 
-                zz : FS [ z , ⊗C .F-ob (z , z) ]
-                zz = inl , isEmbedding-inl
+                    zz : FS [ z , ⊗C .F-ob (z , z) ]
+                    zz = inl , isEmbedding-inl
 
-                v : ob FS
-                v = TQy .end z k .fst
+                    v : ob FS
+                    v = TQy .end z k .fst
 
-                g : FS [ z , v ]
-                g = TQy .end z k .snd .fst
+                    g : FS [ z , v ]
+                    g = TQy .end z k .snd .fst
 
-                Qv : Q .F-ob v .fst 
-                Qv = TQy .end z k .snd .snd
+                    Qv : Q .F-ob v .fst 
+                    Qv = TQy .end z k .snd .snd
 
-                sub : F .F-ob (P ⨂ᴰ Q) .F-ob (⊗C .F-ob (v , v)) .fst 
-                sub = (⊗C .F-ob (v , v)) , ((C .id) , (inc ((v , v) , ((C .id) , (P .F-hom (j ⋆⟨ FS ⟩ g) Px)) , Qv)))
+                    sub : F .F-ob (P ⨂ᴰ Q) .F-ob (⊗C .F-ob (v , v)) .fst 
+                    sub = (⊗C .F-ob (v , v)) , ((C .id) , (inc ((v , v) , ((C .id) , (P .F-hom (j ⋆⟨ FS ⟩ g) Px)) , Qv)))
 
-                goal : F .F-ob (P ⨂ᴰ Q) .F-ob z .fst
-                goal = F .F-ob (P ⨂ᴰ Q) .F-hom (g ⋆⟨ FS ⟩ (inl , isEmbedding-inl)) sub
+                    goal : F .F-ob (P ⨂ᴰ Q) .F-ob z .fst
+                    goal = F .F-ob (P ⨂ᴰ Q) .F-hom (g ⋆⟨ FS ⟩ (inl , isEmbedding-inl)) sub
 
-{-
-                v : ob FS
-                v = TQy .end z k .fst
+    {-
+                    v : ob FS
+                    v = TQy .end z k .fst
 
-                g : FS [ z , v ]
-                g = TQy .end z k .snd .fst
+                    g : FS [ z , v ]
+                    g = TQy .end z k .snd .fst
 
-                Qv : Q .F-ob v .fst 
-                Qv = TQy .end z k .snd .snd
+                    Qv : Q .F-ob v .fst 
+                    Qv = TQy .end z k .snd .snd
 
-                yv : FS [ y , v ]
-                yv = k ⋆⟨ FS ⟩ g 
+                    yv : FS [ y , v ]
+                    yv = k ⋆⟨ FS ⟩ g 
+                    
+                    d : (P ⨂ᴰ Q) .F-ob v .fst
+                    d = inc ((x , y) , (((x⊗y→z ⋆⟨ FS ⟩ g) , Px) , (Q .F-hom {! yv !} Qv)))
+
+                    option1 : F .F-ob (P ⨂ᴰ Q) .F-ob z .fst
+                    option1 = v , (g , d)
+
+                    d' : (P ⨂ᴰ Q) .F-ob z .fst
+                    d' = (inc ((x , y) , ((x⊗y→z , Px) , Q .F-hom {!  !} Qv)))
+
+                    option2 : F .F-ob (P ⨂ᴰ Q) .F-ob z .fst
+                    option2 = z , ((FS .id) , d')
+
+                    --d3 : (P ⨂ᴰ Q) .F-ob (⊗C .F-ob (z , z)) .fst
+                    --d3 = (inc ((x , y) , ((⊗C .F-hom (j , k) , Px) , {!   !})))
+                    
+                    d3 : (P ⨂ᴰ Q) .F-ob (⊗C .F-ob (v , v)) .fst
+                    d3 = (inc ((v , v) , ((⊗C .F-hom ((C .id) , (C .id)) , P .F-hom (j ⋆⟨ FS ⟩ g) Px) , Qv)))
+
+                    option3' : F .F-ob (P ⨂ᴰ Q) .F-ob (⊗C .F-ob (v , v)) .fst
+                    option3' = (⊗C .F-ob (v , v)) , (C .id , d3)
+
+                    option3 : F .F-ob (P ⨂ᴰ Q) .F-ob z .fst
+                    option3 = F .F-ob (P ⨂ᴰ Q) .F-hom (g ⋆⟨ FS ⟩ (inl , isEmbedding-inl)) option3'
+    -}
+
+                ⊗str' .N-hom {(x , x')}{(y , y')} (x→y , x'→y') = funExt λ{(Px , TQx') → {!   !}}
                 
-                d : (P ⨂ᴰ Q) .F-ob v .fst
-                d = inc ((x , y) , (((x⊗y→z ⋆⟨ FS ⟩ g) , Px) , (Q .F-hom {! yv !} Qv)))
+                ⊗str : {P Q : ob 𝓥} → 𝓥 [ P ⨂ᴰ T .F-ob Q , T .F-ob (P ⨂ᴰ Q) ] 
+                ⊗str {P} {Q} = ⨂UP .inv ⊗str' 
 
-                option1 : F .F-ob (P ⨂ᴰ Q) .F-ob z .fst
-                option1 = v , (g , d)
+            module Partition where 
+                ⊗str' : {P Q : ob 𝓥}  → 𝓥× [ P ⨂Ext T .F-ob Q , T .F-ob (P ⨂ᴰ Q) ∘F (⊗C ^opF) ] 
+                ⊗str' {P}{Q}.N-ob (x , y) (Px , TQy) .end z x⊗y→z = goal where 
 
-                d' : (P ⨂ᴰ Q) .F-ob z .fst
-                d' = (inc ((x , y) , ((x⊗y→z , Px) , Q .F-hom {!  !} Qv)))
+                    postulate zx zy zm : ob C
+                    postulate fact1 : z ≡ ⊗C .F-ob ((⊗C .F-ob (zx , zy)) , zm) 
+                    postulate hx : FS [ x , zx ]
+                    postulate hy : FS [ y , zy ]
 
-                option2 : F .F-ob (P ⨂ᴰ Q) .F-ob z .fst
-                option2 = z , ((FS .id) , d')
+                    h : FS [ (⊗C .F-ob (x , y)) , z ]
+                    h = x⊗y→z
 
-                --d3 : (P ⨂ᴰ Q) .F-ob (⊗C .F-ob (z , z)) .fst
-                --d3 = (inc ((x , y) , ((⊗C .F-hom (j , k) , Px) , {!   !})))
+                    v : ob FS 
+                    v = TQy .end zy hy .fst
+
+                    g : FS [ zy , v ]
+                    g = TQy .end zy hy .snd .fst
+
+                    q' : Q .F-ob v .fst 
+                    q' = TQy .end zy hy .snd .snd
+
+                    -- zx ⊎ zy ⊎ zm --> zx ⊎ v ⊎ zm via id ⊎ g ⊎ id
+                    m : FS [ z , {!   !} ]
+                    m = {!   !}
+                    
+                    goal : F .F-ob (P ⨂ᴰ Q) .F-ob z .fst
+                    goal = (⊗C .F-ob (⊗C .F-ob (zx , zm), v )) , m , 
+                            inc (((⊗C .F-ob (zx , zm)) , v) , (((FS .id) , P .F-hom (hx ⋆⟨ FS ⟩ (inl , isEmbedding-inl)) Px) , q'))
+
+                ⊗str' .N-hom {(x , x')}{(y , y')} (x→y , x'→y') = {!   !}
                 
-                d3 : (P ⨂ᴰ Q) .F-ob (⊗C .F-ob (v , v)) .fst
-                d3 = (inc ((v , v) , ((⊗C .F-hom ((C .id) , (C .id)) , P .F-hom (j ⋆⟨ FS ⟩ g) Px) , Qv)))
+                ⊗str : {P Q : ob 𝓥} → 𝓥 [ P ⨂ᴰ T .F-ob Q , T .F-ob (P ⨂ᴰ Q) ] 
+                ⊗str {P} {Q} = ⨂UP .inv ⊗str' 
 
-                option3' : F .F-ob (P ⨂ᴰ Q) .F-ob (⊗C .F-ob (v , v)) .fst
-                option3' = (⊗C .F-ob (v , v)) , (C .id , d3)
+            module Desired where 
+                ⊗str' : {P Q : ob 𝓥}  → 𝓥× [ P ⨂Ext T .F-ob Q , T .F-ob (P ⨂ᴰ Q) ∘F (⊗C ^opF) ] 
+                ⊗str' {P}{Q}.N-ob (x , y) (Px , TQy) .end z x⊗y→z = goal where 
 
-                option3 : F .F-ob (P ⨂ᴰ Q) .F-ob z .fst
-                option3 = F .F-ob (P ⨂ᴰ Q) .F-hom (g ⋆⟨ FS ⟩ (inl , isEmbedding-inl)) option3'
--}
+                    h : FS [ (⊗C .F-ob (x , y)) , z ]
+                    h = x⊗y→z
 
-            ⊗str' .N-hom {(x , x')}{(y , y')} (x→y , x'→y') = funExt λ{(Px , TQx') → {!   !}}
-            
-            ⊗str : {P Q : ob 𝓥} → 𝓥 [ P ⨂ᴰ T .F-ob Q , T .F-ob (P ⨂ᴰ Q) ] 
-            ⊗str {P} {Q} = ⨂UP .inv ⊗str' 
+                    v : ob FS 
+                    v = TQy .end y (FS .id) .fst
+
+                    g : FS [ y , v ]
+                    g = TQy .end y (FS .id) .snd .fst
+
+                    postulate g' : FS [ v , y ]
+
+                    q' : Q .F-ob v .fst 
+                    q' = TQy .end y (FS .id) .snd .snd
+
+                    goal : F .F-ob (P ⨂ᴰ Q) .F-ob z .fst
+                    goal = z , (FS .id , inc ((x , y) , (x⊗y→z , Px) , Q .F-hom g' q'))
+                    
+                ⊗str' .N-hom {(x , x')}{(y , y')} (x→y , x'→y') = {!   !}
+                
+                ⊗str : {P Q : ob 𝓥} → 𝓥 [ P ⨂ᴰ T .F-ob Q , T .F-ob (P ⨂ᴰ Q) ] 
+                ⊗str {P} {Q} = ⨂UP .inv ⊗str'
+
+            --open Projection
+            --open Partition
+            open Desired
+
 
             str⊗Unitor : CatIso 𝓥 (𝓥unit ⨂ᴰ T .F-ob P) (T .F-ob (𝓥unit ⨂ᴰ P)) 
             str⊗Unitor = ⊗str , isiso b {!   !} {!   !} where
@@ -199,9 +265,20 @@ module src.Data.ConcreteFin where
                 ⨂≡map (makeNatTransPath 
                     (funExt λ{(x , y) → funExt λ{(Ax , By)→ 
                         end≡ _ λ z x⊗y→z  → 
+                            -- RHS (z , FS .id , A⨂B(x⊗y→z)(inc (x , y) (id , Ax , By)))
+                            -- Projection 
                             -- first components are not equal
                             -- z ⊎ z != z
-                            ΣPathP ({! refl  !} , ΣPathP ({!   !} , {!   !})) }}))
+                            
+                            -- Partition
+                            -- first components are not equal
+                            -- (zx ⊎ zm) ⊎ v != z
+
+                            -- Desired
+                            -- first and second components are equal
+                            -- B(g')(q') = By ... unclear..
+                            -- dayfact {MC = opmon} A B ?
+                            ΣPathP (refl , ΣPathP (refl , day-ap {MC = opmon} A B {!   !} refl {!   !})) }}))
             
 
 {- seemingly no UP ⨂ for oblique morphisms 
@@ -261,4 +338,4 @@ module src.Data.ConcreteFin where
                                                 -}
                                                 λ{ ((y , z) , (x←y⊗z , Py) , Qz) → {!  i !}}))
 
--}   
+-}     
