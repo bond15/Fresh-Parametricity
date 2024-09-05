@@ -21,6 +21,7 @@ module src.Data.ConcreteFin where
     open import src.Data.PresheafCCC
     open import Cubical.Categories.Yoneda.More
     open import Cubical.Foundations.Function
+    open import Cubical.Functions.Embedding
     open import Cubical.Data.Sigma 
     open import Cubical.Categories.Instances.Discrete
     open import Cubical.Categories.Displayed.Constructions.Comma
@@ -170,7 +171,7 @@ module src.Data.ConcreteFin where
                 ⊗str : {P Q : ob 𝓥} → 𝓥 [ P ⨂ᴰ T .F-ob Q , T .F-ob (P ⨂ᴰ Q) ] 
                 ⊗str {P} {Q} = ⨂UP .inv ⊗str' 
 
-            module Partition where 
+            module PartitionEx where 
                 ⊗str''' : {P Q : ob 𝓥}  → 𝓥× [ P ⨂Ext Q , T .F-ob (P ⨂ᴰ Q) ∘F (⊗C ^opF) ] 
                 ⊗str''' {P}{Q}.N-ob (x , y) (Px , Qy) .end z x⊗y→z = goal where 
 
@@ -215,50 +216,22 @@ module src.Data.ConcreteFin where
                     
                 ⊗str''' {P}{Q}.N-hom {(x , y)}{(z' , y')}(f , g) = funExt λ {(Px , Qy) → {!  !}}
                 
-                {-# TERMINATING #-}
+                {-# TERMINATING #-} -- wierd issue
                 ⊗str' : {P Q : ob 𝓥}  → 𝓥× [ P ⨂Ext T .F-ob Q , T .F-ob (P ⨂ᴰ Q) ∘F (⊗C ^opF) ] 
                 ⊗str' {P}{Q}.N-ob (x , y) (Px , TQy) .end z x⊗y→z = goal where 
+                    open Partition
+                    module s = Split x⊗y→z
 
-                    postulate zx zy zm : ob C
-                    postulate fact1 : z ≡ ⊗C .F-ob ((⊗C .F-ob (zx , zy)) , zm) 
-                    postulate hx : FS [ x , zx ]
-                    postulate hy : FS [ y , zy ]
+                    e = TQy .end s.zy s.hy
+                    v = e .fst 
+                    g' = e .snd .fst 
+                    q' = e .snd .snd
 
-                    h : FS [ (⊗C .F-ob (x , y)) , z ]
-                    h = x⊗y→z
-
-                    v : ob FS 
-                    v = TQy .end zy hy .fst
-
-                    g : FS [ zy , v ]
-                    g = TQy .end zy hy .snd .fst
-
-                    q' : Q .F-ob v .fst 
-                    q' = TQy .end zy hy .snd .snd
-
-                    p' : P .F-ob zx .fst 
-                    p' = P .F-hom hx Px
-
-                    zy'  = ⊗C .F-ob (v , zm)
-                    n = ⊗C .F-ob (zx , zy')
-
-                    -- zx ⊎ zy ⊎ zm --> zx ⊎ v ⊎ zm via id ⊎ g ⊎ id
-                    m : FS [ z , n ]
-                    m = {!   !} , {!   !}
+                    w = ⊗C .F-ob (s.zx , ⊗C .F-ob (v , s.zm))
+                    z→w = s.split ⋆⟨ FS  ⟩ (⊎Monotone↪ (id↪ _) (⊎Monotone↪  g' (id↪ _)))
                     
                     goal : F .F-ob (P ⨂ᴰ Q) .F-ob z .fst
-                    goal = n , m , inc ((zx , zy') , ((FS .id , p') , Q .F-hom ((inl , isEmbedding-inl)) q'))  
-                        --z , (FS .id , inc ((zx , v) , (({!   !} , p') , q'))) 
-                        
-                        {-F .F-ob (P ⨂ᴰ Q) .F-hom 
-                            m 
-                            (n , (FS .id , 
-                                (inc ((⊗C .F-ob (zx , zm) , v) , ((FS .id , P .F-hom (hx ⋆⟨ FS ⟩ (inl , isEmbedding-inl)) Px) , q'))))) 
-                        -}
-
-
-                        --(⊗C .F-ob (⊗C .F-ob (zx , zm), v )) , m , 
-                        -- inc (((⊗C .F-ob (zx , zm)) , v) , (((FS .id) , P .F-hom (hx ⋆⟨ FS ⟩ (inl , isEmbedding-inl)) Px) , q'))
+                    goal = w , ( z→w ,  inc ((s.zx , ⊗C .F-ob (v , s.zm)) , ((FS .id ,  P .F-hom s.hx Px ) , Q .F-hom Inl q')) )
 
                 ⊗str' .N-hom {(x , y)}{(x' , y')} (x→y , x'→y') =
                     funExt λ {(Px , TQy) → 
@@ -297,7 +270,7 @@ module src.Data.ConcreteFin where
                 ⊗str {P} {Q} = ⨂UP .inv ⊗str'
 
             --open Projection
-            open Partition
+            open PartitionEx
             --open Desired
 
 
@@ -327,10 +300,10 @@ module src.Data.ConcreteFin where
 
             open UniversalProperty
             strUnit : {A B : ob 𝓥} → (⨂map (𝓥 .id) (ret .N-ob B)) ⋆⟨ 𝓥 ⟩ ⊗str {A} {B} ≡ ret .N-ob (A ⨂ᴰ B)
-            strUnit {A} {B} = {!   !}
-               -- ⨂≡map (makeNatTransPath 
-               --     (funExt λ{(x , y) → funExt λ{(Ax , By)→ 
-                --        end≡ _ λ z x⊗y→z  → ΣPathP (refl , (ΣPathP (refl , {!   !})))}}))
+            strUnit {A} {B} = 
+                ⨂≡map (makeNatTransPath 
+                    (funExt λ{(x , y) → funExt λ{(Ax , By)→ 
+                        end≡ _ λ z x⊗y→z  → ΣPathP ({!   !} , (ΣPathP ({!   !} , {!   !})))}}))
                 --makeNatTransPath (funExt λ z → {!   !})
             --sym (η≡ {!   !}))
                 {-}
