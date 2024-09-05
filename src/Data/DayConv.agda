@@ -82,31 +82,32 @@ module src.Data.DayConv where
         Day-cowedge : ∀ {x} {y} → (C)[ y ,  x ] → Cowedge (diagram x)
         Day-cowedge {_} {y} _ .nadir = Day y .cowedge .nadir
         Day-cowedge f .ψ (a , b) ((g , Fa) , Gb) = day (f ⋆ᶜ g) Fa Gb
-        Day-cowedge f .extranatural (f₁ , f₂) = funExt λ { x → {!  !} }
+        Day-cowedge f .extranatural {c}{c'} (f₁ , f₂) = 
+            funExt λ { ((x→c'₁⊗c'₂ , Fc'1) , Gc'2) → {! day-fact {f = f₁}{f₂}{x→c'₁⊗c'₂}{Fc'1}{Gc'2} ? !} }
+            -- {!  day-fact {f = f₁}{f₂}{x→c'₁⊗c'₂}{Fc'1}{Gc'2} ? !} }
 
         factor' : ∀ {i} (W : Cowedge (diagram i)) → fst(Day i . cowedge .nadir) → fst (W .nadir)
         factor' W = Day _ .factor W 
     
+        open import Cubical.HITs.SetCoequalizer.Properties
+        open UniversalProperty
         _⊗ᴰ_ : Presheaf (MC .StrictMonCategory.C) (ℓ-max ℓC ℓC')
         _⊗ᴰ_ .F-ob x = Day x .cowedge .nadir
         _⊗ᴰ_ .F-hom {y}{x} f = factor' (Day-cowedge f)
-        _⊗ᴰ_ .F-id = funExt λ{x → {! coeq  ?  !} }
+        _⊗ᴰ_ .F-id = sym (uniqueness  {!   !} {!   !} {!   !} {!   !} {!   !} {!   !} {!   !})
+            --funExt λ{x → {! coeq  ?  !} }
         _⊗ᴰ_ .F-seq f g = funExt λ nad → {!   !} 
 
     module _ (MC : StrictMonCategory ℓC ℓC') where 
         open StrictMonCategory MC 
-        open Category C renaming (ob to obᶜ ; _⋆_ to _⋆ᶜ_ ; id to idᶜ ; ⋆IdL to ⋆IdLᶜ ; ⋆IdR to ⋆IdRᶜ ;  ⋆Assoc to ⋆Assocᶜ ; isSetHom to isSetHomC )
+        --open Category C renaming (ob to obᶜ ; _⋆_ to _⋆ᶜ_ ; id to idᶜ ; ⋆IdL to ⋆IdLᶜ ; ⋆IdR to ⋆IdRᶜ ;  ⋆Assoc to ⋆Assocᶜ ; isSetHom to isSetHomC )
     
         open import Cubical.Categories.Constructions.BinProduct
         open Functor
 
         PshC = PresheafCategory C (ℓ-max ℓC ℓC')
 
-        yo : Functor (MC .StrictMonCategory.C ^op) (SET (ℓ-max ℓC ℓC'))
-        yo .F-ob c = Lift {ℓC'}{ℓC} (C [ c , unit ]) , {!   !}
-        yo .F-hom f (lift g) = lift (f ⋆⟨ C ⟩ g)
-        yo .F-id  = funExt λ{(lift f) → cong lift (⋆IdLᶜ f)}
-        yo .F-seq  f g  = funExt λ {(lift h) → cong lift (⋆Assocᶜ g f h)}
+       -- Dmap : PshC [ ]
 
         Day-Functor : Functor (PshC ×C PshC) PshC 
         Day-Functor .F-ob (F , G)= _⊗ᴰ_ {MC = MC} F G
@@ -114,12 +115,15 @@ module src.Data.DayConv where
         Day-Functor .F-id = {!   !}
         Day-Functor .F-seq = {!   !}
 
+        I⨂ : Category.ob PshC
+        I⨂ = LiftF {_}{(ℓ-max ℓC ℓC')} ∘F (C [-, unit ])
+
         open import Cubical.Categories.Functors.HomFunctor
         open MonoidalStr
         open import Cubical.Categories.Yoneda.More
         PshMon : MonoidalStr PshC 
-        PshMon .tenstr = record { ─⊗─ = Day-Functor ; unit = yo } --{! C [-, unit MC ] !} }
-        PshMon .α = {!   !}
+        PshMon .tenstr = record { ─⊗─ = Day-Functor ; unit = I⨂ } --{! C [-, unit MC ] !} }
+        PshMon .α = {!   !}  
         PshMon .η = {!   !}
         PshMon .ρ = {!   !}
         PshMon .pentagon = {!   !}

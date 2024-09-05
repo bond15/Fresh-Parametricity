@@ -1,0 +1,250 @@
+\documentclass{article}
+    % General document formatting
+    \usepackage[margin=0.7in]{geometry}
+    \usepackage[parfill]{parskip}
+    \usepackage[utf8]{inputenc}
+    \usepackage{xcolor}
+    \usepackage{hyperref}
+    \usepackage{tikz-cd}
+
+    % Related to math
+    \usepackage{stmaryrd}
+    \usepackage{amsmath,amssymb,amsfonts,amsthm}
+    \newcommand{\den}[1]{\llbracket #1 \rrbracket}
+    \newcommand{\sep}{\mathrel{-\mkern-6mu*}}
+    \newcommand{\blue}[1]{\textcolor{blue}{#1}}
+    \newcommand{\red}[1]{\textcolor{red}{#1}}
+    \newcommand{\pshC}{\widehat{\mathcal{C}}}
+    \newcommand{\pshCC}{\widehat{\mathcal{C \times C}}}
+    \newcommand{\dayprod}{\otimes^{Day}}
+
+
+\begin{document}
+\section{Model Setup}
+\subsection{Bicartesian Doubly Closed Category}
+Given a category $\mathcal{C}$, its presheaf category ($\pshC := [\mathcal{C}^{op}, Set]$)
+is bicartesian closed. Given a monoidal category ($\mathcal{C}, \otimes_C , I_C$), 
+its presheaf category is bicartesian closed and monoidal closed via the Day convolution. 
+The monoidal product is given by:
+\[
+    (P \dayprod Q)(x) = \int_{}^{y,z} \mathcal{C}[ x , y \otimes_C z ] 
+    \times P(y) \times Q(z)
+\]
+With a useful fact:
+\begin{align*}
+    ^{inc}[h , A(f)(a'), B(g)(b')] = ^{inc}[h ; (f \otimes g)  , a' , b']
+\end{align*} 
+where $h : C[x , y \otimes z]$, $f : C[y , y']$, $g : C[z , z']$, $a' : A(y')$, and $b' : B(z')$.
+The Day monoidal product has the universal property that any maps out of it are in bijective
+correspondence with a family of maps natural in $x$ and $y$ 
+\href{https://github.com/bond15/Bunched-CBPV/blob/82136dc6f4f9e4034391877f0d959a6ff1b62dfc/src/Data/BiDCC.agda#L222}
+{(Agda)}: 
+\footnote{here $\overline{\times}$ is the \textit{external} product}
+
+
+\[
+    \pshC[P \dayprod Q , R] \;\cong \; \pshCC [ P \overline{\times} Q , R \circ \otimes_C ]\; \cong \; \Pi_{x, y : \;ob \;C}\; Set[P(x) \times Q(y) , R(x \otimes_C y)]
+\]
+
+The monoidal closed structure is given by: 
+\begin{align*}
+    (P \sep Q)(X) = \pshC[P , Q(X , -)]
+\end{align*}
+With the universal property that the closed structure is right adjoint to the tensor
+\href{https://github.com/bond15/Bunched-CBPV/blob/82136dc6f4f9e4034391877f0d959a6ff1b62dfc/src/Data/BiDCC.agda#L354}{(Agda)}: 
+\begin{align}
+    \pshC [ A \otimes_C B , C] \cong \pshC [ A , B \sep C]
+\end{align}
+
+\subsection{Towards Bunched CBPV with Dynamic Store}
+Let ($C, \otimes_C , I_C$) be a monoidal category, the value category be $\mathcal{V} := [C^{op} , Set]$, 
+computation category $\mathcal{C} := [C , Set]$, and use the \textit{standard}
+monad for ground dynamic store with $F : \mathcal{V} \rightarrow \mathcal{C}$ as:
+\[
+    F(A)(x) := \Sigma_{y : ob \;C}\Sigma_{f : C^{op}[ x , y ]}A(y)    
+\]
+and $U : \mathcal{C} \rightarrow \mathcal{V}$ as :
+\[
+    U(\underline{B})(x) := \Pi_{y : ob \; C}\Pi_{f : C^{op}[ x , y]}\underline{B}(y)   
+\]
+
+The oblique morphisms in this model are given by families of maps:
+\[
+    \mathcal{O}[A , \underline{B}] := \Pi_{x : ob \; C} Set[A(x) , \underline{B}(x)]   
+\]
+
+we have the following isomorphims:
+\[
+    \mathcal{V}[A , U(\underline{B})] \cong \mathcal{O}[A , \underline{B}] \cong \mathcal{C}[F(A) , \underline{B}]   
+\]
+and a monad on $\mathcal{V}$ via the adjunction between $F$ and $U$.
+\[
+    T(A)(x) := \Pi_{y : ob \; C}\Pi_{f : C^{op}[ x , y]}\Sigma_{z : ob \;C}\Sigma_{g : C^{op}[ y , z ]}A(z) 
+\]
+The monadic Unit
+\[
+    \eta_A(x)(a:A(x)) = \lambda x' . \lambda f : FS[x , x'] . (x' , id_{x'}, A(f)(a))    
+\]
+\section{Issue with Abstract Model}
+It seems we cannot define the strength map:
+\[
+    str\otimes_{P,Q} : \mathcal{V}[ P \otimes T(Q), T (P \otimes Q)]
+\]
+via the universal property of tensor, it suffices to construct components of the form:
+\[
+    Set[P(x) \times T(Q)(y) ,T(P \otimes Q)(x \otimes_C y) ]
+\]
+introducing terms and unfolding definitions, we have:
+\begin{align*}
+    &p : P(x)\\
+    &q : T(Q)(y) = \Pi_{u : ob \; C}\Pi_{f : C^{op}[ y , u]}\Sigma_{v : ob \;C}\Sigma_{g : C^{op}[ u , v ]}Q(v)\\
+    &h : C^{op}[x\otimes_C y , z]
+\end{align*}
+we get to choose some future world $w$ of $z$, $C^{op}[z , w]$, 
+at which we must provide 
+\[ 
+    ? : (P \otimes Q)(w) = \int_{}^{r,s} \mathcal{C}[ w , r \otimes_C s ] 
+\times P(r) \times Q(s)
+\]
+How to proceed? Notice that in order to \textit{extract} a value $Q(\_)$ from $q$,
+we need to provide a morphism $C^{op}[y , u]$ for some $u$. 
+Working abstractly with no additional assumptions about $C$, all we can provide is $id_y$ which yields:
+\[
+    q(y)(id_y) : \Sigma_{v : ob \;C}\Sigma_{g : C^{op}[ y , v ]}Q(v)  
+\]
+Then our context becomes:
+\begin{align*}
+    &p : P(x)\\
+    &g : C^{op}[ y , v ]\\
+    &q' : Q(v)\\
+    &h : C^{op}[x\otimes_C y , z]
+\end{align*}
+We still need to choose some future world $w$ of $z$.
+From the data available to us, it seems we are stuck using identity, $id_z$, once again.
+This leaves us with the obligation:
+\[
+    ? : (P \otimes Q)(z) = \int_{}^{r,s} \mathcal{C}[ z , r \otimes_C s ] 
+\times P(r) \times Q(s)
+\]
+The choice of $r$ seems forced to be $x$ for which we have $p: P(x)$.
+The natural choices for $s$ would be $v$ or $y$, but it seems we've hit a variance issue yet again.
+Observe that \red{if $g: C^{op}[ y , v ]$ was instead $g : C^{op}[v , y]$} we'd have
+\[
+    ((id \otimes_C g) ;h , p , q') = (h , p , Q(g)(q'))
+\]
+which are equal relative to the coend quotient.
+
+\section{Concrete Model}
+Now we consider substituting the monoidal category ($C, \otimes_C , I_C$) with ($FinSet_{mono}^{op}, \uplus , \emptyset $)
+where $\uplus$ is disjoint union of sets. Take $\mathcal{FS}$ as shorthand for $FinSet_{mono}$. 
+
+\subsection{Components}
+Define as a bilinear map.
+
+
+\begin{align*}
+    & str_{A, B} : \Pi_{x,y :ob \mathcal{FS}}\; Set[A(x)\times T(B)(y) , T(A\otimes B)(x \uplus y)] \\
+    & str_{A, B} (x , y)(a : A(x), tb :T(B)(y))=\lambda z . \lambda f: \mathcal{FS}[x \uplus y , z].\; \red{??} 
+\end{align*}
+
+where 
+\[
+    \red{??}: \Sigma_{w : ob \mathcal{FS}}\Sigma_{g : \mathcal{FS}[z , w]}(A\otimes B)(w)
+\]
+
+We recognize that since $f$ is injective and the domain is a disjoint union, $z$ is partitioned into three parts
+\begin{align*}
+    z_x :& \textrm{ the range of $f_x$, f restricted to x}\\
+    z_y :& \textrm{ the range of $f_y$, f restricted to y}\\
+    z_m :& \; z - (z_x \uplus z_y)\\
+    \textrm{where } & z \cong z_x \uplus z_y \uplus z_m
+\end{align*}
+
+
+Using $f_y : y \rightarrow z_y$
+\[
+  (v , g : FS[z_y , v], b : B(v)) = tb(zy)(f_y)  
+\]
+
+We can construct future world $w := z_x \uplus v \uplus z_m$, and map $z \xrightarrow{z_x \;\uplus\; g \;\uplus\; z_m} w$.
+Now we must provide 
+\[
+    (A \otimes B)(w) = \int_{}^{r,s} \mathcal{FS}[r \uplus s,w] 
+    \times A(r) \times B(s)
+\]
+have $r := z_x$ and $s := v \uplus z_m$.
+Then the element at the future world is 
+\[
+  ^{inc}[ id_w, A(f_x)(a), B(inl)(b)]
+\]
+
+\subsection{Naturality}
+Given $f : FS[x , x']$ and $g: FS[y , y']$.
+\begin{figure}[!ht]
+    \centering
+\begin{tikzcd}
+    A(x)\times T(B)(y) \arrow[rr, "A(f) \times T(B)(g)"] \arrow[dd, "{Str_{A , B}(x , y)}"] &  & A(x')\times T(B)(y') \arrow[dd, "{Str_{A,B}(x',y')}"] \\
+                                                                                            &  &                                                       \\
+    T(A \otimes B)(x \otimes y) \arrow[rr, "T(A \otimes B)(f \otimes g)"]                   &  & T(A \otimes B)(x' \otimes y')                        
+    \end{tikzcd}
+\end{figure}
+
+\subsubsection{RHS}
+Starting in the upper left at $(a,tb)$, we get $(a' = A(f)(a),tb')$ via the top map where 
+\[
+    tb' = T(B)(g)(tb) = \lambda z. \lambda h: FS[y' , z]. tb(z)(g ; h)
+\]
+Then, computing the strength map, we have for $z$, $h : FS[ x' \otimes y' , z]$ an $h_{y'} : FS [ y' , z_{y'}]$ with
+\[
+    tb'(z_{y'})(h_{y'}) = (\lambda z. \lambda h: FS[y' , z]. tb(z)(g ; h)) (z_{y'})(h_{y'}) = tb(z_{y'})(g ; h_{y'}) = (v , j : FS[z_y , v], b : B(v))
+\]
+resulting in 
+\[
+  (z_{x'} \uplus v \uplus z_{m'}, id \uplus j \uplus id , ^{inc}[id, A(f ; h_{x'})(a), B(inl)(b)] )
+\]
+\subsubsection{LHS}
+Starting in the upper left at $(a,tb)$, we also take in $z$ and $h : FS [x' \otimes y' , z]$. 
+The LHS calculates the strength given $m = (f \otimes g) ; h$. Note that we have:
+\[
+    tb(z_y)(m_y) = tb(z_{y'})(g ; h_{y'}) = (v , j : FS[z_y , v], b : B(v))
+\]
+which is the same future data as the RHS.
+
+\subsection{Laws}
+\subsubsection{Strength with I is Irrelevant}
+\subsubsection{Strength Respects Associators}
+\subsubsection{Strength Commutes with Monad Unit}
+\begin{figure}[!ht]
+    \centering
+    \begin{tikzcd}
+        & A \otimes B \arrow[ld, "id_A \otimes \eta_B"'] \arrow[rd, "\eta_{A\otimes B}"] &                \\
+A \otimes T(B) \arrow[rr, "{str_{A,B}}"'] &                                                                                & T(A \otimes B)
+\end{tikzcd}
+\end{figure}
+$\eta_{A\otimes B}$ as a bilinear map computes to:
+\begin{align*}
+    & \eta' : \Pi_{x,y :ob \mathcal{FS}}\; Set[A(x)\times B(y) , T(A\otimes B)(x \uplus y)] \\
+    & \eta' (x , y)(a : A(x), b :B(y)) = \lambda z . \lambda f: \mathcal{FS}[x \uplus y , z].^{inc}[f , a , b]
+\end{align*}
+
+The strength map precomposed with $id_A \otimes \eta_B$ yields:
+\[
+    (z_y , id_{z_y}, b' = B(f_y)(b)) = tb(z_y)(f_y)  
+\]
+thus, the future worlds are equal $z \cong z_x \uplus z_y \uplus z_m \cong w$ and the maps $z\rightarrow w$ are equal.
+It remains to show that
+\[
+    ^{inc}[id, A(f_x)(a), B(inl)(b')] = ^{inc}[f , a , b]
+\]
+Recall $ ^{inc}[h , A(f)(a), B(g)(b)] = ^{inc}[(f \uplus g) ; h , a , b]  $
+
+\begin{align*}
+    ^{inc}[id_{z_x \uplus (z_y \uplus z_m)}, A(f_x)(a), B(inl)(b')] &= \\
+    ^{inc}[id_{z_x \uplus (z_y \uplus z_m)}, A(f_x; id_{z_x})(a), B(f_y ; inl)(b)]  &= \\
+    ^{inc}[(f_x \uplus f_y) ; (id_{z_x} \uplus inl), a , b] &= \\
+    ^{inc}[f , a , b]\\
+    \qed
+\end{align*}
+\subsubsection{Strength Commutes with Monad Multiplication}
+
+\end{document}

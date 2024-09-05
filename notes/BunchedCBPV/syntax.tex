@@ -1,0 +1,64 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{comment}
+\usepackage{simplebnf}
+\usepackage{xcolor}
+\usepackage{stmaryrd}
+\begin{document}
+
+\input{commands.tex}
+\section{Syntax}
+
+
+\begin{bnf}
+    $S$ : ground types ::= $\textrm{Unit}$
+    | $\textrm{Bool}$
+    ;;
+    $A$ : value types ::= 
+    | $\textrm{Bool}$
+    | $\textrm{Case A}$ 
+    | $\textrm{OSum}$
+    | $A\; \times \; A$  
+    | $A\; * \; A$
+    | $U\underline{B}$
+    ;;
+    $B$ : computation types ::= $A \rightarrow \underline{B}$ 
+    | $A \sep \underline{B}$
+    | $F\;A$
+    ;;
+    $V$ : values ::= $\ttt$
+    |$\tru$
+    | $\fsl$
+    | $x$ : variable
+    | $\injj{V}{V}$ : injection into the open sum
+    | $(V,V)$
+    | $\pi_1 V$
+    | $\pi_2 V$
+    | $(V*V)$ : separating product
+    | $\rho_1 V$
+    | $\rho_2 V$
+    | $\thunk{M}$
+    ;;
+    $M$ : computations ::= $\err$ : \red{need monad for this}
+    | $\force{V}$
+    | $\ret{V}$
+    | $\bind{x}{M}{N}$
+    | $M \; N$
+    | $M \at N$
+    | $\lambda x \colon A . M$
+    | $\alpha x \colon A . M$ : separating function
+    | $\newcase{A}{x}{M}$ : "allocate" a new case in the open sum
+    | $\match{V}{V}{\injj{}{x}}{M}{N}$ : match on open sum
+    | $\ite{V}{M}{N}$
+    ;;
+    $\Gamma$ : value typing context ::= $\emptyset$ 
+    | $ x \; \colon A$
+    | $\Gamma ; \Gamma'$ : cartesian product
+    | $\Gamma \fatsemi \Gamma'$ : monoidal product
+    ;;
+    $\Theta$ : stoup ::= $\cdot$ 
+    | $\bullet \; \colon B$
+\end{bnf}
+
+\end{document}

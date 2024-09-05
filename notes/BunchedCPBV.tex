@@ -56,7 +56,10 @@
 \begin{document}
 \section{Untyped Syntax}
 \begin{bnf}
-$A$ : value types ::= $\textrm{Unit}$
+$S$ : ground types ::= $\textrm{Unit}$
+| $\textrm{Bool}$
+;;
+$A$ : value types ::= 
 | $\textrm{Bool}$
 | $\textrm{Case A}$ 
 | $\textrm{OSum}$
