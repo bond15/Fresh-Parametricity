@@ -1,0 +1,471 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{simplebnf}
+\usepackage{bussproofs}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[dvipsnames]{xcolor}
+
+
+\begin{document}
+\include{commands}
+
+\section{Object Language}
+\subsection{Raw Terms}
+The untyped syntax for CBPV OSum, add separating connectives, remove error.
+
+%CBPV OSum%
+\begin{bnf}
+    $A$ : Value Types ::= $X$
+    | Unit
+    | Case $A$
+    | OSum
+    | $A \times A$
+    | $A * A$
+    | $\exists X . A$
+    | $U \underline{B}$
+    ;;
+    $\underline{B}$ : Computation Types ::= $A \rightarrow \underline{B}$
+    | $A \sep \underline{B}$
+    | $\forall X . \underline{B}$
+    | $F A$
+    ;;
+    $V$ : Values ::= $x$
+    | $tt$
+    | $\sigma$
+    | $\textrm{inj}_V V$
+    | $(V , V)$
+    | $(V * V)$
+    | pack $(A , V)$ as $\exists X .A$
+    | thunk $M$
+    ;;
+    $M$ : Computations ::= 
+     $\lambda x \colon A . M$
+    | $M V$
+    | $\alpha x \colon A . M$ 
+    | $M @ V$
+    | $\Lambda X . M$
+    | $M[A]$
+    | ret $V$
+    | force $V$
+    | newcase$_A x ; M$
+    | match V with V \{ inj $x . M \| N$ \}
+    | let ($x , x$) = $V ; M$
+    | let ($x * x$) = $V ; M$
+    | unpack $(X , x) = V ; M$
+    ;;
+    $\Gamma$ : Value Context ::= $\cdot$
+    | $\Gamma , x \colon A$ 
+    | $\Gamma * x \colon A$
+    ;;
+    $\Delta$ : Type Context ::= $\cdot$
+    | $\Delta , X$
+    ;;
+\end{bnf}
+\subsection{Typed Terms}
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{}
+    \UnaryInfC{$\Delta ; \Gamma, x \colon A \vdash_v x : A$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{}
+    \UnaryInfC{$\Delta ; \Gamma * x \colon A  \vdash_v x : A$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{}
+    \UnaryInfC{$\Delta ; \Gamma \vdash_v \ttt : \textrm{Unit}$}
+\end{prooftree}
+
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma \vdash_v \sigma : \textrm{Case} A$}
+    \AxiomC{$\Delta ; \Gamma \vdash_v V : A$}
+    \RightLabel{}
+    \BinaryInfC{$\Delta ; \Gamma \vdash_v \injj{\sigma}{V}: \textrm{OSum}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma \vdash_v V_1 : A_1$}
+    \AxiomC{$\Delta ; \Gamma \vdash_v V_2 : A_2$}
+    \RightLabel{}
+    \BinaryInfC{$\Delta ; \Gamma \vdash_v (V_1,V_2) : A_1 \times A_2$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma_1 \vdash_v V_1 : A_1$}
+    \AxiomC{$\Delta ; \Gamma_2 \vdash_v V_2 : A_2$}
+    \RightLabel{}
+    \BinaryInfC{$\Delta ; \Gamma_1 * \Gamma_2 \vdash_v (V_1 * V_2) : A_1 * A_2$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma \vdash_v V : A[A'/X]$}
+    \RightLabel{}
+    \UnaryInfC{$\Delta ; \Gamma \vdash_v \textrm{pack}(A',V) \textrm{ as } \exists X .A : \exists X .A$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma \vdash_c M : \underline{B} $}
+    \RightLabel{}
+    \UnaryInfC{$\Delta ; \Gamma \vdash_v \textrm{thunk } M : U \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma , x : A \vdash_c M : \underline{B}$}
+    \RightLabel{}
+    \UnaryInfC{$\Delta ; \Gamma \vdash _c  \lambda x : A . M : A \rightarrow \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma \vdash_c M : A \rightarrow \underline{B}$}
+    \AxiomC{$\Delta ; \Gamma \vdash_v N : A$}
+    \RightLabel{}
+    \BinaryInfC{$\Delta ; \Gamma \vdash_c M N : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma * x : A \vdash_c M : \underline{B}$}
+    \RightLabel{}
+    \UnaryInfC{$\Delta ; \Gamma \vdash _c  \alpha x : A . M : A \sep \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma_1 \vdash_c M : A \sep \underline{B}$}
+    \AxiomC{$\Delta ; \Gamma_2 \vdash_v N : A$}
+    \RightLabel{}
+    \BinaryInfC{$\Delta ; \Gamma_1 * \Gamma_2 \vdash_c M @ N : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta , X ; \Gamma \vdash_c M : \underline{B}$}
+    \RightLabel{}
+    \UnaryInfC{$\Delta ; \Gamma \vdash_c \Lambda X . M : \forall X . \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma \vdash_c : M : \forall X . \underline{B}$}
+    \AxiomC{$\Delta \vdash A$}
+    \RightLabel{}
+    \BinaryInfC{$\Delta ; \Gamma \vdash_c M[A] : \underline{B}[A / X]$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma \vdash_v V : A$}
+    \RightLabel{}
+    \UnaryInfC{$\Delta ; \Gamma \vdash _c \textrm{ret } V : F A$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma \vdash_v V : U \underline{B}$}
+    \RightLabel{}
+    \UnaryInfC{$\Delta ; \Gamma \vdash_c : \textrm{force } V : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma * (\sigma : \textrm{Case}A ) \vdash_c M : \underline{B}$}
+    \AxiomC{$\Delta \vdash A$}
+    \RightLabel{}
+    \BinaryInfC{$\Delta ; \Gamma \vdash_c \textrm{newcase}_{A} x ; M : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma \vdash_v V : \textrm{OSum}$}
+    \AxiomC{$\Delta ; \Gamma \vdash_v \sigma : \textrm{Case }A$}
+    \AxiomC{$\Delta ; \Gamma , x : A \vdash M : \underline{B}$}
+    \AxiomC{$\Delta ; \Gamma \vdash_c N : \underline{B}$}
+    \RightLabel{}
+    \QuaternaryInfC{$\Delta ; \Gamma \vdash_c \textrm{match } V \textrm{ with } \sigma \{ \textrm{ inj }x. M \| N\} : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma \vdash_v V : A_1 \times A_2$}
+    \AxiomC{$\Delta ; \Gamma , x : A_1 , y : A_2 \vdash_c M : \underline{B}$}
+    \RightLabel{}
+    \BinaryInfC{$\Delta ; \Gamma \vdash_c$ let $(x,y) = V; M : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma \vdash_v V : A_1 * A_2$}
+    \AxiomC{$\Delta ; \Gamma * x : A_1 * y : A_2 \vdash_c M : \underline{B}$}
+    \RightLabel{}
+    \BinaryInfC{$\Delta ; \Gamma \vdash_c$ let $(x*y) = V; M : \underline{B}$}
+\end{prooftree}
+
+
+\begin{prooftree}
+    \AxiomC{$\Delta \vdash \underline{B}$}
+    \AxiomC{$\Delta ; \Gamma \vdash_v V : \exists X . A$}
+    \AxiomC{$\Delta , X ; \Gamma , x : A \vdash_c M : \underline{B}$}
+    \RightLabel{}
+    \TrinaryInfC{$\Delta ; \Gamma \vdash_c : \textrm {unpack} (X , x) = V ; M : \underline{B}$}
+\end{prooftree}
+
+\section{Meta Language}
+\subsection{Raw Formulas}
+    
+%CBPV OSum%
+\begin{bnf}
+    $\phi,\psi$ : Formula ::= 
+   % $\bot$%
+     $t =_A u$ 
+    | $R(t,u)$
+    | $\phi \implies \psi$
+    | $\phi \land \psi$
+    | $\phi \lor \psi$ 
+    | $\exists x \colon A .\phi$
+    | $\exists X . \phi$
+    | $\exists \underline{X} . \phi$
+    | $\exists R \colon Rel[A,B] . \phi$
+    | $\forall x \colon A . \phi$ 
+    | $\forall X . \phi$
+    | $\forall \underline{X} . \phi$
+    | $\forall R \colon Rel[A,B] . \phi$
+    ;;
+\end{bnf}
+\subsection{Typed Formulas}
+Propositions, or well-formed formulas, use a term environment $\Gamma$, type environment $\Delta$
+and relation environment $\Theta$. The typing judgement for Propositions is $\Delta ; \Gamma ; \Theta \vdash_p P$.
+There are value relations and computation relations.
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma \vdash_\_ t : A$}
+    \AxiomC{$\Delta ; \Gamma \vdash_\_ u : A$}
+    \RightLabel{for $v,c$}
+    \BinaryInfC{$\Delta ; \Gamma ; \Theta \vdash_p t =_A u $}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma \vdash_\_ t : A$}
+    \AxiomC{$\Delta ; \Gamma \vdash_\_ u : B$}
+    \AxiomC{$R : Rel_\_[A,B]\in \Theta$}
+    \RightLabel{for $v,c$}
+    \TrinaryInfC{$\Delta ; \Gamma ; \Theta \vdash_p R(t,u) $}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma ; \Theta \vdash_p \phi$}
+    \AxiomC{$\Delta ; \Gamma ; \Theta \vdash_p \psi$}
+    \RightLabel{$\square \in \{\land , \lor , \implies\}$}
+    \BinaryInfC{$\Delta ; \Gamma ; \Theta \vdash_p \phi \square \psi$}
+\end{prooftree}
+
+\blue{what about *? Something like exists fresh }
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma , x : A | \Theta \vdash_p \phi$}
+    \RightLabel{}
+    \UnaryInfC{$\Delta ; \Gamma ; \Theta \vdash_p \exists x : A . \phi$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma ; \Theta \vdash_p \phi$}
+    \RightLabel{$X \notin FV(\Delta,\Gamma,\Theta)$}
+    \UnaryInfC{$\Delta ; \Gamma ; \Theta \vdash_p \exists X . \phi$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma ; \Theta \vdash_p \phi$}
+    \RightLabel{$\underline{X} \notin FV(\Delta,\Gamma,\Theta)$}
+    \UnaryInfC{$\Delta ; \Gamma ; \Theta \vdash_p \exists \underline{X} . \phi$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma ; \Theta , R : Rel_\_[A,B] \vdash_p \phi$}
+    \RightLabel{for $\{v,c\}$}
+    \UnaryInfC{$\Delta ; \Gamma ; \Theta \vdash_p \exists R:Rel_\_[A,B].\phi$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma , x : A | \Theta \vdash_p \phi$}
+    \RightLabel{}
+    \UnaryInfC{$\Delta ; \Gamma ; \Theta \vdash_p \forall x : A . \phi$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma ; \Theta \vdash_p \phi$}
+    \RightLabel{$X \notin FV(\Delta,\Gamma,\Theta)$}
+    \UnaryInfC{$\Delta ; \Gamma ; \Theta \vdash_p \forall X . \phi$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma ; \Theta \vdash_p \phi$}
+    \RightLabel{$\underline{X} \notin FV(\Delta,\Gamma,\Theta)$}
+    \UnaryInfC{$\Delta ; \Gamma ; \Theta \vdash_p \forall \underline{X} . \phi$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma ; \Theta , R : Rel_\_[A,B] \vdash_p \phi$}
+    \RightLabel{for $\{v,c\}$}
+    \UnaryInfC{$\Delta ; \Gamma ; \Theta \vdash_p \forall R:Rel_\_[A,B].\phi$}
+\end{prooftree}
+
+
+\subsection{Typed Relations}
+Relations are of the form $(x : A , y : B). \phi$ where $\phi$ is a proposition that can use $x,y$.
+The typing judgement for relations is $\Delta ; \Gamma ; \Theta \vdash_r (x : A , y : B). \phi : Rel_\_[A,B]$.
+The body of the relation is a proposition. 
+Here we pay attention to the difference between value and computation relations.
+
+\blue{again, what about *?}
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma , x : A \vdash_v t : C$}
+    \AxiomC{$\Delta ; \Gamma , y : B \vdash_v u : C$}
+    \RightLabel{}
+    \BinaryInfC{$\Delta ; \Gamma ; \Theta \vdash_r (x : A , y : B). t =_C u : Rel_v[A,B]$}
+\end{prooftree}
+\blue{secretly inserting stoup}
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma | x : \underline{A} \vdash_c t : \underline{C}$}
+    \AxiomC{$\Delta ; \Gamma | y : \underline{B} \vdash_c u : \underline{C}$}
+    \RightLabel{}
+    \BinaryInfC{$\Delta ; \Gamma ; \Theta \vdash_r (x : \underline{A}, y : \underline{B}). t =_{\underline{C}} u : Rel_c[\underline{A},\underline{B}]$}
+\end{prooftree}
+Given some $x : A$ and $y : B$ the terms $t,u$ are related by $R$, thus we have a relation on $A,B$.
+Think of these like a lambda abstraction over two parameters. If the body is related, we can 
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma , x : A \vdash_v t : C$}
+    \AxiomC{$\Delta ; \Gamma , y : B \vdash_v u : D$}
+    \RightLabel{}
+    \BinaryInfC{$\Delta ; \Gamma ; \Theta, R : Rel_v[C,D] \vdash_r (x : A , y : B). R(t,u) : Rel_v[A,B]$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma | x : \underline{A} \vdash_c t : \underline{C}$}
+    \AxiomC{$\Delta ; \Gamma | y : \underline{B} \vdash_c u : \underline{D}$}
+    \RightLabel{}
+    \BinaryInfC{$\Delta ; \Gamma ; \Theta ,\underline{R} : Rel_c[\underline{C},\underline{D}]\vdash_r (x : \underline{A}, y : \underline{B}). \underline{R}(t , u) : Rel_c[\underline{A},\underline{B}] $}
+\end{prooftree}
+
+\blue{What is the intuition here? This rule is in figure 5 of the PE logic paper.}
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma ;\Theta \vdash_p \phi$}
+    \AxiomC{$\Delta ; \Gamma ;\Theta \vdash_r (x : A, y : B). \psi : Rel_v{A,B}$}
+    \RightLabel{also $c$ version}
+    \BinaryInfC{$\Delta ; \Gamma ; \Theta \vdash_r (x : A , y : B). \phi \implies \psi : Rel_v[A,B]$}
+\end{prooftree}
+
+\blue{?}
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma ;\Theta \vdash ?$}
+    \AxiomC{$\Delta ; \Gamma ;\Theta \vdash ?$}
+    \RightLabel{also $c$ version}
+    \BinaryInfC{$\Delta ; \Gamma ; \Theta \vdash_r (x : A , y : B). \phi \land \psi : Rel_v[A,B]$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma , z : C ;\Theta \vdash_r (x : A , y : B). \phi : Rel_v[A,B] ?$}
+    \RightLabel{also $c$ version}
+    \UnaryInfC{$\Delta ; \Gamma ; \Theta \vdash_r (x : A , y : B). \forall (z : C) . \phi : Rel_v[A,B]$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta , X ; \Gamma ;\Theta \vdash_r (x : A , y : B). \phi : Rel_v[A,B] ?$}
+    \RightLabel{also $c$ version}
+    \UnaryInfC{$\Delta ; \Gamma ; \Theta \vdash_r (x : A , y : B). \forall X . \phi : Rel_v[A,B]$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta , X ; \Gamma ;\Theta , R : Rel_{\mathbf{n}}[C,D] \vdash_r (x : A , y : B). \phi : Rel_{\mathbf{m}}[A,B]$}
+    \RightLabel{$\mathbf{n},\mathbf{m} \in \{v,c\}$}
+    \UnaryInfC{$\Delta ; \Gamma ; \Theta \vdash_r (x : A , y : B). \forall (R : Rel_{\mathbf{n}}[C , D]). \phi : Rel_{\mathbf{m}}[A,B]$}
+\end{prooftree}
+Analogous versions for $\exists$ connectives.
+
+\subsection{Deduction Rules}
+The judgement for deduction sequence are of the form $\Delta ; \Gamma ; \Theta ; \Phi \vdash_d \psi$ 
+where $\Delta$ is a type environment, $\Gamma$ is a term environment, $\Theta$ is a relation environment, 
+$\Theta$ is a proposition environment, and $\psi$ is a proposition.
+\blue{like term intro and elim, but without proof terms}
+\blue{also for computations?}
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma \vdash_v t : A$}
+    \RightLabel{refl}
+    \UnaryInfC{$\Delta ; \Gamma ; \Theta ; \Phi \vdash_d t =_A t$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma ; \Theta ; \Phi \vdash_d t =_A u $}
+    \AxiomC{$\Delta ; \Gamma ; \Theta ; \Phi \vdash_d \phi [t/x]$}
+    \RightLabel{subst}
+    \BinaryInfC{$\Delta ; \Gamma ; \Theta ; \Phi \vdash_d \phi[u/x]$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma ; \Theta ; \Phi , \phi \vdash_d \psi $}
+    \RightLabel{$\implies$ Intro}
+    \UnaryInfC{$\Delta ; \Gamma ; \Theta ; \Phi \vdash_d \phi \implies \psi $}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma ; \Theta ; \Phi \vdash_d \phi \implies \psi $}
+    \AxiomC{$\Delta ; \Gamma ; \Theta ; \Phi \vdash_d \phi $}
+    \RightLabel{$\implies$ Elim}
+    \BinaryInfC{$\Delta ; \Gamma ; \Theta ; \Phi \vdash_d \psi $}
+\end{prooftree}
+and familiar rules for logical and ($\land$)
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma ,(x : A) ; \Theta ; \Phi \vdash_d \phi $}
+    \RightLabel{$\forall$ Term Intro}
+    \UnaryInfC{$\Delta ; \Gamma ; \Theta ; \Phi \vdash_d \forall (x : A) . \phi$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma ; \Theta ; \Phi \vdash_d \forall (x : A) . \phi$}
+    \AxiomC{$\Delta ; \Gamma \vdash_v t : A$}
+    \RightLabel{$\forall$ Term Elim}
+    \BinaryInfC{$\Delta ; \Gamma ; \Theta ; \Phi \vdash_d \phi[t/x] $}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta ,X ; \Gamma  ; \Theta ; \Phi \vdash_d \phi $}
+    \LeftLabel{$X \notin FV(..)$, also for $c$}
+    \RightLabel{$\forall$ Type Intro}
+    \UnaryInfC{$\Delta ; \Gamma ; \Theta ; \Phi \vdash_d \forall X . \phi$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma  ; \Theta ; \Phi \vdash_d \forall X . \phi$}
+    \AxiomC{$\Delta \vdash A$}
+    \LeftLabel{also for $c$}
+    \RightLabel{$\forall$ Type Elim}
+    \BinaryInfC{$\Delta ; \Gamma ; \Theta ; \Phi \vdash_d \phi[A/X]$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma ; \Theta , R: Rel_v[A , B]; \Phi \vdash_d  \phi$}
+    \LeftLabel{also for $c$}
+    \RightLabel{$\forall$ Rel Intro}
+    \UnaryInfC{$\Delta ; \Gamma ; \Theta ; \Phi \vdash_d \forall (R : Rel_v[A , B]) . \phi$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma ; \Theta ; \Phi \vdash_d \forall(R : Rel_v[A,B]).\phi $}
+    \AxiomC{$\Delta ; \Gamma ; \Theta \vdash_r (x : A, y : B).\psi : Rel_v[A,B]$}
+    \LeftLabel{also for $c$}
+    \RightLabel{$\forall$ Rel Elim}
+    \BinaryInfC{$\Delta ; \Gamma ; \Theta ; \Phi \vdash_d \phi[\psi[t/x,u/y]/R(t,u)]$}
+\end{prooftree}
+
+\subsection{Axioms \& Axiom Schemas}
+\subsubsection{Congruences}
+
+\begin{prooftree}
+    \AxiomC{$\Delta ; \Gamma , (x : A) \vdash_c t , u : \underline{B} $}
+    \AxiomC{$\Delta ; \Gamma , (x : A); \Theta ; \Phi \vdash_d t = u$}
+    \RightLabel{$x \notin FV(\Phi)$}
+    \BinaryInfC{$\Delta ; \Gamma ; \Theta ; \Phi \vdash_d (\lambda (x : A). t) =_{A \rightarrow \underline{B}} (\lambda (x : A). u) $}
+\end{prooftree}
+
+\subsubsection{Beta / Eta Laws}
+
+\subsubsection{Parametricity}
+
+
+
+\end{document}
