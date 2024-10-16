@@ -5,6 +5,7 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage[dvipsnames]{xcolor}
+\usepackage{stmaryrd}
 
 
 \begin{document}
@@ -458,14 +459,178 @@ and familiar rules for logical and ($\land$)
 \begin{prooftree}
     \AxiomC{$\Delta ; \Gamma , (x : A) \vdash_c t , u : \underline{B} $}
     \AxiomC{$\Delta ; \Gamma , (x : A); \Theta ; \Phi \vdash_d t = u$}
-    \RightLabel{$x \notin FV(\Phi)$}
+    \RightLabel{$\lambda$ cong, $x \notin FV(\Phi)$}
     \BinaryInfC{$\Delta ; \Gamma ; \Theta ; \Phi \vdash_d (\lambda (x : A). t) =_{A \rightarrow \underline{B}} (\lambda (x : A). u) $}
 \end{prooftree}
 
 \subsubsection{Beta / Eta Laws}
 
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{$\lambda \beta$}
+    \UnaryInfC{$\Delta ; \Gamma ; \Theta ; \Phi \vdash_d \forall (u : A). ((\lambda x : A . t)u =_B t[u/x])$}
+\end{prooftree}
+
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{$\lambda \eta$}
+    \UnaryInfC{$\Delta ; \Gamma ; \Theta ; \Phi \vdash_d \forall X. \forall Y. \forall (f : X \rightarrow Y). ((\lambda x: X . f x) =_{X\rightarrow Y}f)$}
+\end{prooftree}
+
 \subsubsection{Parametricity}
 
+\subsection{Example Derivations}
 
+\subsubsection{Equality Reasoning}
+\paragraph{Transitivity}
+\begin{prooftree}
+    \AxiomC{}
+    \UnaryInfC{$...;(x =_X y) \land (y =_X z ) \vdash_d (x =_X y) \land (y =_X z ) $}
+    \UnaryInfC{$...;(x =_X y) \land (y =_X z ) \vdash_d y =_X z$}
+
+    \AxiomC{}
+    \UnaryInfC{$...; (x =_X y) \land (y =_X z ) \vdash_d (x =_X y) \land (y =_X z ) $}
+    \UnaryInfC{$...;(x =_X y) \land (y =_X z ) \vdash_d (x =_X y)$}
+    \UnaryInfC{$...; (x =_X y) \land (y =_X z ) \vdash_d (x =_X y)[y/y]$}
+    
+    \RightLabel{subst}
+    \BinaryInfC{$X ; x,y,z ; \cdot ; (x =_X y) \land (y =_X z ) \vdash_d (x =_X y)[z/y]$}
+    \UnaryInfC{$X ; x,y,z ; \cdot ; (x =_X y) \land (y =_X z ) \vdash_d (x =_X z)$}
+    \UnaryInfC{$\vdash_d \forall X . \forall (x y z : X). (x =_X y) \land (y =_X z) \implies (x =_X z)$}
+\end{prooftree}
+
+\paragraph{Symmetry}
+Use IdExt and opRel?
+
+\subsubsection{Extensionality}
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{in $\Phi$}
+    \UnaryInfC{$X ,\underline{Y} ; f,g,x ; \cdot ; (\forall(x : X). f x =_{\underline{Y}} g x)  \vdash_d \forall (x : X).(f x =_{\underline{Y}} g x) $}
+    
+    \AxiomC{}
+    \RightLabel{Var}
+    \UnaryInfC{$...\vdash_v x : X$}
+    
+    \RightLabel{$\forall$ Elim}
+    \BinaryInfC{$X ,\underline{Y} ; f,g,x ; \cdot ; (\forall(x : X). f x =_{\underline{Y}} g x)  \vdash_d (f x =_{\underline{Y}} g x) $}
+    \RightLabel{$\lambda$ cong}
+    \UnaryInfC{$X ,\underline{Y}; f,g ; \cdot ; (\forall(x : X). f x =_{\underline{Y}} g x)  \vdash_d ((\lambda x : X. f x) =_{X \rightarrow \underline{Y}} (\lambda x : X .g x)) $}
+    \RightLabel{$\lambda \eta$}
+    \UnaryInfC{$X ,\underline{Y} ; f,g ; \cdot ; (\forall(x : X). f x =_{\underline{Y}} g x)  \vdash_d (f =_{X \rightarrow \underline{Y}} g) $}
+    \RightLabel{Intros}
+    \UnaryInfC{$X,\underline{Y} ; f,g ; \cdot ; \cdot \vdash_d ((\forall(x : X). f x =_{\underline{Y}} g x) \implies f =_{X \rightarrow \underline{Y}} g) $}
+    \RightLabel{Intros}
+    \UnaryInfC{$...\vdash_d \forall (f , g: X \rightarrow \underline{Y}).((\forall(x : X). f x =_{\underline{Y}} g x) \implies f =_{X \rightarrow \underline{Y}} g) $}
+\end{prooftree}
+\subsubsection{Identity Extension Lemma}
+By Induction on Types.
+\paragraph{For Unit}
+ 
+Recall 
+\begin{align*}
+    eq_A := (x : A, y : A). x =_A y
+\end{align*}
+and substitution of a relation into a base type is just the relational interpretation of the base type.
+\begin{align*}
+    Unit[eq_{Unit}] = \llbracket Unit \rrbracket_{Rel} = \{(tt,tt)\}
+\end{align*}
+
+\blue{What rules are missing here to make this proof go through?}
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{Refl}
+    \UnaryInfC{$...; \Phi , \{u=tt,v=tt\} \vdash_d tt =_{Unit} tt$}
+    \RightLabel{Unit $\eta$ ?}
+    \UnaryInfC{$...; \Phi ,u(\llbracket Unit \rrbracket_{Rel})v \vdash_d u =_{Unit} v$}
+    \RightLabel{Intro}
+    \UnaryInfC{$... \vdash_d u(\llbracket Unit \rrbracket_{Rel})v \implies u =_{Unit} v$}
+
+    \AxiomC{}
+    \RightLabel{By Def}
+    \UnaryInfC{$...; \Phi , tt =_{Unit} tt \vdash_d tt(\llbracket Unit \rrbracket_{Rel})tt$}
+    \RightLabel{Unit $\eta$?}
+    \UnaryInfC{$...; \Phi , u =_{Unit} v \vdash_d u(\llbracket Unit \rrbracket_{Rel})v$}
+    \RightLabel{Intro}
+    \UnaryInfC{$... \vdash_d u =_{Unit} v \implies u(\llbracket Unit \rrbracket_{Rel})v$}
+
+    \RightLabel{Logical Equiv}
+    \BinaryInfC{$\cdot ; u : Unit , v : Unit ; \cdot ; \cdot \vdash_d u(\llbracket Unit \rrbracket_{Rel})v \equiv u =_{Unit} v$}
+    \RightLabel{Intros}
+    
+    \UnaryInfC{$\cdot ; \cdot ; \cdot ; \cdot \vdash_d \forall u : Unit , v : Unit. u(\llbracket Unit \rrbracket_{Rel})v \equiv u =_{Unit} v$}
+    \RightLabel{Relational Subst}
+    \UnaryInfC{$\cdot ; \cdot ; \cdot ; \cdot \vdash_d \forall u : Unit , v : Unit. u(Unit[eq_{Unit}])v \equiv u =_{Unit} v$}
+
+\end{prooftree}
+
+\paragraph{For $X \rightarrow \underline{Y}$}
+Recall
+\begin{align*}
+    (X \rightarrow \underline{Y})[eq_X , eq_{\underline{Y}}] &= 
+    (f : (X \rightarrow \underline{Y}) g : (X \rightarrow \underline{Y})).\\
+    &\forall (x : X). \forall (x' : X). \\
+    & x (eq_X) x' \implies (f x)(eq_Y)(g x')
+\end{align*}
+One direction. 
+\begin{prooftree}
+    
+    \AxiomC{}
+    \RightLabel{in $\Phi$} 
+    \UnaryInfC{(the relation in above on $f,g$)}
+
+    \AxiomC{}
+    \RightLabel{Var}
+    \UnaryInfC{$..\vdash_v x : X$}
+
+    \RightLabel{$\forall$ Elim}
+    \BinaryInfC{$..\vdash_d \forall (x' : X). x (eq_X) x' \implies fx =_{\underline{Y}} gx' $}
+
+    \AxiomC{}
+    \RightLabel{Var}
+    \UnaryInfC{$..\vdash_v x : X$}
+
+    \RightLabel{$\forall$ Elim}
+    \BinaryInfC{$..;f((X \rightarrow \underline{Y})[eq_X , eq_{\underline{Y}}])g  \vdash_d x (eq_X) x \implies fx =_{\underline{Y}} gx $}
+
+    \AxiomC{}
+    \RightLabel{Refl}
+    \UnaryInfC{$\vdash_d x =_X x$}
+    \RightLabel{IdExt}
+    \UnaryInfC{$\vdash_d x (eq_X) x$}
+    \RightLabel{$\implies$ Elim}
+
+    \BinaryInfC{$..;f,g,x;..;f((X \rightarrow \underline{Y})[eq_X , eq_{\underline{Y}}])g  \vdash_d  fx (eq_{\underline{Y}}) gx $}
+    \RightLabel{IdExt}
+    \UnaryInfC{$..;f,g,x;..;f((X \rightarrow \underline{Y})[eq_X , eq_{\underline{Y}}])g  \vdash_d  fx =_{\underline{Y}} gx $}
+    \RightLabel{$\lambda$ cong}
+    \UnaryInfC{$..;f,g;..;f((X \rightarrow \underline{Y})[eq_X , eq_{\underline{Y}}])g  \vdash_d  (\lambda x : X .fx) =_{X \rightarrow \underline{Y}} (\lambda x: X . gx) $}
+    \RightLabel{$\lambda \eta$}
+    \UnaryInfC{$..;f,g;..;f((X \rightarrow \underline{Y})[eq_X , eq_{\underline{Y}}])g  \vdash_d  f =_{X \rightarrow \underline{Y}} g $}
+    \RightLabel{Intros}
+    \UnaryInfC{$..;f,g;.. \vdash_d f((X \rightarrow \underline{Y})[eq_X , eq_{\underline{Y}}])g \implies f =_{X \rightarrow \underline{Y}} g $}
+    \RightLabel{Intros}
+    \UnaryInfC{$... \vdash_d \forall (f , g : X \rightarrow \underline{Y}). f((X \rightarrow \underline{Y})[eq_X , eq_{\underline{Y}}])g \implies f =_{X \rightarrow \underline{Y}} g $}
+\end{prooftree}
+
+\subsubsection{Identity Function}
+
+\begin{prooftree}
+    \AxiomC{?}
+    \UnaryInfC{$X ; f : \forall X . X \rightarrow F X, x : X ; \cdot ; \cdot \vdash_d f[X]x =_{FX} ret \;x$}
+    \RightLabel{Intro}
+    \UnaryInfC{$\cdot ; f : \forall X . X \rightarrow F X ; \cdot ; \cdot \vdash_d \forall X . \forall (x : X). f[X]x =_{FX} ret \;x$}
+\end{prooftree}
+
+\subsubsection{Church Encodings}
+\paragraph{Unit}
+Forget the built in Unit type for now. Note that we only have the compuational function type in this language.
+\begin{align*}
+    &Unit := \forall X . X \rightarrow F X\\
+    &\mathbf{1} : Unit\\
+    &\mathbf{1} = \Lambda X . \lambda (x : X) . \textrm{ ret } x\\
+\end{align*}
 
 \end{document}
