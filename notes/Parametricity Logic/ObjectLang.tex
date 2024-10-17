@@ -489,14 +489,19 @@ Let $A$ be a \textbf{value type} with $FTV(A) \in \{\bm{X},\bm{\underline{X}}\}$
 \[
   A[\bm{\rho}/\bm{X},\bm{\underline{\rho}}/\bm{\underline{X}}] : Rel_v[A[\bm{C}/\bm{X},\bm{\underline{C}}/\bm{\underline{X}}], A[\bm{C'}/\bm{X},\bm{\underline{C'}/\bm{\underline{X}}}]] 
 \] 
-by induction on $A$.
+by induction on $A$. 
+\blue{Note: PE Logic defines the relational interpretation of value types, 
+but not computation types? }. 
+It seems like this relation needs to be indexed by worlds to describe how Case A and OSum are related.
+
 \begin{align*}
     X_i[\bm{\rho},\bm{\underline{\rho}}] &= \rho_i\\
-    \textrm{Unit} [\bm{\rho},\bm{\underline{\rho}}]&= \\
+    \textrm{Unit} [\bm{\rho},\bm{\underline{\rho}}]&= (x : Unit , y : Unit). x =_{Unit} y\\
     \textrm{Case} A [\bm{\rho},\bm{\underline{\rho}}]&= \\
     \textrm{OSum} [\bm{\rho},\bm{\underline{\rho}}]&= \\
-    A \times A [\bm{\rho},\bm{\underline{\rho}}]&= \\
-    A * A [\bm{\rho},\bm{\underline{\rho}}]&= \\
+    A \times A' [\bm{\rho},\bm{\underline{\rho}}]&= ((x,y) : A\times A'[\bm{C}/\bm{X},\bm{\underline{C}}/\bm{\underline{X}}], (x',y') :  A \times A'[\bm{C'}/\bm{X},\bm{\underline{C'}/\bm{\underline{X}}}]).\\
+    & A[\bm{\rho},\bm{\underline{\rho}}](x,x')\land A'[\bm{\rho},\bm{\underline{\rho}}](y,y') \\
+    A * A' [\bm{\rho},\bm{\underline{\rho}}]&= \\
     \exists X . A [\bm{\rho},\bm{\underline{\rho}}]&= \\
     U \underline{B} [\bm{\rho},\bm{\underline{\rho}}]&= \\
 \end{align*}
