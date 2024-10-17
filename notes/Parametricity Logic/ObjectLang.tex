@@ -6,7 +6,7 @@
 \usepackage{amssymb}
 \usepackage[dvipsnames]{xcolor}
 \usepackage{stmaryrd}
-
+\usepackage{comment}
 
 \begin{document}
 \include{commands}
@@ -632,5 +632,112 @@ Forget the built in Unit type for now. Note that we only have the compuational f
     &\mathbf{1} : Unit\\
     &\mathbf{1} = \Lambda X . \lambda (x : X) . \textrm{ ret } x\\
 \end{align*}
+Given 
+\begin{align*}
+    &f : \forall X . X \rightarrow F X\\
+\end{align*}
+by $\eta$
+\begin{align*}
+    &f = \Lambda X . \lambda (x : X). f[X] x\\
+\end{align*}
+Pick a relation on $FX$,
+\begin{align*}
+    &R := X ; x : X ; \cdot \vdash_r (a : F X , b : F X). \textrm{ ret } x =_{FX} b\\
+\end{align*}
+What does parametricity say for the type $\forall X . X \rightarrow F X$?
+\begin{align*}
+    &\forall (t : (\forall X, X \rightarrow FX)).\forall Y, Z, R : Rel_v[Y,Z].t[Y]((X \rightarrow F X)[R])t[Z]\\
+\end{align*}
+$((X \rightarrow F X)[R])$ Substitute the relation in for type variables.
+\begin{align*}
+    &(X \rightarrow F X)[R] =\\
+    &= X[R] \rightarrow (FX)[R]\\
+    &= X[R] \rightarrow \red{?}\\
+\end{align*}
+\begin{prooftree}
+    \AxiomC{?}
+    \UnaryInfC{$Unit,X ;\mathbf{1},f,x;\cdot;\cdot \vdash_d \forall X .\forall (x : X). \textrm{ ret } x =_{F X} f [X]x$}
+    
+    \AxiomC{}
+    \UnaryInfC{$Unit , X \vdash X$}
+
+    \RightLabel{$\forall$ Elim}
+    \BinaryInfC{$Unit,X ;\mathbf{1},f,x;\cdot;\cdot \vdash_d \forall (x : X). \textrm{ ret } x =_{F X} f [X]x$}
+
+    \AxiomC{}
+    \RightLabel{Var}
+    \UnaryInfC{$..\vdash_v x : X$}
+    \RightLabel{$\forall$ Elim}
+
+    \BinaryInfC{$Unit,X ;\mathbf{1},f,x;\cdot;\cdot \vdash_d \textrm{ ret } x =_{F X} f [X]x$}
+    \RightLabel{cong}
+    \UnaryInfC{$Unit ;\mathbf{1},f;\cdot;\cdot \vdash_d \Lambda X . \lambda (x : X) . \textrm{ ret } x =_{Unit} \Lambda X . \lambda (x : X). f [X]x$}
+    \RightLabel{Def, $\eta$}
+    \UnaryInfC{$Unit ;\mathbf{1},f;\cdot;\cdot \vdash_d \mathbf{1} =_{Unit} f$}
+    \RightLabel{Intro}
+    \UnaryInfC{$Unit ;\mathbf{1};\cdot;\cdot \vdash_d \forall (f : Unit). \mathbf{1} =_{Unit} f$}
+\end{prooftree}
+
+\subsubsection{OSum Free Theorems}
+Looking for free theorems for types containing our separating connectives, OSum, and Case.
+From the gradual parametricity paper: given
+\[
+    \vdash M : \forall ^{\nu} X . ? \rightarrow X 
+\]
+and $\vdash V :\; ?$ then
+\[
+  \textrm{unseal}_X (M \{X \cong A \} V) \textrm{true}  
+\]
+either diverges or errors. 
+\\
+In CBPV OSum:
+\[
+  \vdash_c M : \forall X . \textrm{Case} X \sep (\textrm{OSum} \rightarrow F X)  
+\]
+should be uninhabited. If error $\mho$ was added to the language,
+then 
+\[
+  A ; \sigma : \textrm{Case} A * d : \textrm{OSum} \vdash_c (M[A]@ \sigma)d : F X 
+\]
+should always error.
+
+\[
+  A ; \sigma : \textrm{Case} A * d : \textrm{OSum} ; \cdot ; \cdot \vdash_d 
+  \forall (M : X . \textrm{Case} X \sep (\textrm{OSum} \rightarrow F X)).  (M[A]@ \sigma)d =_{F X}  \mho 
+\]
+Seems like we have to state this property with the context loaded since we dont have a freshenss quantifier.
+Would we want something like?:
+\[
+    \vdash_d \forall A . \fresh{\sigma}{\textrm{Case A}}{\forall (d : \textrm{OSum})}
+    \forall (M : X . \textrm{Case} X \sep (\textrm{OSum} \rightarrow F X)). 
+    (M[A]@ \sigma)d =_{F X}  \mho 
+\]
+
+\begin{comment}
+What can we say about:  
+\[
+    \forall X. \textrm{OSum} \rightarrow (\textrm{Case}X \sep F \;\textrm{OSum})
+\]
+This should only be able to return the original OSum?
+It would need a value of type X in addition to a Case X to construct a new value.
+What about getting a value from OSum?
+\[
+  \textrm{OSum} \rightarrow (\forall X . \textrm{Case} X \sep X)
+\]
+or
+\[
+  \forall X . \textrm{OSum} \rightarrow ( \textrm{Case} X \sep X)
+\]
+This type should be uninhabited since a fresh case cannot be used to get a value of X 
+since OSum could not have used that case in an injection.
+\blue{Both of the above are not well-formed types since $\forall$ quantifies over value types, missing an $F$ }
+What about 
+
+\[
+  \forall X . \textrm{Case X} \rightarrow (\textrm{OSum}  \sep F X)  
+\]
+This can be inhabited.. but there are values of type $X$ which are "inaccessible".
+\end{comment}
+
 
 \end{document}
