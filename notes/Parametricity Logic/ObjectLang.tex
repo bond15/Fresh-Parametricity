@@ -7,6 +7,7 @@
 \usepackage[dvipsnames]{xcolor}
 \usepackage{stmaryrd}
 \usepackage{comment}
+\usepackage{bm}
 
 \begin{document}
 \include{commands}
@@ -480,6 +481,27 @@ and familiar rules for logical and ($\land$)
 
 \subsubsection{Parametricity}
 
+\subsection{Relational interpretation of Types}
+Let $\bm{X}$ and $\bm{\underline{X}}$ be vectors of value type and computation type variables of length $n$.
+Let $\bm{\rho}$ be a vector of value relations $\Delta ; \Gamma ; \Theta \vdash_r \rho_i : Rel_v[C_i , C'_i]$ for all $i \in {1..n}$.
+Let $\bm{\underline{\rho}}$ be a vector of computation relations $\Delta ; \Gamma ; \Theta \vdash_r \underline{\rho_i} : Rel_c[\underline{C_i} , \underline{C'_i}]$ for all $i \in {1..n}$.
+Let $A$ be a \textbf{value type} with $FTV(A) \in \{\bm{X},\bm{\underline{X}}\}$. Define:
+\[
+  A[\bm{\rho}/\bm{X},\bm{\underline{\rho}}/\bm{\underline{X}}] : Rel_v[A[\bm{C}/\bm{X},\bm{\underline{C}}/\bm{\underline{X}}], A[\bm{C'}/\bm{X},\bm{\underline{C'}/\bm{\underline{X}}}]] 
+\] 
+by induction on $A$.
+\begin{align*}
+    X_i[\bm{\rho},\bm{\underline{\rho}}] &= \rho_i\\
+    \textrm{Unit} [\bm{\rho},\bm{\underline{\rho}}]&= \\
+    \textrm{Case} A [\bm{\rho},\bm{\underline{\rho}}]&= \\
+    \textrm{OSum} [\bm{\rho},\bm{\underline{\rho}}]&= \\
+    A \times A [\bm{\rho},\bm{\underline{\rho}}]&= \\
+    A * A [\bm{\rho},\bm{\underline{\rho}}]&= \\
+    \exists X . A [\bm{\rho},\bm{\underline{\rho}}]&= \\
+    U \underline{B} [\bm{\rho},\bm{\underline{\rho}}]&= \\
+\end{align*}
+
+
 \subsection{Example Derivations}
 
 \subsubsection{Equality Reasoning}
@@ -708,9 +730,13 @@ should always error.
 Seems like we have to state this property with the context loaded since we dont have a freshenss quantifier.
 Would we want something like?:
 \[
-    \vdash_d \forall A . \fresh{\sigma}{\textrm{Case A}}{\forall (d : \textrm{OSum})}
+    \vdash_d \forall A . \fresh (\sigma :\textrm{Case A}).\forall (d : \textrm{OSum})
     \forall (M : X . \textrm{Case} X \sep (\textrm{OSum} \rightarrow F X)). 
     (M[A]@ \sigma)d =_{F X}  \mho 
+\]
+in Fresh Logic [CITE], Gabbay decomposes $\fresh$ into 
+\[
+    \fresh a . \phi(a) := \exists S \in \textrm{Fin}\mathbf{A}. \forall a \notin S. \phi(a)    
 \]
 
 \begin{comment}
