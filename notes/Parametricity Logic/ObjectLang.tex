@@ -497,13 +497,17 @@ It seems like this relation needs to be indexed by worlds to describe how Case A
 \begin{align*}
     X_i[\bm{\rho},\bm{\underline{\rho}}] &= \rho_i\\
     \textrm{Unit} [\bm{\rho},\bm{\underline{\rho}}]&= (x : Unit , y : Unit). x =_{Unit} y\\
-    \textrm{Case} A [\bm{\rho},\bm{\underline{\rho}}]&= \textrm{same injection}\\
+    \textrm{Case} A [\bm{\rho},\bm{\underline{\rho}}]&= (x : \textrm{Case } (A[\bm{C}/\bm{X},\bm{\underline{C}}/\bm{\underline{X}}]),
+    y : \textrm{Case } (A[\bm{C'}/\bm{X},\bm{\underline{C'}}/\bm{\underline{X}}])). 
+    \\
+    & foo\\
     \textrm{OSum} [\bm{\rho},\bm{\underline{\rho}}]&= \textrm{same injection, related values}\\
     A \times A' [\bm{\rho},\bm{\underline{\rho}}]&= ((x,y) : A\times A'[\bm{C}/\bm{X},\bm{\underline{C}}/\bm{\underline{X}}], (x',y') :  A \times A'[\bm{C'}/\bm{X},\bm{\underline{C'}/\bm{\underline{X}}}]).\\
     & A[\bm{\rho},\bm{\underline{\rho}}](x,x')\land A'[\bm{\rho},\bm{\underline{\rho}}](y,y') \\
     A * A' [\bm{\rho},\bm{\underline{\rho}}]&= \textrm{same as product.. but fiddle with world index?}\\
     \exists X . A [\bm{\rho},\bm{\underline{\rho}}]&= standard \\
     U \underline{B} [\bm{\rho},\bm{\underline{\rho}}]&= \textrm{related thunks?}\\
+    (A \sep \underline{B})[\bm{\rho},\bm{\underline{\rho}}]&= \textrm{related inputs to related outputs?}\\
 \end{align*}
 
 
@@ -651,6 +655,11 @@ One direction.
     \UnaryInfC{$\cdot ; f : \forall X . X \rightarrow F X ; \cdot ; \cdot \vdash_d \forall X . \forall (x : X). f[X]x =_{FX} ret \;x$}
 \end{prooftree}
 
+
+\subsubsection{Church Encodings}
+We can only church encode the F type.
+\begin{comment}
+    
 \subsubsection{Church Encodings}
 \paragraph{Unit}
 Forget the built in Unit type for now. Note that we only have the compuational function type in this language.
@@ -704,8 +713,95 @@ $((X \rightarrow F X)[R])$ Substitute the relation in for type variables.
     \RightLabel{Intro}
     \UnaryInfC{$Unit ;\mathbf{1};\cdot;\cdot \vdash_d \forall (f : Unit). \mathbf{1} =_{Unit} f$}
 \end{prooftree}
+\end{comment}
+
+\subsubsection{Practice}
+\paragraph{Unit}
+Practice parametricity proofs for System F.
+Let 
+\[
+    Unit := \forall X . X \rightarrow X    
+\]
+and 
+\[
+    tt := \Lambda X . \lambda (x : X) . x  
+\]
+Prove 
+\[
+    \vdash_d : \forall (u : Unit). tt = u
+\]
+
+By the parametricity schema for type Unit, we have 
+\begin{align*}
+    & \forall (p : (\forall X. X \rightarrow X)). \forall Y. \forall Z. \forall (R : Rel[Y,Z]). ((X \rightarrow X)[R])(p[Y],p[Z]) \\
+\end{align*}
+Specialized to $u, X, X$, we have 
+\[
+    \forall (R : Rel[X,X]). ((X \rightarrow X)[R])(u[X],u[X])
+\]
+which \textit{evaluates} to 
+\[
+    \forall (R : Rel[X,X]).\forall (y : X). \forall (z : X). R(y,z) \implies R(u[X]y,u[X]z)
+\]
+choosing $R$ to be $X ; x : X ; \cdot \vdash_r (y : X , z : X). z = x$, we use $\forall$Rel Elim to get
+\begin{prooftree}
+    \AxiomC{}
+    \UnaryInfC{$\forall (R : Rel[X,X]).\forall (y : X). \forall (z : X). R(y,z) \implies R(u[X]y,u[X]z)$}
+
+    \AxiomC{}
+    \UnaryInfC{$X ; x : X ; \cdot \vdash_r (y : X , z : X). z = x$}
+
+    \BinaryInfC{$\vdash_d \forall (y : X). \forall (z : X). z = x \implies u[X]z = x$}
+\end{prooftree}
+specializing $y,z$ to $x,x$
+\[
+    x = x \implies u[X]x = x  
+\]
+which we can apply to refl to yield 
+\[
+    u[X]x = x 
+\]
+
+
+\begin{prooftree}
+    \AxiomC{$\rotatebox{90}{\ldots}$}
+    \UnaryInfC{$X ; u : Unit, x : X \vdash_d x = u[X](x)$}
+    \RightLabel{$\lambda$ cong}
+    \UnaryInfC{$X ; u : Unit \vdash_d \lambda (x : X).x =  \lambda (x : X). u[X](x)$}
+    \RightLabel{$\Lambda$ cong}
+    \UnaryInfC{$u : Unit \vdash_d \Lambda X . \lambda (x : X).x = \Lambda X . \lambda (x : X). u[X](x)$}
+    \RightLabel{Eta}
+    \UnaryInfC{$u : Unit \vdash_d tt =_{\forall X . X \rightarrow X} u$}
+    \RightLabel{Intros}
+    \UnaryInfC{$\vdash_d : \forall (u : Unit). tt =_{\forall X . X \rightarrow X}  u$}
+\end{prooftree}
+
 
 \subsubsection{OSum Free Theorems}
+Try to prove 
+\begin{align*}
+    \vdash_d & \forall A \;B. \\
+    & \forall (y : \textrm{OSum}). \\
+    & \forall (f : U(\forall X . \textrm{Case }X \sep \textrm{OSum} \rightarrow F X)). \\
+    & \forall (k \; k' : U(A \rightarrow B)). \\
+    & \textrm{newcase}_A \sigma ; x \leftarrow (!f)[A]\sigma y ; (!k) x  \\
+    & = \\
+    & \textrm{newcase}_A \sigma ; x \leftarrow (!f)[A]\sigma y ; (!k') x  
+\end{align*}   
+
+The intuition is?: Any term $f$ can't use the fresh case to extract a value from OSum. 
+So $f$ is effectively a term of type $U (\forall X . F X)$? 
+After you force $f$ and apply it to $A$, $(!f)[A]$, you get an effectful value $x$ of $A$. 
+Then for any two possible continuations of type $A \rightarrow B$, applying the continuations to $x$ yields related results?
+
+\begin{prooftree}
+    \AxiomC{}
+    \UnaryInfC{$...\vdash_d \textrm{newcase}_A \sigma ; x \leftarrow (!f)[A]\sigma y ; (!k) x = \textrm{newcase}_A \sigma ; x \leftarrow (!f)[A]\sigma y ; (!k') x$}
+    \RightLabel{Intros}
+    \UnaryInfC{$\vdash_d \forall ... \textrm{newcase}_A \sigma ; x \leftarrow (!f)[A]\sigma y ; (!k) x = \textrm{newcase}_A \sigma ; x \leftarrow (!f)[A]\sigma y ; (!k') x$}
+\end{prooftree}
+
+\subsubsection{cruft}
 Looking for free theorems for types containing our separating connectives, OSum, and Case.
 From the gradual parametricity paper: given
 \[

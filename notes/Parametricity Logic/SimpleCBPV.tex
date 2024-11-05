@@ -1,0 +1,276 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{simplebnf}
+\usepackage{bussproofs}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{stmaryrd}
+\usepackage{comment}
+\usepackage{bm}
+
+\begin{document}
+\include{commands}
+
+\section{Object Language}
+A simply typed CBPV language.
+\subsection{Raw Terms}
+\begin{bnf}
+    $A$ : Value Types ::= Unit
+    | $A \times A$
+    | $U \underline{B}$
+    ;;
+    $\underline{B}$ : Computation Types ::= $A \rightarrow \underline{B}$
+    | $F A$
+    ;;
+    $V$ : Values ::= $x$
+    | $tt$
+    | $(V , V)$
+    | thunk $M$
+    ;;
+    $M$ : Computations ::= 
+     $\lambda x \colon A . M$
+    | $M V$
+    | ret $V$
+    | force $V$
+    | $M$ to $x$ in $M'$
+    | let $x$ = $V ; M'$
+    | let ($x , y$) = $V ; M$
+    ;;
+    $\Gamma$ : Value Context ::= $\cdot$
+    | $\Gamma , x \colon A$ 
+    ;;
+\end{bnf}
+\subsection{Typed Terms}
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{Var}
+    \UnaryInfC{$\Gamma, x \colon A \vdash_v x : A$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{I-Unit}
+    \UnaryInfC{$\Gamma \vdash_v tt : $ Unit}
+\end{prooftree}
+
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash_v t : A$}
+    \AxiomC{$\Gamma \vdash_v t : A'$}
+    \RightLabel{I-$\times$}
+    \BinaryInfC{$\Gamma \vdash_v  (t , u): A \times A' $ }
+\end{prooftree}
+
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash_c M : \underline{B}$}
+    \RightLabel{}
+    \UnaryInfC{$\Gamma \vdash_v \textrm{thunk } M : U \underline{B}$}
+\end{prooftree}
+
+
+\begin{prooftree}
+    \AxiomC{$\Gamma , x : A \vdash_c M : \underline{B}$}
+    \RightLabel{I - $\rightarrow$}
+    \UnaryInfC{$\Gamma \vdash_c (\lambda (x : A) . M) : A \rightarrow \underline{B}$}
+\end{prooftree}
+
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash_c M : A \rightarrow \underline{B}$}
+    \AxiomC{$\Gamma \vdash_v V : A$}
+    \RightLabel{E-$\rightarrow$}
+    \BinaryInfC{$\Gamma \vdash_c : M V : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash_v V : A$}
+    \RightLabel{}
+    \UnaryInfC{$\Gamma \vdash_c \textrm{ret } V : F A$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash_v V : U \underline{B}$}
+    \RightLabel{}
+    \UnaryInfC{$\Gamma \vdash_c \textrm{force } V : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash_c M : F A$}
+    \AxiomC{$\Gamma , x : A \vdash_c N : \underline{B}$}
+    \RightLabel{}
+    \BinaryInfC{$\Gamma \vdash_c M \textrm{ to } x \textrm{ in } N : \underline{B}$}
+\end{prooftree}
+
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash_v V : A$}
+    \AxiomC{$\Gamma , x : A \vdash_c N : \underline{B}$}
+    \RightLabel{}
+    \BinaryInfC{$\Gamma \vdash_c \textrm{let x } = V ; N : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash_v V : A \times A'$}
+    \AxiomC{$\Gamma , x : A, y : A' \vdash_c M : \underline{B}$}
+    \RightLabel{E-$\times$}
+    \BinaryInfC{$\Gamma \vdash_c \textrm{let (x,y) } = V ; M : \underline{B}$}
+\end{prooftree}
+
+\section{Logic}
+
+\subsection{Formation Rules}
+\subsubsection{Value Fragment}
+Judgments: 
+Value Propositions
+\[
+  \Gamma \vdash \phi \textrm{ VProp}  
+\]
+ connectives: 
+ \[
+   \phi := \top | \phi \land \phi | \phi \implies \phi 
+ \]
+\begin{prooftree}
+    \AxiomC{}
+    \UnaryInfC{$\Gamma \vdash \top  \textrm{ VProp}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash \phi \textrm{ VProp}$}
+    \AxiomC{$\Gamma \vdash \psi \textrm{ VProp}$}
+    \BinaryInfC{$\Gamma \vdash \phi \land \psi  \textrm{ VProp}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash \phi \textrm{ VProp}$}
+    \AxiomC{$\Gamma \vdash \psi \textrm{ VProp}$}
+    \BinaryInfC{$\Gamma \vdash \phi \implies \psi  \textrm{ VProp}$}
+\end{prooftree}
+\subsubsection{Computation Fragment}
+Judgments: 
+Computation Propositions
+\[
+  \Gamma ; \Delta \vdash \underline{\phi} \textrm{ CProp}  
+\]
+ connectives: 
+ \[
+   \underline{\phi} := \underline{\top} | \underline{\phi} \land \underline{\psi} | \blue{\phi \implies \underline{\psi}}
+ \]
+ \begin{prooftree}
+    \AxiomC{}
+    \UnaryInfC{$\Gamma ; \Delta \vdash \underline{\top}  \textrm{ CProp}$}
+\end{prooftree}
+
+
+\begin{prooftree}
+    \AxiomC{$\Gamma ;\Delta \vdash \underline{\phi} \textrm{ CProp}$}
+    \AxiomC{$\Gamma ; \Delta \vdash \underline{\psi} \textrm{ CProp}$}
+    \BinaryInfC{$\Gamma ; \Delta \vdash \underline{\phi} \land \underline{\psi}  \textrm{ CProp}$}
+\end{prooftree}
+
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash \phi \textrm{ VProp}$}
+    \AxiomC{$\Gamma ; \Delta \vdash \underline{\psi} \textrm{ CProp}$}
+    \BinaryInfC{$\Gamma ; \Delta \vdash \phi \implies \underline{\psi}  \textrm{ CProp}$}
+\end{prooftree}
+
+\subsection{Derivation Rules}
+\subsubsection{Value Derivations}
+Value Derivation Judgement
+\[
+    \Gamma | \Phi \vdash \phi 
+\]
+where $\Phi$ is a conjunction of value propositions.
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{I-$\top$}
+    \UnaryInfC{$\Gamma | \Phi \vdash \top$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma | \Phi \vdash \phi$}
+    \AxiomC{$\Gamma | \Phi \vdash \psi $}
+    \RightLabel{I-$\land$}
+    \BinaryInfC{$\Gamma | \Phi \vdash \phi \land \psi$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma | \Phi \vdash \phi \land \psi$}
+    \RightLabel{E1-$\land$}
+    \UnaryInfC{$\Gamma | \Phi \vdash \phi $}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma | \Phi \vdash \phi \land \psi$}
+    \RightLabel{E2-$\land$}
+    \UnaryInfC{$\Gamma | \Phi \vdash \psi $}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma | \Phi, \phi \vdash \psi $}
+    \RightLabel{I-$\implies$}
+    \UnaryInfC{$\Gamma | \Phi \vdash \phi \implies \psi $}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma | \Phi \vdash \phi \implies \psi $}
+    \AxiomC{$\Gamma | \Phi \vdash \phi$}
+    \RightLabel{E-$\implies$}
+    \BinaryInfC{$\Gamma | \Phi \vdash \psi $}
+\end{prooftree}
+
+\subsubsection{Computation Derivations}
+Computation Derivation Judgement:
+\[
+  \Gamma ; \Delta | \Phi ; \red{\underline{\Psi}} \vdash \underline{\phi}  
+\]
+\red{context for computation propositions?}
+\[
+\oslash^* : Sub_V(\Gamma) \times Sub_C(\Gamma \oslash \Delta) \rightarrow Sub_C(\Gamma \oslash \Delta)
+\]
+\[
+  \llbracket \Gamma ; \Delta | \Phi ; \red{\underline{\Psi}} \vdash \underline{\phi} \rrbracket : Sub_C(\Gamma \oslash \Delta)[\oslash^*(\Phi,\red{\underline{\Psi}}), \underline{\phi}]
+\]
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{I-$\top$}
+    \UnaryInfC{$\Gamma ; \Delta | \Phi ; \underline{\Psi}\vdash \underline{\top}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma ; \Delta | \Phi ; \underline{\Psi}\vdash \underline{\phi}$}
+    \AxiomC{$\Gamma ; \Delta | \Phi ; \underline{\Psi}\vdash \underline{\psi} $}
+    \RightLabel{I-$\land$}
+    \BinaryInfC{$\Gamma ; \Delta | \Phi ; \underline{\Psi}\vdash \underline{\phi} \land \underline{ \psi}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma ; \Delta | \Phi ; \underline{\Psi}\vdash \underline{\phi} \land \underline{ \psi}$}
+    \RightLabel{E1-$\land$}
+    \UnaryInfC{$\Gamma ; \Delta | \Phi ; \underline{\Psi}\vdash \underline{\phi} $}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma ; \Delta | \Phi ; \underline{\Psi}\vdash \underline{\phi} \land \underline{ \psi}$}
+    \RightLabel{E2-$\land$}
+    \UnaryInfC{$\Gamma ; \Delta | \Phi ; \underline{\Psi}\vdash \underline{ \psi}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{I-$\implies$}
+    \UnaryInfC{$\Gamma ; \Delta | \Phi ; \underline{\Psi}\vdash \phi \implies \underline{\psi}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{E-$\implies$}
+    \UnaryInfC{}
+\end{prooftree}
+
+
+\end{document}
