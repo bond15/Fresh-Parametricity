@@ -376,6 +376,12 @@ computation relation environment $\Omega$, value proposition environment $\Phi$,
     \BinaryInfC{$\Xi ; \Gamma ; \Theta, R : Rel_{\mathcal{V}}[C,D] \vdash (x : A , y : B). R(t,u) : Rel_{\mathcal{V}}[A,B]$}
 \end{prooftree}
 
+Introduction Rule
+
+\begin{prooftree}
+    \AxiomC{$\Xi ; \Gamma, x : A, y : B; \Theta \vdash \phi$}
+    \UnaryInfC{$\Xi ; \Gamma ; \Theta \vdash (x : A , y : B) . \phi : Rel_{\mathcal{V}}[A,B]$}
+\end{prooftree}
 
 \begin{comment}
     No, now we need to be careful with the difference between value and computation proposition
@@ -442,6 +448,12 @@ computation relation environment $\Omega$, value proposition environment $\Phi$,
 \begin{prooftree}    
     \AxiomC{$\Xi ; \Gamma; \Delta ;  \Theta ; \Omega ,  \underline{R} : Rel_{\mathcal{C}}[\underline{A} , \underline{B}]  \vdash (x : \underline{A}, y : \underline{B}).  \underline{\phi} : Rel_{\mathcal{C}}[\underline{A},\underline{B}] $}
     \UnaryInfC{$\Xi ; \Gamma ; \Delta ;  \Theta ; \Omega \vdash (x : \underline{A}, y : \underline{B}). \forall (\underline{R} : Rel_{\mathcal{C}}[\underline{A} , \underline{B}]). \underline{\phi} : Rel_{\mathcal{C}}[\underline{A},\underline{B}] $}
+\end{prooftree}
+
+Introduction Rule. Compare this to the value relation introduction rule.. the stoup has at most one computation.. 
+\begin{prooftree}
+    \AxiomC{$\Xi ; \Gamma ; \blue{x : \underline{B}} ;  \Theta ; \Omega \vdash \underline{\phi}$}
+    \UnaryInfC{$\Xi ; \Gamma ; \Delta ;  \Theta ; \Omega \vdash ?? : Rel_{\mathcal{C}}[? , ?]$}
 \end{prooftree}
 
 \subsection{Derivation Rules}
@@ -682,6 +694,7 @@ Try to prove
     \item Finalize the judgment forms, what contexts do they actually need to be displayed over? Do we need to split the relation and proposition contexts into distinct value/computation contexts?
     \item Check that the classification of logical connectives makes sense (value prop vs comp prop)
     \item Does the body of a value relation need to be value propositions? (same question for computation relation)
+    \item What is the introduction rule for computation relations (definable computation relations)?
     \item Denotation of value/computation propositions
     \item Understand the operation $\oslash$ and its laws
     \item Denotation of value/computation derivations 
