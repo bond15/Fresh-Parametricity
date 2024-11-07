@@ -362,7 +362,52 @@ computation relation environment $\Omega$, value proposition environment $\Phi$,
 \end{prooftree}
 
 \subsubsection{Value Relations}
+\begin{prooftree}
+    \AxiomC{$\Xi ; \Gamma , x : A \vdash_v t : C$}
+    \AxiomC{$\Xi ; \Gamma , y : B \vdash_v u : C$}
+    \RightLabel{}
+    \BinaryInfC{$\Xi; \Gamma ; \Theta \vdash (x : A , y : B). t =_C u : Rel_{\mathcal{V}}[A,B]$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Xi ; \Gamma , x : A \vdash_v t : C$}
+    \AxiomC{$\Xi ; \Gamma , y : B \vdash_v u : D$}
+    \RightLabel{}
+    \BinaryInfC{$\Xi ; \Gamma ; \Theta, R : Rel_{\mathcal{V}}[C,D] \vdash (x : A , y : B). R(t,u) : Rel_{\mathcal{V}}[A,B]$}
+\end{prooftree}
+
+\begin{comment}
+    No, now we need to be careful with the difference between value and computation proposition
+\begin{prooftree}
+    \AxiomC{$\Xi; \Gamma , z : C ;\Theta \vdash (x : A , y : B). \phi : Rel_{\mathcal{V}}[A,B] $}
+    \UnaryInfC{$\Xi ; \Gamma ; \Theta \vdash (x : A , y : B). \forall (z : C) . \phi : Rel_{\mathcal{V}}[A,B]$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Xi , X ; \Gamma ;\Theta \vdash (x : A , y : B). \phi : Rel_{\mathcal{V}}[A,B]$}
+    \UnaryInfC{$\Xi ; \Gamma ; \Theta \vdash (x : A , y : B). \forall X . \phi : Rel_{\mathcal{V}}[A,B]$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Xi , \underline{X} ; \Gamma ;\Theta \vdash (x : A , y : B). \phi : Rel_{\mathcal{V}}[A,B]$}
+    \UnaryInfC{$\Xi ; \Gamma ; \Theta \vdash (x : A , y : B). \forall \underline{X} . \phi : Rel_{\mathcal{V}}[A,B]$}
+\end{prooftree}
+\end{comment}
+
 \subsubsection{Computation Relations}
+\red{Something seems off including the stoup, $\Delta$, in the computation relation judgment..}
+\begin{prooftree}
+    \AxiomC{$\Xi ; \Gamma | x : \underline{A} \vdash_c t : \underline{C}$}
+    \AxiomC{$\Xi; \Gamma | y : \underline{B} \vdash_c u : \underline{C}$}
+    \RightLabel{}
+    \BinaryInfC{$\Xi; \Gamma ; \Delta ; \Theta ; \Omega \vdash (x : \underline{A}, y : \underline{B}). t =_{\underline{C}} u : Rel_{\mathcal{C}}[\underline{A},\underline{B}]$}
+\end{prooftree}
+\begin{prooftree}
+    \AxiomC{$\Xi ; \Gamma | x : \underline{A} \vdash_c t : \underline{C}$}
+    \AxiomC{$\Xi ; \Gamma | y : \underline{B} \vdash_c u : \underline{D}$}
+    \RightLabel{}
+    \BinaryInfC{$\Xi ; \Gamma ; \Delta ;  \Theta ; \Omega,\underline{R} : Rel_{\mathcal{C}}[\underline{C},\underline{D}]\vdash (x : \underline{A}, y : \underline{B}). \underline{R}(t , u) : Rel_{\mathcal{C}}[\underline{A},\underline{B}] $}
+\end{prooftree}
 
 \subsection{Derivation Rules}
 
@@ -578,7 +623,7 @@ Let $\underline{B}$ be a \textbf{computation type} with $FTV(\underline{B}) \in 
 by induction on $\underline{B}$. 
 
 \begin{align*}
-    A \rightarrow \underline{B}[\bm{\rho},\bm{\underline{\rho}}] &= \\
+    A \rightarrow \underline{B}[\bm{\rho},\bm{\underline{\rho}}] &= \textrm{Add weakest precondition to the proposition syntax to interpret this?}\\
     A \sep \underline{B}[\bm{\rho},\bm{\underline{\rho}}] &= \\
     \forall X . \underline{B} [\bm{\rho},\bm{\underline{\rho}}]&= \\
     F A[\bm{\rho},\bm{\underline{\rho}}] &= \textrm{Could be encoded if we add } \forall \underline{X} . \underline{B}?\\
