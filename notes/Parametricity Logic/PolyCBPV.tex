@@ -641,5 +641,21 @@ Try to prove
     & \textrm{newcase}_A \sigma ; x \leftarrow (!f)[A]\sigma y ; (!k') x  
 \end{align*}   
 
+\section{TODO/Questions}
+\begin{itemize}
+    \item Do we add the type $\forall \underline{X}. \underline{B}$ to the object lang and then encode $F A$ ?
+    \item Finalize the judgment forms, what contexts do they actually need to be displayed over? Do we need to split the relation and proposition contexts into distinct value/computation contexts?
+    \item Check that the classification of logical connectives makes sense (value prop vs comp prop)
+    \item Denotation of value/computation propositions
+    \item Understand the operation $\oslash$ and its laws
+    \item Denotation of value/computation derivations 
+    \item Define the operation $\oslash^*$ and find its laws
+    \item Finish the known relational interpretation of types
+    \item Attempt the relational interpretation of our new types
+    \item Write up the beta and eta deduction rules 
+    \item Check the correctness of the relational interpretation of types. (By proving Reynold's Identity Extension Lemma?)
+    \item PE Logic denotes the collection of computation relations, $Rel_{\mathcal{C}}[\underline{A},\underline{B}]$, by $Sub_{\mathcal{C}}(\underline{A} \times \underline{B})$. However,
+          they never define $\underline{A} \times \underline{B}$ or state that it is a derivable type.
+\end{itemize}
 
 \end{document}
