@@ -1,0 +1,517 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{simplebnf}
+\usepackage{bussproofs}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{stmaryrd}
+\usepackage{comment}
+\usepackage{bm}
+
+\include{commands}
+
+
+\title{Categorical Logic}
+\begin{document}
+\maketitle
+
+\section{Simply Typed Logics}
+Here we present the setup for a logic of simply typed lambda calculus term equality.
+
+\subsection{Syntax}
+\begin{bnf}
+    $\alpha$ : Types ::= Unit | $\alpha \times \alpha$ | $\alpha \rightarrow \alpha$ ;;
+    $M$ : Terms ::= $tt$ | $(M , N)$ | $\pi_1 M$ | $\pi_2 M$ | $\lambda (x \colon \alpha). M$ | $MN$
+\end{bnf}
+
+With the usual typing rules, structural rules, and beta/eta equalities.
+\subsection{Classifying Category}
+This category represents the syntax of the simply typed lambda calculus. 
+(\red{not just $\beta/\eta$ equivalence? conversion can have $\alpha$ renaming or congruence rules?})
+\begin{align*}
+    \textrm{Objects} &:= \textrm{Types, $\alpha$, constructed by the grammar}\\
+    \textrm{Morphisms} &:= \alpha \rightarrow \beta \textrm{ are equivalence classes $[M]$ of terms } x : \alpha \vdash M : \beta \\
+    &\textrm{ with one free variable(Equivalence relative to } \beta/\eta \textrm{ laws})\\
+    \textrm{Identity } \alpha &:= \textrm{equivalence class of term } x : \alpha \vdash x : \alpha\\
+    \textrm{Composition }f g  &:= \textrm{ is substitution. Say } f \textrm{ contains } x : \alpha \vdash M : \beta\\
+    &\textrm{ and g contains } y : \beta \vdash N : \gamma \textrm{ then } x : \alpha \vdash N[M/y] : \gamma \textrm { in g $\circ$ f.}
+    %\textrm{ where } (f : \alpha \rightarrow \beta)(g : \beta \rightarrow \gamma) \\
+\end{align*}
+
+This category, denoted here by $\mathcal{CL}(\lambda_{1,\times,\rightarrow})$, is cartesian closed. 
+\begin{comment}
+    My mistake here is using the definition of classifying category for a theory that does not assume built in products
+
+
+\begin{align*}
+    \textrm{Objects} &:= \textrm{Contexts } \Gamma = (x_1 \colon \alpha_1 , x_2 \colon \alpha_2... )\\ 
+    \textrm{Morphisms} &:= \Gamma \rightarrow \Delta \textrm{with } |\Gamma| = n , |\delta| = m \\
+    & \textrm{ with } \Gamma = (x_1 : \alpha_1 , x_2 : \alpha_2, .., x_n : \alpha_n) \; \delta = (y_1 : \beta_1 , y_2 : \beta_2, .., y_m : \beta_m)\\
+    & \textrm{ consists of an $m$ tuple of equivalence clases of terms} (\beta/\eta \textrm { equivalence}) \\
+    & ([M_1], [M_2], .. [M_m]) \textrm{ where } \Gamma \vdash M_i : \beta_i \\
+    & \blue{think "multimophisms"}
+\end{align*}
+
+\blue{Or, since our calculus has products, we can just take \textbf{Types} as objects. See Crole page 177 and Jacobs page 139}
+\end{comment}
+\subsection{Term Model}
+A \textbf{model} of the term language in a cartesian closed category $\mathcal{C}$ is a functor from the classifying category into $\mathcal{C}$\\
+\[
+M : \mathcal{CL}(\lambda_{1,\times,\rightarrow}) \rightarrow \mathcal{C}
+\]
+\subsection{Base Logic Syntax}
+We now turn out attention to a logic where the only proposition is equality of simply typed lambda calculus terms.
+We have two judgements:
+\[
+  \Gamma \vdash \phi \textrm{ Prop}  
+\]
+which states $\phi$ is a proposition. And 
+\[
+    \Gamma | \Phi \vdash \psi 
+\]
+which is a proof derivation judgement. There are a few structural and context rules for proof derivations 
+\begin{itemize}
+    \item Axiom
+    \item Identity
+    \item Cut 
+    \item weakening (for prop)
+    \item contraction (for prop)
+    \item exchange (for prop)
+    \item weakening (for term context)
+    \item contraction (for term context)
+    \item exchange (for term context)
+    \item substitution
+\end{itemize}
+\subsection{Equational Logic Syntax}
+Here are the rules for the equality proposition.
+For the first judgement, $\phi$ is generated from a boring bnf grammar:
+
+\begin{bnf}
+    $\phi$ ::= $ M =_{\alpha} M'$ ;;
+\end{bnf}
+\\
+There is one formation rule for propositions
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash M : \alpha $}
+    \AxiomC{$\Gamma \vdash M' : \alpha $}
+    \BinaryInfC{$\Gamma \vdash M =_{\alpha} M' \textrm{ Prop}$}
+\end{prooftree}
+
+You have the expected rules for $=$.
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash M : \alpha$}
+    \RightLabel{refl}
+    \UnaryInfC{$\Gamma | \Phi \vdash M =_{\alpha} M$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma | \Phi \vdash M =_{\alpha} M' $}
+    \RightLabel{sym}
+    \UnaryInfC{$\Gamma | \Phi \vdash M' =_{\alpha} M$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma | \Phi \vdash M =_{\alpha} N $}
+    \AxiomC{$\Gamma | \Phi \vdash N =_{\alpha} P $}
+    \RightLabel{trans}
+    \BinaryInfC{$\Gamma | \Phi \vdash M =_{\alpha} P$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma | \Phi \vdash M =_{\alpha} M' $}
+    \AxiomC{$\Gamma , x : \alpha \vdash N : \beta$}
+    \RightLabel{replace}
+    \BinaryInfC{$\Gamma | \Phi \vdash N[M/x] =_{\beta} N[M'/x]$}
+\end{prooftree}
+
+The four previous rules are equivalent to the following two. For proof, see page 180 of Jacobs.
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash M : \alpha $}
+    \AxiomC{$\Delta , x : \alpha , \Delta' \;|\; \overrightarrow{N} =_{\overrightarrow{\beta}} \overrightarrow{N'} \vdash L =_{\gamma} L'$}
+    \RightLabel{substitution}
+    \BinaryInfC{$\Delta , \Gamma , \Delta' \;| \;\overrightarrow{N[M/x]} =_{\overrightarrow{\beta}} \overrightarrow{N'[M/x]} \vdash L[M/x] =_{\gamma} L'[M/x]$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma, x : \alpha | \Phi \vdash N[x/y]=_{\beta}N'[x/y]$}
+    \doubleLine
+    \RightLabel{Lawvere Equality, $=$-mate}
+    \UnaryInfC{$\Gamma , x : \alpha , y : \alpha | \Phi , x =_{\alpha} y \vdash N =_{\beta} N'$}
+\end{prooftree}
+
+Additionally, we also have that definitional equality / conversion is contained in propositional equality.
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash M : \alpha$}
+    \AxiomC{$\Gamma \vdash M' : \alpha$}
+    \AxiomC{$\Gamma \vdash M = M' : \alpha$}
+    \TrinaryInfC{$\Gamma \vdash M =_{\alpha} M'$}
+\end{prooftree}
+
+\subsection{Preliminaries for the Logic Semantics}
+\textbf{Def. Preorder}: A set $X$ with a binary relation $R \subseteq X \times X$ that is reflexive and transitive.
+\\
+\textbf{Def. Partially Ordered Set (Poset)}: A set $X$ with a binary relation $R : \subseteq X \times X$ that is reflexive, transitive, and anti-symmetric.
+\\
+Any preorder can be regarded as a thin category where $(x,y) \in R$ is regarded as the existence of a unique morphism from $x$ to $y$.
+\\
+Any preorder can be turned into a partial order via a \textit{posetal reflection}. Let $(A, \leq )$ be a preorder. We construct a poset $(A/\cong,\leq')$ where 
+\[
+  a \cong b \iff a \leq b \land b \leq a  
+\]
+and 
+\[
+  [a] \leq' [b] \iff a \leq b 
+\]
+The quotient \textit{enforces} the anti-symmetry condition.
+\\
+For a category $\mathcal{C}$ and an object, $X : ob \;\mathcal{C}$, we can take the category 
+$Mono(\mathcal{C})$ to be a full subcategory $\mathcal{C}/X$ which consists only of monomorphisms.
+This category can be regarded as a preorder.
+\\ 
+For a category $\mathcal{C}$ and an object, $X : ob \;\mathcal{C}$, we can take the \textit{posetal reflection} of $Mono(X)$ 
+and regard it as a category $Sub(X)$. This category consists of the subobjects of $X$ in $\mathcal{C}$.
+\\
+Miscelaneous facts:
+\begin{itemize}
+    \item binary products + pullbacks $\implies$ equalizers
+    \item every equalizer is a monomorphism
+    \item pullbacks preserve monomorphisms
+    \item Every category with pullbacks of monomorphisms has a contravariant functor $Sub:C^{op}\rightarrow Pos$ to the category of posets called the subobject poset functor, making it into a hyperdoctrine.
+\end{itemize}
+
+\subsection{Basics of Set Based Logic Semantics}
+Assume we have a set based model, $F : \mathcal{CL}(\lambda_{1,\times,\rightarrow}) \rightarrow Set$, for our simply typed lambda calculus.
+We need to interpret our two equational logic judgments:
+\begin{align*}
+    &\Gamma \vdash \phi \textrm{ Prop}\\
+    &\Gamma | \Phi \vdash \phi
+\end{align*}
+For a context $\Gamma$, the proposition $\Gamma \vdash \phi$ will be interpreted as a subset $X \subseteq \den{\Gamma}_F$. 
+Propositional context, $\Phi = \phi \land \psi \land ..$, will be interpreted as a conjunction of propositions 
+where a conjunction of propositions $\Gamma \vdash \phi$ and $\Gamma \vdash \psi$ is:
+\[
+    \den{\phi \land \psi}_F = \den{\phi}_F \cap \den{\psi}_F
+\]
+We can drop $F$ from the denotation subscript when the model is obvious.
+For any term context $\Gamma$, we have the poset $(\mathcal{P}(\den{\Gamma}_F), \leq)$
+where $\mathcal{P}(\den{\Gamma}_F)$ is the powerset of $\den{\Gamma}_F$.
+The ordering is given by subset inclusion, that is:
+\[
+  \den{\phi} \leq \den{\psi} \iff \den{\phi} \subseteq \den{\psi}  
+\]
+Checking this is a poset.. we clearly have that the relation is reflexive since $X \subseteq X$
+Additionally, it is also transitive since subset inclusion is transitive.
+Finally, we have that $\leq$ is anti\-symmetric since 
+\[
+    X \subseteq Y \land Y \subseteq X \implies  X = Y 
+\]
+
+Thus we will interpret $\den{\Gamma | \Phi \vdash \phi} = \den{\Phi} \leq  \den{\phi}$ 
+which means that either $\den{\Phi} \subseteq \den{\phi}$ or not. 
+Our derivations are \textit{proof irrelevant} since there is at most one term representing if a derivation is inhabited.
+
+\subsection{Set Based Semantics for Propositional Equality}
+Our equational logic only has one logical connective, $M =_{\alpha} M'$ propositional equality.
+To interpret this proposition, we use equalizers. Equalizers in $Set$ are rather simple.
+Given $\Gamma \vdash M : \alpha$ and $\Gamma \vdash M' : \alpha$, we have the equalizer:
+\[
+    Eq(\den{M},\den{M'}) = \{ x : \den{\Gamma} \;|\; \den{M}(x) = \den{M'}(x)\}
+\]
+Remember that terms are denoted as morphisms $\den{\Gamma \vdash M : \alpha} : Set[\den{\Gamma},\den{\alpha}]$ or functions in $Set$.
+The equalizer of terms $M$ and $M'$ is just the subset of $\den{\Gamma}$ for which these functions return equal values in $\den{\alpha}$.
+\subsection{Demonstration of Propositional Equality Logic}
+In our logic, we should be able to prove the sequent
+\[
+  x : \alpha, y : \alpha, z : \alpha | x =_{\alpha} y , y =_{\alpha} z \vdash x =_{\alpha} z  
+\]
+via the transitivity rule. Lets check that this is sound w.r.t the set based denotation.
+We have that $\den{\alpha}$ is some set and $\den{\Gamma} = \den{\alpha} \times \den{\alpha}\times \den{\alpha}$.
+The terms $x,y,z$ just projections out of the context.
+\begin{align*}
+    &\den{x} : \den{\Gamma} \rightarrow \den{\alpha} = \pi_1 \\
+    &\den{y} : \den{\Gamma} \rightarrow \den{\alpha} = \pi_2\\
+    &\den{z} : \den{\Gamma} \rightarrow \den{\alpha} = \pi_3 \\
+\end{align*}
+We have that:
+\begin{align*}
+    &\den{x =_{\alpha} y} = Eq(x,y) = \{\gamma : \den{\Gamma} \;|\; \pi_1(\gamma) = \pi_2(\gamma)\}\\
+    &\den{y =_{\alpha} z} = Eq(y,z) = \{\gamma : \den{\Gamma} \;|\; \pi_2(\gamma) = \pi_3(\gamma)\}\\
+    &\den{x =_{\alpha} z} = Eq(x,z) = \{\gamma : \den{\Gamma} \;|\; \pi_1(\gamma) = \pi_3(\gamma)\}\\
+\end{align*}
+and 
+\[
+    (x =_{\alpha} y \land y =_{\alpha} z) = \den{x =_{\alpha} y} \cap \den{y =_{\alpha} z} = \{ \gamma : \den{\Gamma} \; | \; \pi_1(\gamma) = \pi_2(\gamma) = \pi_3(\gamma)\}
+\]
+Our proposition considered true in the model if:
+\[
+    \den{x =_{\alpha} y} \cap \den{y =_{\alpha} z} \subseteq \den{x =_{\alpha} z} 
+\]
+The LHS consists of all tuples of the form 
+\[
+    (M , M, M) : \den{\alpha} \times \den{\alpha}\times \den{\alpha}
+\]  
+where all components of the tuple are equal. While the RHS consists of all tuples of the form
+\[
+    (M , N, M) : \den{\alpha} \times \den{\alpha}\times \den{\alpha}
+\]
+where only the first and third components are required to be equal. 
+Thus, there is clearly a subset inclusion from the LHS to the RHS. 
+
+\subsection{Changing Contexts}
+We have sequent $x : \alpha \;|\; \cdot \vdash x =_{\alpha} x $ via reflexivity. 
+We can apply weakening for terms to this sequent to obtain a proof of 
+$x : \alpha, y : \beta \;|\; \cdot \vdash x =_{\alpha} x $. 
+How is this operation justified in the set based semantics? 
+Notice that the first sequent is in the poset \textit{over} $\den{\alpha}$ 
+while the second sequent is in the poset \textit{over} $\den{\alpha} \times \den{\beta}$.
+
+We need a way to \textit{change basis}. This is the role of substitution functors. 
+Recall that we can regard preorders(refl,trans) as categories if we interpret $a \leq_R b$ as the existence of a unique morphism between objects $a,b$.
+Furthermore, a poset(refl,trans,anti-sym) can be regarded as a category where $a \leq_R b$ and $b \leq_R b$ implies $a \cong b$. \
+\footnote{Since there is at most one morphisms between objects, this isomorphism is forced}
+We can then regard a poset \textit{over} $\den{\alpha}$ as a category $Sub(\den{\alpha})$.
+For any morphism 
+\[
+ f : \den{\alpha} \rightarrow \den{\beta}   
+\]
+
+we have an induced functor
+\[
+ f^* : \textrm{Functor} \;Sub(\den{\beta}) \; Sub(\den{\alpha})
+\]
+given by 
+\begin{align*}
+    f^*_0 (X \subseteq \den{\beta}) &= \{a : \den{\alpha} \;|\; f(a) \in X\} \subseteq \den{\alpha}\\
+    f^*_1 (X \leq_{\den{\beta}} Y) &= \{ a : \den{\alpha} \; | \; f(a) \in X\}\leq_{\den{\alpha}} \{ a : \den{\alpha} \; | f(a) \in Y\; \}\\
+\end{align*}
+We can check that 
+\begin{align*}
+    f^*_1(X \leq_{\den{\beta}} X) &= \{ a : \den{\alpha} \; | \; f(a) \in X\}\leq_{\den{\alpha}} \{ a : \den{\alpha} \; | f(a) \in X\; \}\\
+    &= id_{f^*_0(X)}
+\end{align*}
+and 
+\begin{align*}
+    f^*_1(X \leq_{\den{\beta}}  Y ; Y \leq_{\den{\beta}}  Z) &=   f^*_1(X \leq_{\den{\beta}}  Z)\\
+    & \textrm{b.c. at most one morphism and } X \subseteq Y \land Y \subseteq Z \implies X \subseteq Z\\
+    &= \{ a : \den{\alpha} \; | \; f(a) \in X\}\leq_{\den{\alpha}} \{ a : \den{\alpha} \; | f(a) \in Z\; \}\\
+    &= f^*_1(X \leq_{\den{\beta}}  Y) ; f^*_1(Y \leq_{\den{\beta}}  Z)\\
+\end{align*}
+
+Lets consider a special case 
+\begin{align*}
+    &\pi: \den{\alpha}\times\den{\beta}\rightarrow\den{\alpha}\\
+    &\pi (a,b) = a \\
+\end{align*}
+This induces a substitution functor $\pi^* :$ Functor $Sub(\den{\alpha})$ $Sub(\den{\alpha} \times \den{\beta})$ 
+which we can use to transport our proof over $\den{\alpha}$ to be over $\den{\alpha}\times \den{\beta}$.
+
+\subsection{Eq as left adjoint to $\delta^*$}
+\subsection{TODO: explain the total category $Sub(\mathcal{C})$ and how Functor $Sub(\mathcal{C})$  $\mathcal{C}$ is a fibration}
+ 
+\subsection{Regular Logic Syntax}    
+Equational logic only has one type of proposition, propositional equality. 
+We will now focus on a logic with four connectives: 
+
+\begin{bnf}
+    $\phi$ ::= $M =_{\alpha} M'$ | $\top$ | $\phi \land \phi'$ | $\exists(x \colon \alpha). \phi$
+\end{bnf}
+
+This is a subset of first order logic called \textit{regular logic}. In addition to the base logic structural rules, we have the following:
+\subsubsection{Proposition Formation Rules}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash M : \alpha$}
+    \AxiomC{$\Gamma \vdash M' : \alpha$}
+    \BinaryInfC{$\Gamma \vdash M =_{\alpha} M'$ Prop}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{}
+    \UnaryInfC{$\Gamma \vdash \top $ Prop}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash \phi$ Prop }
+    \AxiomC{$\Gamma \vdash \psi$ Prop}
+    \BinaryInfC{$\Gamma \vdash \phi \land \psi$ Prop}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma, x : \alpha \vdash \phi$ Prop}
+    \UnaryInfC{$\Gamma \vdash \exists (x : \alpha). \phi$ Prop}
+\end{prooftree}
+
+\subsubsection{Derivation Rules}
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{$\top$-Intro}
+    \UnaryInfC{$\Gamma | \Phi \vdash \top$}    
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma | \Phi \vdash \phi$}
+    \AxiomC{$\Gamma | \Phi \vdash \psi$}
+    \RightLabel{$\land$-Intro}
+    \BinaryInfC{$\Gamma | \Phi \vdash \phi \land \psi$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma | \Phi \vdash \phi \land \psi$}
+    \RightLabel{$\land\textrm{-Elim}_1$}
+    \UnaryInfC{$\Gamma | \Phi \vdash \phi$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma | \Phi \vdash \phi \land \psi$}
+    \RightLabel{$\land\textrm{-Elim}_2$}
+    \UnaryInfC{$\Gamma | \Phi \vdash \psi$}
+\end{prooftree}
+
+Equality and existential propositions have special, bidirectional, \textit{mate} rules.
+These combined introduction/elimination rules are a reflection of adjunctions used in the semantics.
+
+\footnote{See page 225 Jacobs for the 4 rules $=$-mate replaces and the 2 rules $\exists$-mate replaces}
+\begin{prooftree}
+    \AxiomC{$\Gamma, x : \alpha | \Phi \vdash \phi[x/y]$}
+    \doubleLine
+    \RightLabel{$=$-mate}
+    \UnaryInfC{$\Gamma, x : \alpha, y : \alpha | \Phi, x =_{\alpha} y \vdash \phi$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma | \exists (x : \alpha). \phi \vdash \psi$}
+    \doubleLine
+    \RightLabel{$\exists$-mate}
+    \UnaryInfC{$\Gamma , x : \alpha | \phi \vdash \psi $}
+\end{prooftree}
+
+\subsection{Semantics of Regular Logic}
+A sequent, $\Gamma |\Phi \vdash \phi$, is \textit{valid} if 
+\[
+    \den{\Gamma \vdash \Phi} \leq_{\den{\Gamma}} \den{\Gamma \vdash \phi}  
+\]
+and a proposition, $\Gamma \vdash \phi$ is \textit{valid} if the sequent $\Gamma | \top \vdash \phi$ is valid.
+\[
+  \den{\Gamma} \leq_{\Gamma} \den{\Gamma \vdash \phi}
+\]
+
+We need a semantic interpretation of our new logical connectives.
+\begin{align*}
+     \den{\Gamma \vdash M =_{\alpha}M'} &= Eq_{\den{\Gamma}}(\den{\Gamma \vdash M : \alpha},\den{\Gamma \vdash M' : \alpha})\\
+     \den{\Gamma \vdash \top} &= \den{\Gamma}\\
+     \den{\Gamma \vdash \phi \land \psi} &= \den{\Gamma \vdash \phi} \land \den{\Gamma \vdash \psi} \\
+     \den{\Gamma \vdash \exists (x : \alpha). \phi} &= \exists_{\den{\Gamma},\den{\alpha}}(\den{\Gamma, x : \alpha \vdash \phi})\\
+\end{align*}
+
+The terms $Eq_{\den{\Gamma},\den{\alpha}}$ and $\exists_{\den{\Gamma},\den{\alpha}}$ need a bit more explaination.
+
+\subsubsection{Adjoints to Substitution Functors}
+As mentioned in section 1.10, any morphism $f : \den{\alpha} \rightarrow \den{\beta}$
+induces a substitution functor $f^* : \textrm{Functor} (Sub(\den{\beta})) (Sub(\den{\alpha}))$.
+We've already seen the weakening substitution functor $\pi^*$ induced from 
+\begin{align*}
+    & \pi : \den{\alpha} \times \den{\beta} \rightarrow \den{\alpha} \\
+    & \pi (a , b) = a\\
+\end{align*}
+Another important functor is the contraction functor, $\delta^*$, induced by
+\begin{align*}
+    & \delta : \den{\alpha} \rightarrow \den{\alpha} \times \den{\alpha}\\
+    & \delta (a) = (a , a)
+\end{align*}
+The operation $Eq$ is defined to be left adjoint to $\delta^*$.
+\[
+    Eq \dashv \delta^*
+\]
+and 
+\[
+    \exists \dashv \pi^*
+\]
+Lets expand these out to see what they mean. 
+We'll start with equality.
+
+We have $\delta_{\Gamma} : \den{\Gamma} \rightarrow \den{\Gamma }\times \den{\Gamma}$. 
+The statement $Eq \dashv \delta^*$ elaborates to the following isomorphism of hom sets 
+for any $X : \; Sub(\den{\Gamma})$ and $Y : ob \; Sub(\den{\Gamma }\times \den{\Gamma})$.
+
+\[
+  Sub(\den{\Gamma} \times \den{\Gamma})[Eq(X),Y] \cong Sub(\den{\Gamma})[X , \delta^*(Y)]  
+\]
+The definition of $Eq(X)$ for which this holds is 
+\[
+ Eq(X) = \{ (\gamma , \gamma') : \den{\Gamma} \times \den{\Gamma} \; | \; \gamma = \gamma' \land \gamma \in X\}    
+\]
+In our set based poset models, the hom set adjunction elaborates to 
+\[
+    Eq(X) \subseteq_{\den{\Gamma}\times \den{\Gamma}} Y \iff X \subseteq_{\den{\Gamma}} \delta^*(Y)
+\]
+This corresponds to the $=$-mate rule above. (renaming $X$ as $\Phi$ and $Y$ as $\phi$)
+
+\begin{prooftree}
+    \AxiomC{$\Gamma, x : \alpha | \Phi \vdash \phi[x/y]$}
+    \doubleLine
+    \RightLabel{$=$-mate}
+    \UnaryInfC{$\Gamma, x : \alpha, y : \alpha | \Phi, x =_{\alpha} y \vdash \phi$}
+\end{prooftree}
+
+Now for $\exists$. We have $\pi_{\Gamma,\alpha} : \den{\Gamma} \times \den{\alpha} \rightarrow \den{\Gamma }$.
+The statement $\exists \dashv \pi^*$ elaborates to the following isomorphism of hom sets 
+for any $X : ob \;Sub(\den{\Gamma} \times \den{\alpha})$ and $ Y : ob \;Sub(\den{\Gamma})$
+\[
+    Sub(\den{\Gamma})[\exists(X),Y] \cong Sub(\den{\Gamma} \times \den{\alpha})[X, \pi^*(Y)]
+\]
+The definition of $\exists$ for which this holds is 
+\[
+    \exists(X) = \{ \gamma  : \den{\Gamma}  \; | \; \exists (a : \alpha). (\gamma , a) \in X \} 
+\]
+In out set based poset models, the homset adjunction elaborates to 
+\[
+    \exists(X) \subseteq_{\den{\Gamma}} Y \iff X \subseteq_{\den{\Gamma }\times \den{\alpha}} \pi^*(Y)
+\]
+This corresponds to the $\exists$-mate rule above. (renaming $X$ as $\phi$ and $Y$ as $\psi$)
+\begin{prooftree}
+    \AxiomC{$\Gamma | \exists (x : \alpha). \phi \vdash \psi$}
+    \doubleLine
+    \RightLabel{$\exists$-mate}
+    \UnaryInfC{$\Gamma , x : \alpha | \phi \vdash \psi $}
+\end{prooftree}
+
+
+\subsection{Demonstration of Regular Logic}
+
+\begin{comment}
+category has to be well powered for Sub(X) to be a category and not just a poset?
+
+Assume we have a model, $F : \mathcal{CL}(\lambda_{1,\times,\rightarrow}) \rightarrow \mathcal{C}$, of the object language.
+For our simply typed object language, this is just a functor from the \textit{syntactic} category into a cartesian closed category.
+We will need $\mathcal{C}$ to also have pullbacks (pullbacks and binary products yield equalizers) in order to interpret derivations.
+Propositions in context $\Gamma$ will be interpreted as subobjects of $F(\Gamma)$. 
+
+For any term context, $\Gamma$, there is a logic in the context $\Gamma$. The structure of this logic is posetal. 
+\begin{itemize}
+    \item binary products + pullbacks $\implies$ equalizers
+    \item every equalizer is a monomorphism
+    \item pullbacks preserve monomorphisms
+    \item Every category with pullbacks of monomorphisms has a contravariant functor $Sub:C^{op}\rightarrow Pos$ to the category of posets called the subobject poset functor, making it into a hyperdoctrine.
+\end{itemize}
+
+
+
+    
+We say that the model satisfies an algebraic equation $\Gamma \vdash M =_{\alpha} M'$ (equation with no propositional context) if 
+\[
+    \den{\Gamma \vdash M : \alpha}_F = \den{\Gamma \vdash M' : \alpha}_F    
+\]
+the denotations are equal morphisms in category $\mathcal{C}$. 
+Proof derivations with a non empty propositional context can be interpreted in $\mathcal{C}$ assuming $\mathcal{C}$ has equalizers.
+\blue{$\mathcal{C}$ has equalizers if it has binary products and pullbacks. Consider the pullback of the two morphism along the diagonal.}
+Lets consider how to denote 
+\[
+\Gamma | \Phi \vdash \psi    
+\]
+Note that $\den{\Gamma} : ob \;\mathcal{C}$. We take 
+\end{comment}
+
+\end{document}
