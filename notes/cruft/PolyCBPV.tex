@@ -639,11 +639,13 @@ Beta/Eta/(parametricity schema?)
 
 \subsection{Logical Interpretation of Types}
 Let $\bm{X}$ and $\bm{\underline{X}}$ be vectors of value type and computation type variables of length $n$.
-Let $\bm{\rho}$ be a vector of value relations $\Xi ; \Gamma ; \Theta \vdash \rho_i : Rel_{\mathcal{V}}[C_i , C'_i]$ for all $i \in {1..n}$.
-Let $\bm{\underline{\rho}}$ be a vector of computation relations $\Xi ; \Gamma ; \Delta ; \Theta ; \Omega \vdash \underline{\rho_i} : Rel_{\mathcal{C}}[\underline{C_i} , \underline{C'_i}]$ for all $i \in {1..n}$.
+Let $\bm{\rho}$ be a vector of value relations $\bm{\rho} : Rel_{\mathcal{V}}[\bm{\alpha}, \bm{\alpha'}]$ 
+where $\Xi ; \Gamma ; \Theta \vdash \rho_i : Rel_{\mathcal{V}}[\alpha_i , \alpha'_i]$ for all $i \in {1..n}$.
+Let $\bm{\underline{\rho}}$ be a vector of computation relations $\bm{\underline{\rho}} : Rel_{\mathcal{C}}[\bm{\underline{\beta}}, \bm{\underline{\beta'}}]$ 
+where $\Xi ; \Gamma ; \Delta ; \Theta ; \Omega \vdash \underline{\rho_i} : Rel_{\mathcal{C}}[\underline{\beta_i} , \underline{\beta'_i}]$ for all $i \in {1..n}$.
 \\Let $A$ be a \textbf{value type} with $FTV(A) \in \{\bm{X},\bm{\underline{X}}\}$. Define:
 \[
-  A[\bm{\rho}/\bm{X},\bm{\underline{\rho}}/\bm{\underline{X}}] : Rel_{\mathcal{V}}[A[\bm{C}/\bm{X},\bm{\underline{C}}/\bm{\underline{X}}], A[\bm{C'}/\bm{X},\bm{\underline{C'}/\bm{\underline{X}}}]] 
+  A[\bm{\rho}/\bm{X},\bm{\underline{\rho}}/\bm{\underline{X}}] : Rel_{\mathcal{V}}[A[\bm{\alpha}/\bm{X},\bm{\underline{\beta}}/\bm{\underline{X}}], A[\bm{\alpha'}/\bm{X},\bm{\underline{\beta'}/\bm{\underline{X}}}]] 
 \] 
 by induction on $A$. 
 
@@ -651,11 +653,12 @@ by induction on $A$.
 \begin{align*}
     X_i[\bm{\rho},\bm{\underline{\rho}}] &= \rho_i\\
     \textrm{Unit} [\bm{\rho},\bm{\underline{\rho}}]&= (x : Unit , y : Unit). x =_{Unit} y\\
-    \textrm{Case} A [\bm{\rho},\bm{\underline{\rho}}]&= (x : \textrm{Case } (A[\bm{C}/\bm{X},\bm{\underline{C}}/\bm{\underline{X}}]),
-    y : \textrm{Case } (A[\bm{C'}/\bm{X},\bm{\underline{C'}}/\bm{\underline{X}}])). 
+    \textrm{Case} A [\bm{\rho},\bm{\underline{\rho}}]&= (x : (\textrm{Case } A)[\bm{\alpha}/\bm{X},\bm{\underline{\beta}}/\bm{\underline{X}}],
+    y : (\textrm{Case } A)[\bm{\alpha'}/\bm{X},\bm{\underline{\beta'}}/\bm{\underline{X}}]). 
     \\
     & \blue{\textrm{think exists?}}\\
-    \textrm{OSum} [\bm{\rho},\bm{\underline{\rho}}]&= \blue{\textrm{think exists?}}\\
+    \textrm{OSum} [\bm{\rho},\bm{\underline{\rho}}]&= (\injj{\sigma_x}{v_x} : \textrm{OSum} , \injj{\sigma_y}{v_y} : \textrm{OSum}). \\
+    & \exists (R : Rel_{\mathcal{V}}[\blue{\sigma_x},\blue{\sigma_y}]).\\
     A \times A' [\bm{\rho},\bm{\underline{\rho}}]&= ((x,y) : A\times A'[\bm{C}/\bm{X},\bm{\underline{C}}/\bm{\underline{X}}], (x',y') :  A \times A'[\bm{C'}/\bm{X},\bm{\underline{C'}/\bm{\underline{X}}}]).\\
     & A[\bm{\rho},\bm{\underline{\rho}}](x,x')\land A'[\bm{\rho},\bm{\underline{\rho}}](y,y') \\
     A * A' [\bm{\rho},\bm{\underline{\rho}}]&= \textrm{similar to product?}\\
@@ -688,23 +691,79 @@ Try to prove
     & \textrm{newcase}_A \sigma ; x \leftarrow (!f)[A]\sigma y ; (!k') x  
 \end{align*}   
 
+\section{V2 Simplification}
+Removing Contexts via Universes and $\Omega$.
+\subsection{Universes a la Coquand}
+To remove the type context, $\Xi$, we can add two value types $Val,Comp$.
+There is a new judgment form 
+\[
+    \Gamma \vdash A \;small    
+\]
+where $A$ can be a value or computation type. $Val$ and $Comp$ are not $small$, but the other types are.
+We have $\Gamma \vdash Unit \; small$ and 
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash A \; small$}
+    \AxiomC{$\Gamma \vdash A' \; small$}
+    \BinaryInfC{$\Gamma \vdash A \times A' \; small$}
+\end{prooftree}
+
+but \textbf{NOT} $\Gamma \vdash Val \; small$ or $\Gamma \vdash Comp \; small$.
+
+Any $small$ value type has a \textit{code} in $Val$. 
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash A \;small$}
+    \UnaryInfC{$\Gamma \vdash \lceil ddd \rceil : Val$}
+\end{prooftree}
+
+And any \textit{code} in $Val$ is $small$
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash  A : Val$}
+    \UnaryInfC{$\Gamma \vdash \lfloor A \rfloor \; small$}
+\end{prooftree}
+
+These \textit{quoting} ($\lceil \_ \rceil$) and \textit{unquoting} ($\lfloor \_ \rfloor$) operations form an isomorphism.
+(between what? Val and ??)
+That is to say, we have the two equations
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash A \; small$}
+    \UnaryInfC{$\Gamma \vdash A = \lfloor \lceil A \rceil \rfloor$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash A : Val$}
+    \UnaryInfC{$\Gamma \vdash A = \lceil \lfloor A \rfloor \rceil$}
+\end{prooftree}
+
+To have an impredicative universe, we take the rule
+\begin{prooftree}\
+    \AxiomC{$\Gamma , \lceil X \rceil : Val \vdash A \; small $}
+    \UnaryInfC{$\Gamma \vdash \forall X . A \; small$}
+\end{prooftree}
+
+\blue{Q: By removing the type context and using universes, 
+types (or codes in $Val$) are now impacted by bunched connectives? (see bunched polymorphism paper)
+And what about having $\phi : \; Prop$ also in $\Gamma$? }
+
+ 
+
 \section{TODO/Questions}
 \begin{itemize}
-    \item Do we add the type $\forall \underline{X}. \underline{B}$ to the object lang and then encode $F A$ ?
+    \item Do we add the type $\forall \underline{X}. \underline{B}$ to the object lang (\blue{yes}) and then encode $F A$ ?
     \item Finalize the judgment forms, what contexts do they actually need to be displayed over? Do we need to split the relation and proposition contexts into distinct value/computation contexts?
-    \item Check that the classification of logical connectives makes sense (value prop vs comp prop)
-    \item Does the body of a value relation need to be value propositions? (same question for computation relation)
+    \item Check that the classification of logical connectives makes sense (value prop vs comp prop) (\blue{yes})
+    \item \blue{yes}Does the body of a value relation need to be value propositions? (same question for computation relation)
     \item What is the introduction rule for computation relations (definable computation relations)?
     \item Denotation of value/computation propositions
     \item Understand the operation $\oslash$ and its laws
     \item Denotation of value/computation derivations 
     \item Define the operation $\oslash^*$ and find its laws
     \item Finish the known relational interpretation of types
-    \item Attempt the relational interpretation of our new types
+    \item Attempt the relational interpretation of our new types \blue{cant internalize some of the interpretations, ex Case}
     \item Write up the beta and eta deduction rules 
     \item Check the correctness of the relational interpretation of types. (By proving Reynold's Identity Extension Lemma?)
     \item PE Logic denotes the collection of computation relations, $Rel_{\mathcal{C}}[\underline{A},\underline{B}]$, by $Sub_{\mathcal{C}}(\underline{A} \times \underline{B})$. However,
-          they never define $\underline{A} \times \underline{B}$ or state that it is a derivable type.
+          they never define $\underline{A} \times \underline{B}$ or state that it is a derivable type. \blue{we have cartesian product of computation types}
 \end{itemize}
 
 \end{document}

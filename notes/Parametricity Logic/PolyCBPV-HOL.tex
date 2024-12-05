@@ -504,7 +504,6 @@ Any requirement of $P$?
 %   \UnaryInfC{$\Gamma_G ; \Gamma_L(y : X) \vdash \phi[y/x] \; \textrm{Prop}_V$}
 %\end{prooftree}
 
-\red{cruft below}
 
 \subsubsection{Local Value Types}
 
@@ -515,7 +514,6 @@ Any requirement of $P$?
 \end{prooftree}
 
 
-Where $\Gamma \vdash A \; VType_0$
 \begin{prooftree}
     \AxiomC{$\Gamma_G ; \Gamma_L  \vdash \sigma : \textrm{Case} A$}
     \AxiomC{$\Gamma_G ; \Gamma_L  \vdash V : A$}
@@ -526,7 +524,7 @@ Where $\Gamma \vdash A \; VType_0$
 \begin{prooftree}
     \AxiomC{$\Gamma_G ; \Gamma_L  \vdash V : \textrm{OSum}$}
     \AxiomC{$\Gamma_G ; \Gamma_L  \vdash \sigma : \textrm{Case }A$}
-    \AxiomC{$\Gamma_G ; \Gamma_L  , x : A | \Delta \vdash M : \underline{B}$}
+    \AxiomC{$\Gamma_G ; \Gamma_L  ( x : A) | \Delta \vdash M : \underline{B}$}
     \AxiomC{$\Gamma_G ; \Gamma_L  | \Delta \vdash N : \underline{B}$}
     \RightLabel{OSum-E}
     \QuaternaryInfC{$\Gamma_G ; \Gamma_L |\Delta \vdash \textrm{match } V \textrm{ with } \sigma \{ \textrm{ inj }x. M \| N\} : \underline{B}$}
@@ -558,16 +556,16 @@ Where $\Gamma \vdash A \; VType_0$
     \BinaryInfC{$\Gamma_G ; \Gamma_{L_1} * \Gamma_{L_2} \vdash (V_1 * V_2) : A_1 * A_2$}
 \end{prooftree}
 
-check
+
 \begin{prooftree}
     \AxiomC{$\Gamma_G ; \Gamma_L \vdash V : A * A'$}
-    \AxiomC{$\Gamma_G ; \Gamma_L , x : A * y : A' | \Delta \vdash M : \underline{B}$}
+    \AxiomC{$\Gamma_G ; \Gamma_L ( x : A * y : A') | \Delta \vdash M : \underline{B}$}
     \RightLabel{*-E}
     \BinaryInfC{$\Gamma_G ; \Gamma_L | \Delta \vdash$ let $(x*y) = V; M : \underline{B}$}
 \end{prooftree}
 
 \begin{prooftree}
-    \AxiomC{$\Gamma_G ; \Gamma_L, x : A \vdash M : A'$}
+    \AxiomC{$\Gamma_G ; \Gamma_L(x : A) \vdash M : A'$}
     \RightLabel{$\rightarrow$-I}
     \UnaryInfC{$\Gamma_G ; \Gamma_L \vdash (\lambda (x : A) . M) : A \rightarrow A' $}
 \end{prooftree}
@@ -602,7 +600,7 @@ check
 \subsubsection{Computation Types}
 
 \begin{prooftree}
-    \AxiomC{$\Gamma_G ; \Gamma_L , x : A | \Delta \vdash M : \underline{B}$}
+    \AxiomC{$\Gamma_G ; \Gamma_L (x : A) | \Delta \vdash M : \underline{B}$}
     \RightLabel{$\rightarrow_c$-I}
     \UnaryInfC{$\Gamma_G ; \Gamma_L | \Delta \vdash  \lambda x : A . M : A \rightarrow \underline{B}$}
 \end{prooftree}
@@ -613,8 +611,7 @@ check
     \RightLabel{$\rightarrow_c$-E}
     \BinaryInfC{$\Gamma_G ; \Gamma_L | \Delta \vdash M N : \underline{B}$}
 \end{prooftree}
-
-Again, some concern on how this interacts with universes
+check bunch
 \begin{prooftree}
     \AxiomC{$\Gamma_G ; \Gamma_L * x : A | \Delta \vdash M : \underline{B}$}
     \RightLabel{$\sep$-I}
@@ -627,7 +624,8 @@ Again, some concern on how this interacts with universes
     \RightLabel{$\sep$-E}
     \BinaryInfC{$\Gamma_G ; \Gamma_L * \Gamma_L' | \Delta \vdash M @ N : \underline{B}$}
 \end{prooftree}
-All of the following $\forall$ rules supported by one formation rule?
+
+\begin{comment}
 \begin{prooftree}
     \AxiomC{$\Gamma_G ; \Gamma_L \vdash M : \underline{B}$}
     \RightLabel{}
@@ -674,6 +672,8 @@ All of the following $\forall$ rules supported by one formation rule?
     \RightLabel{}
     \BinaryInfC{$\Xi ; \Gamma \vdash_c$ let $(x,y) = V; M : \underline{B}$}
 \end{prooftree}
+\end{comment}
+
 
 \begin{comment}
     
