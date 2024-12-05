@@ -302,9 +302,14 @@ v.s. individual rules for each global type
 ...
 \subsection{Predicates \& Relations}
 \blue{Try to cut out relations by taking them to be special predicates $P (A \times A')$. 
-That seems to complicate the definition of relational substitution.}
+That seems to complicate the definition of relational substitution when performing 
+two different type substitutions on the "input types" ($x : A[\overrightarrow{C}/\overrightarrow{X}], y : B[\overrightarrow{C'}/\overrightarrow{Y}]$)}
 
-Are the following sufficient? What is the justification for the rules in figure 5 of the PE logic paper?
+\blue{Are the following sufficient? What is the justification for the rules in figure 5 of the PE logic paper?}
+
+\blue{Why introduce new judgement forms when we can directly declare membership of the appropriate universe type? 
+$(x : A).\phi \;\textrm{ Pred}_V \; A$ vs $(x : A).\phi : P_V A$. 
+In the Plotkin Abadi logic, this corresponds to the only formation rule for relations}
 
 \blue{Check the usage of the bunch/hole syntax}
 \begin{prooftree}
@@ -329,6 +334,8 @@ Are the following sufficient? What is the justification for the rules in figure 
     \AxiomC{$\Gamma_G ; \Gamma_L | (p : \underline{B} \;\underline{\times}\; \underline{B'}) \vdash \underline{\phi} \textrm{ Prop}_C$}
     \UnaryInfC{$\Gamma_G ; \Gamma_L \vdash (x : \underline{B}, y : \underline{B'}) . \underline{\phi}  \textrm{ Rel}_C \; \underline{B} \; \underline{B'}$}
 \end{prooftree}
+
+Commented out formation rules akin to Figure 5 of PE logic paper. 
 \begin{comment}
 
 \subsubsection{Value Predicates}
@@ -625,6 +632,7 @@ check bunch
     \BinaryInfC{$\Gamma_G ; \Gamma_L * \Gamma_L' | \Delta \vdash M @ N : \underline{B}$}
 \end{prooftree}
 
+Commented rules to be converted.
 \begin{comment}
 \begin{prooftree}
     \AxiomC{$\Gamma_G ; \Gamma_L \vdash M : \underline{B}$}
