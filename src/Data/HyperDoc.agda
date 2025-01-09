@@ -110,25 +110,30 @@ module src.Data.HyperDoc where
     propHA = record{ 
             top = ⊤
             ; bot = ⊥
-            ; and = λ p q  → p ⊓ q 
-            ; or = λ p q → p ⊔ q 
-            ; and-assoc = λ p q r → ⊓-assoc p q r
-            ; and-comm = λ p q → ⊓-comm p q
-            ; and-idem = λ p →  ⊓-idem p
-            ; or-assoc = λ p q r → ⊔-assoc p q r
-            ; or-comm = λ p q → ⊔-comm p q
-            ; or-idem = λ p → ⊔-idem p
+            ; and = _⊓_ 
+            ; or = _⊔_ 
+            ; and-assoc = ⊓-assoc 
+            ; and-comm = ⊓-comm
+            ; and-idem = ⊓-idem 
+            ; or-assoc = ⊔-assoc 
+            ; or-comm = ⊔-comm
+            ; or-idem = ⊔-idem 
             ; abs₁ = λ p q → ⇒∶ fst ⇐∶ λ m → m , ∣ _⊎_.inr m ∣₁
             ; abs₂ = λ p q → ⇒∶ (λ m → ∣ _⊎_.inr m ∣₁) ⇐∶ λ m → prec (p .snd) (⊎rec fst λ x → x) m
-            ; and-unit = λ p → ⊓-identityʳ p
-            ; or-unit = λ p → ⊔-identityʳ p
-            ; imp = λ p q → p ⇒ q
+            ; and-unit = ⊓-identityʳ
+            ; or-unit = ⊔-identityʳ 
+            ; imp = _⇒_
             ; l1 = λ p → ⇒∶ (λ _ → tt*) ⇐∶ λ _ x → x
             ; l2 = λ p q → ⇒∶ (λ (m , f) → m , (f m)) ⇐∶ λ (m , n) → m , (λ _ → n)
             ; l3 = λ p q → ⇒∶ fst ⇐∶ λ m → m , (λ _ → m)
-            ; l4 = λ p q r → ⇒-⊓-distrib p q r} 
+            ; l4 =  ⇒-⊓-distrib } 
 
-    -- Any powerset is an HA
+    -- Any powerset is an Heyting Algebra
+    -- pointwise because hProp is a Heyting Algebra
+    -- power set defined to be 𝓟(X) := X → hProp
+    -- The power object for any object X in a topos 
+    -- is the exponential object Ω^X into the subobject classifier
+    
     PowerHA : {X : Set} → HA (ℙ X)
     PowerHA = record{ 
             top = λ x → ⊤
@@ -217,7 +222,7 @@ module src.Data.HyperDoc where
             Θ : (X : ob set) → Iso (FO .F .F-ob X .fst .fst) (set [ X , H ])
 
 
-    open import Cubical.Data.Bool hiding (and-assoc ; and-comm ; and-idem ; or-assoc ; or-comm ; or-idem)
+    open import Cubical.Data.Bool hiding (and-assoc ; and-comm ; and-idem ; or-assoc ; or-comm ; or-idem ; _≤_)
 
     poset : Set 
     poset = Σ[ P ∈  Preorder _ _ ] isUnivalentP P
@@ -225,6 +230,70 @@ module src.Data.HyperDoc where
     posetPower : (X : ob set) → poset 
     posetPower X = ((ℙ (X .fst)) , preorderstr _⊆_ (ispreorder ⊆-isProp ⊆-refl {!   !})) , record { univ = λ x y → record { equiv-proof = {! ⊆-extensionalityEquiv  !} } }
     -- {! ⊆-extensionalityEquiv  !}
+
+    -- Another way to construct a hyperdoctrine
+    -- given an internal heyting algebra
+    module _ (H : ob set) (HisHA : HA (H .fst)) where 
+
+        Hposet : poset 
+        Hposet = haPoset H HisHA
+
+        Horder : H .fst → H .fst → Type 
+        Horder = Hposet .fst .snd ._≤_ 
+        
+        homPoset : (X : ob set) → poset 
+        homPoset X = pre , record { univ = {!   !} } where 
+
+            hom : Set
+            hom = X .fst → H .fst
+
+            -- pointwise order
+            homOrder : hom → hom → Set 
+            homOrder f g = (x : X .fst) → Horder (f x) (g x)
+
+            isPre : IsPreorder homOrder 
+            isPre = ispreorder 
+                (λ f g → isPropΠ λ x → Hposet .fst .snd .is-prop-valued (f x) (g x))
+                (λ f x → Hposet .fst .snd .is-refl (f x)) 
+                λ f g h f≤g g≤h x → Hposet .fst .snd .is-trans (f x) (g x) (h x) (f≤g  x) (g≤h x)
+
+            prestr : PreorderStr _ hom 
+            prestr = preorderstr homOrder isPre
+
+            pre : Preorder _ _ 
+            pre = hom , prestr
+
+        open import Cubical.Categories.Instances.Preorders.Monotone 
+        hyp : FOHyperDoc 
+        hyp = 
+            record { F = 
+                record { F-ob = homPoset ;
+                    -- precomposition?
+                     F-hom = λ f → record { f = λ xh → λ y → xh ( f y) ; isMon = λ x≤y y → x≤y (f y) } ; 
+                     -- monotone functions are equal when the underlying functions are equal
+                     F-id = eqMon _ _ refl   ; 
+                     F-seq = λ f g → eqMon _ _ refl } ; 
+                isHA = λ X → record
+                                { top = λ f → HisHA .top; 
+                                bot = λ f → HisHA .bot; 
+                                and = λ f g x → HisHA .and (f x) (g x); 
+                                or = λ f g x → HisHA .or (f x) (g x); 
+                                and-assoc = {!   !}; 
+                                and-comm = {!   !}; 
+                                and-idem = λ f → funExt λ x → HisHA .and-idem (f x); 
+                                or-assoc = {!   !}; 
+                                or-comm = {!   !}; 
+                                or-idem = {!   !}; 
+                                abs₁ = {!   !}; 
+                                abs₂ = {!   !}; 
+                                and-unit = {!   !}; 
+                                or-unit = {!   !}; 
+                                imp = {!   !}; 
+                                l1 = {!   !}; 
+                                l2 = {!   !}; 
+                                l3 = {!   !}; 
+                                l4 = {!   !}} }
+    
 
     open BIAlg
     open IsPreorder 
@@ -258,7 +327,7 @@ module src.Data.HyperDoc where
         P = (X .fst → 𝓑 .fst) , preorderstr ≤' ispre
 
         uP : isUnivalentP P 
-        uP = record { univ = λ x y → record { equiv-proof = λ y₁ → {!   !} } }
+        uP = record { univ = λ x y → record { equiv-proof = λ y₁ → {!   !} , {!   !} } }
         
         --((X .fst → 𝓑 .fst) , preorderstr (λ f g → (x : X .fst) → {! f x  !}) {!   !}) , {!   !}
     F' 𝓑 bi .F-hom = {!   !}
@@ -569,4 +638,4 @@ module src.Data.HyperDoc where
 
     𝓑 : ob 𝓒 
     𝓑 = {!   !}
-  -}
+  -} 
