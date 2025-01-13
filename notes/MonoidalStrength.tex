@@ -179,36 +179,27 @@ Then the element at the future world is
 \]
 
 \subsection{Naturality}
-Given $f : FS[x , x']$ and $g: FS[y , y']$.
+Given $f : FS[x , x']$, $g: FS[y , y']$, the following maps in $Set$ should commute.
 \begin{figure}[!ht]
     \centering
 \begin{tikzcd}
     A(x)\times T(B)(y) \arrow[rr, "A(f) \times T(B)(g)"] \arrow[dd, "{Str_{A , B}(x , y)}"] &  & A(x')\times T(B)(y') \arrow[dd, "{Str_{A,B}(x',y')}"] \\
                                                                                             &  &                                                       \\
-    T(A \otimes B)(x \otimes y) \arrow[rr, "T(A \otimes B)(f \otimes g)"]                   &  & T(A \otimes B)(x' \otimes y')                        
+    T(A \otimes B)(x \uplus y) \arrow[rr, "T(A \otimes B)(f \uplus g)"]                   &  & T(A \otimes B)(x' \uplus y')                        
     \end{tikzcd}
 \end{figure}
 
-\subsubsection{RHS}
-Starting in the upper left at $(a,tb)$, we get $(a' = A(f)(a),tb')$ via the top map where 
+For $a : A(x),\; tb : T(B)(y),\; z : ob\;FS ,\; h' : FS [ x' \uplus y' , z]$, the naturality condition is:
 \[
-    tb' = T(B)(g)(tb) = \lambda z. \lambda h: FS[y' , z]. tb(z)(g ; h)
+ Str(a,tb)(z)(f \uplus g ; h') = Str(a',tb')(z)(h')   
 \]
-Then, computing the strength map, we have for $z$, $h : FS[ x' \otimes y' , z]$ an $h_{y'} : FS [ y' , z_{y'}]$ with
-\[
-    tb'(z_{y'})(h_{y'}) = (\lambda z. \lambda h: FS[y' , z]. tb(z)(g ; h)) (z_{y'})(h_{y'}) = tb(z_{y'})(g ; h_{y'}) = (v , j : FS[z_y , v], b : B(v))
-\]
-resulting in 
-\[
-  (z_{x'} \uplus v \uplus z_{m'}, id \uplus j \uplus id , ^{inc}[id, A(f ; h_{x'})(a), B(inl)(b)] )
-\]
-\subsubsection{LHS}
-Starting in the upper left at $(a,tb)$, we also take in $z$ and $h : FS [x' \otimes y' , z]$. 
-The LHS calculates the strength given $m = (f \otimes g) ; h$. Note that we have:
-\[
-    tb(z_y)(m_y) = tb(z_{y'})(g ; h_{y'}) = (v , j : FS[z_y , v], b : B(v))
-\]
-which is the same future data as the RHS.
+where $a' = A(f)(a)$ and $tb' = T(B)(g)(tb) = \lambda y''. \lambda f' : FS [ y' , y'']. tb(y'')(f ; f') = tb(\_)(f ; \_)$.
+\paragraph*{Issue}
+Note that we relied on the fact that we could split the given morphism in the strength map to construct a future world 
+$zy = \textrm{Image}(inr ; x \uplus y \rightarrow z)$ of $y$.
+However, it is not necessarily the case that $\textrm{Image}(inr ; f \uplus g ; h') = \textrm{Image}(inr ; h')$.
+Thus, the application of $tb$ to two potentially different finite sets has no guarantee that the future world $v$ of $tb$ are comparable.
+This implies that the future worlds $w$ of $z$ may not be comparable, which inhibits our ability to compare the results of the strength maps.  
 
 \subsection{Laws}
 \subsubsection{Strength with I is Irrelevant}

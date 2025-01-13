@@ -57,6 +57,163 @@ module src.Data.ConcreteFin where
             idr = StrictMonCategory.sms opmon .StrictMonStr.idr
             𝓥unit = I⨂ opmon
 
+
+            open import Cubical.Data.Unit
+            
+            open import src.Data.Direct2 
+            open Ran C isGroupoidFinSet hiding (Inc* ; Inc)
+            open End renaming (fun to end)
+            open DayUP
+            open Iso renaming (fun to ifun)
+            open import Cubical.Categories.Monad.Base
+            open IsMonad (M .snd) renaming (η to ret)
+
+            strength : (x y z : ob FS)(Px : P .F-ob x .fst)(TQy : T .F-ob Q .F-ob y .fst)(h : FS [ ⊗C .F-ob (x , y) , z ]) → F .F-ob (P ⨂ᴰ Q) .F-ob z .fst 
+            strength x y z Px TQy h = w , (z→w , e') where
+                open Partition
+                module s = Split h
+
+                e = TQy .end s.zy s.hy 
+                v = e .fst 
+                g' = e .snd .fst 
+                q' = e .snd .snd 
+
+                w : ob FS 
+                w = ⊗C .F-ob (s.zx , ⊗C .F-ob (v , s.zm)) 
+                
+                z→w = s.split ⋆⟨ FS  ⟩ (⊎Monotone↪ (id↪ _) (⊎Monotone↪  g' (id↪ _)))
+
+                e' : (P ⨂ᴰ Q) .F-ob w .fst 
+                e' = inc ((s.zx , ⊗C .F-ob (v , s.zm)) , ((FS .id , P .F-hom s.hx Px) , Q .F-hom Inl q'))
+
+
+            module Naturality 
+                (x x' y y' z : ob FS)
+                (Px : P .F-ob x .fst)
+                (TQy : T .F-ob Q .F-ob y .fst)
+                (f : FS [ x , x' ] )
+                (g : FS [ y , y' ])
+                (h' : FS [ ⊗C .F-ob (x' , y') , z ]) where 
+
+                h = (⊗C .F-hom (f , g) ⋆⟨ FS ⟩ h') 
+
+                --top right
+                TR = strength x' y' z (P .F-hom f Px) (T .F-ob Q .F-hom g TQy) h'
+                --left bottom
+                LB = strength x y z Px TQy h
+
+                -- both paths split on different morphisms, one on h, the other on h'
+                -- It is not generally the case that zy = Image (Inr ;g ; h') ≃ Image (Inr ; h') = zy'
+                -- or that these splits create the same partition of z
+                -- because of this, we don't know how to relate the future elements of TQy
+                -- e' = TQy(zy')(Inr ; h')
+                -- and 
+                -- e = TQy(zy)(Inr ; g ; h')
+                -- we do know that zy ⊆ zy' since Image (Inr ; g ; h') ⊆ Image (Inr ; h')
+                -- we also know zx ⊆ zx' and zm ⊇ zm'
+                -- and that there is an isomorphism on z that converts between these partitions.
+                -- (but it is not a map of partitions) 
+                --
+
+
+                open Partition
+                module sTR = Split h'
+                module sLB = Split h
+                _ : TQy ≡ record { fun = λ y' y→y' → TQy .end y' y→y' } 
+                _ = refl
+
+                _ : (T .F-ob Q .F-hom g TQy) ≡ record { fun = λ y'' y'→y'' → TQy .end y'' (g ⋆⟨ FS ⟩ y'→y'') }
+                _ = refl
+
+                _ : T .F-ob Q .F-ob y .fst
+                _ = TQy
+
+                -- consider wheather the worlds w are the same
+                -- are the Splits the same?
+                -- are the future elements e the same?
+                eTR : F .F-ob Q .F-ob sTR.zy .fst
+                eTR = (T .F-ob Q .F-hom g TQy) .end sTR.zy sTR.hy
+
+                eLB : F .F-ob Q .F-ob sLB.zy .fst
+                eLB = TQy .end sLB.zy sLB.hy 
+
+                _ = {! F .F-ob Q .F-hom  !}
+
+
+                _ : eTR ≡ TQy .end sTR.zy (g ⋆⟨ FS ⟩ sTR.hy)
+                _ = refl
+
+                vTR = eTR .fst
+                vLB = eLB .fst
+
+                wTR = ⊗C .F-ob (sTR.zx , ⊗C .F-ob (vTR , sTR.zm)) 
+
+                wLB = ⊗C .F-ob (sLB.zx , ⊗C .F-ob (vLB , sLB.zm)) 
+
+
+
+{-}
+            {-# TERMINATING #-} -- wierd issue
+            ⊗str' : {P Q : ob 𝓥}  → 𝓥× [ P ⨂Ext T .F-ob Q , T .F-ob (P ⨂ᴰ Q) ∘F (⊗C ^opF) ] 
+            ⊗str' {P}{Q}.N-ob (x , y) (Px , TQy) .end z x⊗y→z = goal where 
+                open Partition
+                module s = Split x⊗y→z
+
+                e = TQy .end s.zy s.hy
+                v = e .fst 
+                g' = e .snd .fst 
+                q' = e .snd .snd
+
+                w = ⊗C .F-ob (s.zx , ⊗C .F-ob (v , s.zm))
+                z→w = s.split ⋆⟨ FS  ⟩ (⊎Monotone↪ (id↪ _) (⊎Monotone↪  g' (id↪ _)))
+                
+                goal : F .F-ob (P ⨂ᴰ Q) .F-ob z .fst
+                goal = w , ( z→w ,  inc ((s.zx , ⊗C .F-ob (v , s.zm)) , ((FS .id ,  P .F-hom s.hx Px ) , Q .F-hom Inl q')) )
+
+            ⊗str' .N-hom {(x , y)}{(x' , y')} (x→y , x'→y') =
+                funExt λ {(Px , TQy) → 
+                    end≡ _ (λ z x'⊗y'→z → 
+                        ΣPathP ({!  refl !} , 
+                            ΣPathP ( {!   !}   , 
+                                {!   !}   )  )  )}    
+
+     }       
+            ⊗str : {P Q : ob 𝓥} → 𝓥 [ P ⨂ᴰ T .F-ob Q , T .F-ob (P ⨂ᴰ Q) ] 
+            ⊗str {P} {Q} = ⨂UP .inv ⊗str' 
+
+            ⨂map' : {X Y W Z : ob 𝓥} → 𝓥 [ X , W ] → 𝓥 [ Y , Z ] → 𝓥× [ X ⨂Ext Y , (W  ⨂ᴰ Z) ∘F (⊗C ^opF) ]
+            ⨂map' {X}{Y}{W}{Z} n m .N-ob (x , y) (Xx , Yy) = inc (((x , y)) , (C .id , n .N-ob x Xx) , m .N-ob y Yy)
+            ⨂map' {X}{Y}{W}{Z} n m .N-hom (f , g) = funExt λ x → {!   !}
+
+            ⨂map : {A B C D : ob 𝓥} → 𝓥 [ A , C ] → 𝓥 [ B , D ] → 𝓥 [ A ⨂ᴰ B , C  ⨂ᴰ D ]
+            ⨂map {A}{B}{C}{D} n m = ⨂UP .inv (⨂map' n m) 
+            -- Day-Functor opmon .F-hom ((𝓥 .id) , (ret {B})) 
+
+            open UniversalProperty
+            strUnit : {A B : ob 𝓥} → (⨂map (𝓥 .id) (ret .N-ob B)) ⋆⟨ 𝓥 ⟩ ⊗str {A} {B} ≡ ret .N-ob (A ⨂ᴰ B)
+            strUnit {A} {B} = 
+                ⨂≡map (makeNatTransPath 
+                    (funExt λ{(x , y) → funExt λ{(Ax , By)→ 
+                        end≡ _ λ z x⊗y→z  → ΣPathP ({!   !} , (ΣPathP ({!   !} , {!   !})))}}))
+-}
+
+
+
+
+
+
+
+{- cruft
+
+            ×unit : ob 𝓥 
+            ×unit = Constant _ _ (Unit* , isSetUnit*)
+
+            example : CatIso 𝓒 (fun ×unit R) R 
+            example = (natTrans (λ x tt→Rx → tt→Rx tt*) λ _ → refl) , 
+                     isiso (natTrans (λ{x Rx tt* → Rx}) λ _ → refl) 
+                     (makeNatTransPath refl) (makeNatTransPath refl) 
+
+
             private 
                 open import Cubical.Data.Unit
                 testF : (A : ob 𝓥) → 𝓒 [ Constant _ _ (Unit* , isSetUnit*) , F .F-ob A ]
@@ -78,26 +235,6 @@ module src.Data.ConcreteFin where
                                                                 -- but y→Ø should never be inhabited!
                                                                 -- except when y ≡ Ø ?
                         (isiso (natTrans (λ x Rx y Ø→y → R .F-hom {! ⊗C .F-hom ((C .id) , Ø→y) !} Rx) {! Ø→y  !}) {!   !} {!   !})
-
-            open import Cubical.Data.Unit
-            ×unit : ob 𝓥 
-            ×unit = Constant _ _ (Unit* , isSetUnit*)
-
-            example : CatIso 𝓒 (fun ×unit R) R 
-            example = (natTrans (λ x tt→Rx → tt→Rx tt*) λ _ → refl) , 
-                     isiso (natTrans (λ{x Rx tt* → Rx}) λ _ → refl) 
-                     (makeNatTransPath refl) (makeNatTransPath refl) 
-
-
-            
-            open import src.Data.Direct2 
-            open Ran C isGroupoidFinSet hiding (Inc* ; Inc)
-            open End renaming (fun to end)
-            open DayUP
-            open Iso renaming (fun to ifun)
-            open import Cubical.Categories.Monad.Base
-            open IsMonad (M .snd) renaming (η to ret)
-
             -- FS = C ^op
 
             module Projection where 
@@ -383,4 +520,5 @@ module src.Data.ConcreteFin where
                                                 -}
                                                 λ{ ((y , z) , (x←y⊗z , Py) , Qz) → {!  i !}}))
 
--}         
+-}     
+-}     

@@ -117,9 +117,31 @@ module src.Data.FinSet where
                             isFinSet≡ Y (f .fst x) y))) 
                             (isPropIsInImage (f .fst) y)
 
-                in⊎Out : FS [ Y , ⊕ .F-ob (Img , ¬Img ) ]
-                in⊎Out = (λ y → decRec (λ yin → inl (y , yin)) (λ yout → inr (y , yout)) (decIsInImage y)) , {!   !}
+                YIso : Iso (Y .fst) (⊕ .F-ob (Img , ¬Img ) .fst)
+                YIso = iso 
+                        ((λ y → decRec (λ yin → inl (y , yin)) (λ yout → inr (y , yout)) (decIsInImage y))) 
+                        (λ {(inl x) → x .fst
+                          ; (inr x) → x .fst}) 
+                        (λ{ (inl x) →  {! !}
+                          ; (inr x) → {!   !}}) 
+                        λ{ y → {! y  !}} 
 
+                in⊎Out : FS [ Y , ⊕ .F-ob (Img , ¬Img ) ]
+                in⊎Out = (λ y → decRec (λ yin → inl (y , yin)) (λ yout → inr (y , yout)) (decIsInImage y)) , isEquiv→isEmbedding (isoToEquiv YIso .snd)
+
+            module SimpleSplit {X Y Z : ob FS}(h : FS [ ⊕ .F-ob (X , Y) , Z ]) where 
+
+                f : FS [ X , Z ]
+                f = (Inl {X} {Y} ⋆⟨ FS ⟩ h)
+
+                zx : ob FS 
+                zx = Img {X} {Z} f
+
+                hx : FS [ X , zx ]
+                hx = f|Img {X}{Z} f
+
+                Zsplit : ob FS 
+                Zsplit = ⊕ .F-ob ({!   !} , {!   !})    
 
             module Split {X Y Z : ob FS}(h : FS [ ⊕ .F-ob (X , Y) , Z ]) where 
 

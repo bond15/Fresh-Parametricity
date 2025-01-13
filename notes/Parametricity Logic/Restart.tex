@@ -1,0 +1,581 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{simplebnf}
+\usepackage{bussproofs}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{stmaryrd}
+\usepackage{comment}
+\usepackage{bm}
+
+\usepackage[english]{babel}
+\usepackage{amsthm}
+
+\newtheorem{thm}{Theorem}
+\newtheorem{deff}{Definition}
+
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{cor}[thm]{Corollary}
+\newtheorem{rem}[thm]{Remark}
+\newtheorem*{remark}{Remark}
+\newtheorem*{question}{\red{Question}}
+\newtheorem{definition}[deff]{Definition}
+\newtheorem*{construction}{Construction}
+\newtheorem{conj}[thm]{Conjecture}
+
+\begin{document}
+\include{commands}
+\section{Syntax}
+\subsection{Judgements}
+
+\begin{align*}
+    &\Gamma \textrm{ Vctx} \\ 
+    &\Theta \textrm{ Rctx}\\
+   % &A \textrm{ Univ} \\
+    &\Gamma \vdash A \textrm{ VType}\\
+    &\Gamma \vdash \underline{B} \textrm{ CType} \\
+    &\Gamma \vdash R \textrm{ RType}\\
+    &\Gamma \vdash x : A \\
+    &\Gamma | \Delta \vdash x : \underline{B} \\
+    &\Gamma ; \Theta \vdash \rho : R\\
+    &\Gamma ; \Theta \vdash \phi : \bf{prop}\\
+    &\Gamma ; \Theta |\Phi \vdash \psi
+\end{align*}
+\begin{remark}
+    No stoup needed for the CType judgement
+\end{remark}
+
+\begin{remark}
+    $Univ$ is our judgement for universe types. 
+\end{remark}
+
+\begin{remark}
+    Following PE logic, drop the stoup from prop, relation, and derivation judgements.
+\end{remark}
+\subsection{Contexts}
+\begin{prooftree}
+    \AxiomC{}
+    \UnaryInfC{$\cdot $ Vctx}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma$ Vctx}
+    \AxiomC{$\Gamma \vdash A$ VType}
+    \BinaryInfC{$\Gamma, x : A$ Vctx}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma$ Vctx}
+    %\AxiomC{$A$ Univ}
+    \AxiomC{$A$ VType}
+    \BinaryInfC{$\Gamma, A$ Vctx}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma$ Vctx}
+    %\AxiomC{$A$ Univ}
+    \AxiomC{$\underline{A}$ CType}
+    \BinaryInfC{$\Gamma, \underline{A}$ Vctx}
+\end{prooftree}
+
+\begin{comment}
+    \begin{remark}
+    $\Gamma$ is a second order context containing values and types. 
+    When convenient, we can drop the \textit{universe} syntax and simply 
+    denote context extension with a type by $\Gamma , A$ 
+    instead of $\Gamma , \lceil A \rceil : \mathcal{U}_V$
+\end{remark}
+\end{comment}
+
+
+\begin{prooftree}
+    \AxiomC{}
+    \UnaryInfC{$\cdot $ RCtx}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Theta$ Rctx}
+    \AxiomC{$\Gamma \vdash R$ RType}
+    \BinaryInfC{$\Theta, \rho : R$ Rctx}
+\end{prooftree}
+
+
+\subsection{Types}
+
+\begin{comment}
+\begin{definition}
+    Universe Types
+\end{definition}
+
+\question{
+    Drop universes? Don't want to provide a relational interpretation of universe types.
+}
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{$\mathcal{U}_V$-F}
+    \UnaryInfC{$\mathcal{U}_V \textrm{ Univ}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{$\mathcal{U}_C$-F}
+    \UnaryInfC{$\mathcal{U}_C \textrm{ Univ}$}
+\end{prooftree}
+\end{comment}
+
+\begin{definition}
+    Value Types
+\end{definition}
+\[
+    A := X \;|\; \textrm{Unit} \;|\; \textrm{OSum} \;|\; \textrm{Case } A \;|\; A \times A \;|\; \exists X . A \;|\; \exists \underline{X} . A \;|\;U \underline{B}
+\]
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{Unit-F}
+    \UnaryInfC{$\Gamma \vdash \textrm{Unit VType}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{OSum-F}
+    \UnaryInfC{$\Gamma \vdash \textrm{OSum VType}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash A $ VType}
+    \RightLabel{Case-F}
+    \UnaryInfC{$\Gamma \vdash \textrm{Case } A $ VType}
+\end{prooftree}
+\begin{remark}
+    Without guarded recursion, we limit case symbols to be of a restricted set of value types.
+\end{remark}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash A $ VType}
+    \AxiomC{$\Gamma \vdash A' $ VType}
+    \RightLabel{$\times$-F}
+    \BinaryInfC{$\Gamma \vdash A \times A' $ VType}
+\end{prooftree}
+
+\begin{prooftree}
+   % \AxiomC{$\Gamma, X : \mathcal{U}_V \vdash A $ VType}
+    \AxiomC{$\Gamma, X \vdash A $ VType}
+    \RightLabel{$\exists_V$-F}
+    \UnaryInfC{$\Gamma \vdash \exists X . A $ VType}
+\end{prooftree}
+
+\begin{prooftree}
+  %  \AxiomC{$\Gamma, X : \mathcal{U}_C \vdash A $ VType}
+    \AxiomC{$\Gamma, \underline{X}  \vdash A $ VType}
+    \RightLabel{$\exists_C$-F}
+    \UnaryInfC{$\Gamma \vdash \exists \underline{X} . A $ VType}
+\end{prooftree}
+
+\begin{remark}
+    Note that quantification is impredicative.
+\end{remark}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma  \vdash \underline{B} $ CType}
+    \RightLabel{$U$-F}
+    \UnaryInfC{$\Gamma \vdash U \underline{B}$ VType}
+\end{prooftree}
+
+
+
+
+\begin{definition}
+    Computation types
+\end{definition}
+
+\[
+    \underline{B} := \underline{X} \;|\; A \rightarrow \underline{B} \;|\; \forall X. \underline{B} \;|\; \forall \underline{X}. \underline{B} \;|\; F A
+\]
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash A$ VType}
+    \AxiomC{$\Gamma \vdash \underline{B}$ Ctype}
+    \RightLabel{$\rightarrow$-F}
+    \BinaryInfC{$\Gamma \vdash A \rightarrow \underline{B}$ Ctype}
+\end{prooftree}
+
+\begin{prooftree}
+  %  \AxiomC{$\Gamma , X : \mathcal{U}_V \vdash \underline{B}$ CType}
+    \AxiomC{$\Gamma , X  \vdash \underline{B}$ CType}
+    \RightLabel{$\forall_V$-F}
+    \UnaryInfC{$\Gamma \vdash \forall X. \underline{B}$ CType}
+\end{prooftree}
+
+\begin{prooftree}
+   % \AxiomC{$\Gamma , X : \mathcal{U}_C \vdash \underline{B}$ CType}
+    \AxiomC{$\Gamma , \underline{X}\vdash \underline{B}$ CType}
+    \RightLabel{$\forall_C$-F}
+    \UnaryInfC{$\Gamma \vdash \forall \underline{X}. \underline{B}$ CType}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash A$ VType}
+    \RightLabel{$F$-F}
+    \UnaryInfC{$\Gamma \vdash F A$ CType}
+\end{prooftree}
+
+
+
+\blue{TODO: Introduction and Elimination rules for CBPV OSum, routine}
+
+\begin{definition}
+    Logic Types
+\end{definition}
+
+
+
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{$\bf{prop}$-F}
+    \UnaryInfC{$\Gamma \vdash \bf{prop} $ VType}
+\end{prooftree}
+
+\question{
+    Do we have a duplicate/separate logic for computation propositions? 
+    That is, a Hyperdoctrine on $\mathcal{C_{T}}$? Or, do we factor 
+    a computation logic through the hyperdoctrine on the value cateory?
+    PE logic seems to choose the latter, but they are using a subobject interpretation
+    and we need a more general hyperdoctrine interpretation.
+}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash A$ VType}
+    \AxiomC{$\Gamma \vdash B$ VType}
+    \RightLabel{Rel$_V$-F}
+    \BinaryInfC{$\Gamma \vdash \textrm{Rel}_V[A,B]$ RType}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash \underline{A}$ CType}
+    \AxiomC{$\Gamma \vdash \underline{B}$ CType}
+    \RightLabel{Rel$_C$-F}
+    \BinaryInfC{$\Gamma \vdash \textrm{Rel}_C[A,B]$ RType}
+\end{prooftree}
+
+\begin{definition}
+    Propositions
+\end{definition}
+\begin{remark}
+    Brushing over any distinction between value and computation propositions for the moment.
+    Plausible usages for computation propositions highlighted in blue.
+\end{remark}
+
+\begin{align*}
+\phi := &\; \top \;|\; \bot \;|\; (t =_{A} u) \;| \; \blue{(t =_{\underline{B}} u)} \;|\; R(t,u) \;|\; \blue{\underline{R}(t,u)} \\
+    & |\; \phi \implies \psi \;|\; \phi \land \psi \;|\; \phi \lor \psi \\
+    & |\; \ \forall(x : A). \phi \;| \; \forall X, \phi \;|\; \forall \underline{X}, \phi \; | \; \forall(R : Rel_V[A,B]), \phi \; | \; \forall(\underline{R} : Rel_C[\underline{A},\underline{B}]),\phi \\
+    & |\; \ \exists(x : A). \phi \;| \; \exists X, \phi \;|\; \exists \underline{X}, \phi \; | \; \exists(R : Rel_V[A,B]), \phi \; | \; \exists(\underline{R} : Rel_C[\underline{A},\underline{B}]),\phi 
+\end{align*}
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{}
+    \UnaryInfC{$\Gamma; \Theta \vdash \top : \bf{prop}$}
+\end{prooftree}
+
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{}
+    \UnaryInfC{$\Gamma; \Theta \vdash \bot : \bf{prop}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash t : A$}
+    \AxiomC{$\Gamma \vdash u : A$}
+    \RightLabel{}
+    \BinaryInfC{$\Gamma; \Theta \vdash t =_{A} u : \bf{prop}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma | \Delta \vdash t : \underline{B}$}
+    \AxiomC{$\Gamma | \Delta \vdash u : \underline{B}$}
+    \RightLabel{}
+    \BinaryInfC{$\Gamma; \Theta \vdash t =_{\underline{B}} u :  \bf{prop}$}
+\end{prooftree}
+
+\question{
+    Assuming we denote $\bf{prop}$ as an internal heyting alebra in the value category, 
+    how are we denoting equality of computation types? 
+    $=$ is interpreted as right adjoint to $\mathcal{P}(\Delta)$ where $\Delta : \mathcal{V}[X , X \times X]$ 
+}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash t : A$}
+    \AxiomC{$\Gamma \vdash u : B$}
+    \AxiomC{$\Gamma ; \Theta \vdash R : \textrm{Rel}_V[A,B]$}
+    \RightLabel{}
+    \TrinaryInfC{$\Gamma; \Theta \vdash  R(t , u) : \bf{prop}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma | \Delta \vdash t : \underline{A}$}
+    \AxiomC{$\Gamma | \Delta \vdash u : \underline{B}$}
+    \AxiomC{$\Gamma ; \Theta \vdash \underline{R} : \textrm{Rel}_C[\underline{A},\underline{B}]$}
+    \RightLabel{}
+    \TrinaryInfC{$\Gamma; \Theta \vdash \underline{R}(t, u) : \bf{prop}$}
+\end{prooftree}
+
+
+\begin{prooftree}
+    \AxiomC{$\Gamma ; \Theta \vdash \phi : \bf{prop}$}
+    \AxiomC{$\Gamma ; \Theta \vdash \psi : \bf{prop}$}
+    \RightLabel{$\Box \in \{\implies, \land ,\lor \}$}
+    \BinaryInfC{$\Gamma; \Theta \vdash \phi \;\Box\; \psi \bf{prop}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma, x : A ; \Theta \vdash \phi : \bf{prop}$}
+    \RightLabel{$\mathcal{Q} \in \{\forall , \exists \}$}
+    \UnaryInfC{$\Gamma ; \Theta \vdash \mathcal{Q}(x : A), \phi : \bf{prop}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma; \Theta \vdash \phi : \bf{prop}$}
+    \RightLabel{$\mathcal{Q} \in \{\forall , \exists \}, \mathcal{X} \in \{X , \underline{X}\}, \mathcal{X} \notin FV(\Gamma ; \Theta)$ }
+    \UnaryInfC{$\Gamma ; \Theta \vdash \mathcal{Q}\mathcal{X}, \phi : \bf{prop}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma ; \Theta, R \vdash \mathcal{Q}(R : \textrm{Rel}_{*}[A , B] : \bf{prop})$}
+    \RightLabel{$\mathcal{Q} \in \{\forall , \exists \}, * \in \{V,C\}$}
+    \UnaryInfC{$\Gamma ; \Theta \vdash \mathcal{Q}(R : \textrm{Rel}_{*}[A , B]),\phi : \bf{prop}$}
+\end{prooftree}
+
+\begin{definition}
+    Relations
+\end{definition}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma, x : A , y : B ; \Theta \vdash \phi : \bf{prop} $}
+    \UnaryInfC{$\Gamma ; \Theta \vdash (x : A , y : B). \phi : \textrm{Rel}_V[A , B]$}
+\end{prooftree}
+\question{
+    Definable relations seem sufficient for value relations? 
+    How about computation relations? 
+    We don't have the stoup in our $\bf{prop}$ formation judgement
+    (like so: $\Gamma ; \Theta | \Delta \vdash \phi : \bf{prop}$) 
+    AND $\bf{prop}$ "should" be interpreted as the internal HA in $\mathcal{V}$. 
+    The definable computation relation would be something like 
+    $\Gamma ; \Theta | (x : \underline{A} \times \underline{B}) \vdash \phi : \bf{\underline{prop}}$.
+    Instead, explicitly define the computation relation formation rules.
+}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma | x : \underline{A} \vdash t : \underline{C}$}
+    \AxiomC{$\Gamma | y : \underline{B} \vdash u : \underline{C}$}
+    \BinaryInfC{$\Gamma ; \Theta \vdash (x : \underline{A}, y : \underline{B}). t =_{\underline{C}} u : \textrm{Rel}_C[A , B]$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma | x : \underline{A} \vdash t : \underline{A'}$}
+    \AxiomC{$\Gamma | y : \underline{B} \vdash u : \underline{B'}$}
+    \BinaryInfC{$\Gamma ; \Theta, \underline{R} : \textrm{Rel}_C[A',B'] \vdash (x : \underline{A}, y : \underline{B}). R(t,u): \textrm{Rel}_C[A , B]$}
+\end{prooftree}
+etc..
+
+
+\begin{definition}
+    Deduction rules
+\end{definition}
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{$\top$-I}
+    \UnaryInfC{$\Gamma ; \Theta | \Phi \vdash \top$} 
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash x : A$}
+    \RightLabel{$=_{A}$-I}
+    \UnaryInfC{$\Gamma ; \Theta | \Phi \vdash x =_{A} x $}
+\end{prooftree}
+
+\red{
+\begin{prooftree}
+    \AxiomC{$\Gamma |\Delta \vdash x : \underline{A}$}
+    \RightLabel{$=_{\underline{A}}$-I}
+    \UnaryInfC{$\Gamma, \Delta ; \Theta | \Phi \vdash x =_{\underline{A}} x $}
+\end{prooftree}
+}
+
+\begin{remark}
+    Here we need to be careful with equality of computation terms.
+    The PE logic states there is an equivalence 
+    $\Gamma ; \Theta | \Delta \vdash t =_{\underline{A}} u \equiv 
+    \Gamma, \Delta ; \Theta | - \vdash t =_{\underline{A}} u$ 
+    because of the "faithfullness of the forgetful functor $U$" in their model. 
+    Check this in our model.
+\end{remark}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma ; \Theta | \Phi \vdash t =_{A} u$}
+    \AxiomC{$\Gamma ; \Theta | \Phi \vdash \phi[t/x]$}
+    \RightLabel{$=_{A}$-E}
+    \BinaryInfC{$\Gamma ; \Theta | \Phi \vdash \phi[u/x]$}
+\end{prooftree}
+
+\question{
+    Lawvere style mate rules for quantification and equality?
+}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma ; \Theta | \Phi , \phi \vdash \psi$}
+    \RightLabel{$\implies$-I}
+    \UnaryInfC{$\Gamma ; \Theta | \Phi \vdash \phi \implies \psi$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma ; \Theta | \Phi \vdash \phi \implies \psi$}
+    \AxiomC{$\Gamma ; \Theta | \Phi \vdash \phi$}
+    \RightLabel{$\implies$-E}
+    \BinaryInfC{$\Gamma ; \Theta | \Phi \vdash \psi$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma ; \Theta | \Phi \vdash \phi$}
+    \AxiomC{$\Gamma ; \Theta | \Phi \vdash \psi$}
+    \RightLabel{$\land$-I}
+    \BinaryInfC{$\Gamma ; \Theta | \Phi \vdash \phi \land \psi$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma ; \Theta | \Phi \vdash \phi \land \psi$}
+    \RightLabel{$\land\textrm{-E}_1$}
+    \UnaryInfC{$\Gamma ; \Theta | \Phi \vdash \phi$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma ; \Theta | \Phi \vdash \phi \land \psi$}
+    \RightLabel{$\land\textrm{-E}_2$}
+    \UnaryInfC{$\Gamma ; \Theta | \Phi \vdash \psi$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma ; \Theta | \Phi \vdash \phi$}
+    \RightLabel{$\lor\textrm{-I}_1$}
+    \UnaryInfC{$\Gamma ; \Theta | \Phi \vdash \phi \lor \psi$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma ; \Theta | \Phi \vdash \psi$}
+    \RightLabel{$\lor\textrm{-I}_2$}
+    \UnaryInfC{$\Gamma ; \Theta | \Phi \vdash \phi \lor \psi$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma ; \Theta | \Phi , \phi \vdash \xi$}
+    \AxiomC{$\Gamma ; \Theta | \Phi , \psi \vdash \xi$}
+    \RightLabel{$\lor$-E}
+    \BinaryInfC{$\Gamma ; \Theta | \Phi , \phi \lor \psi \vdash \xi$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma, x : A ; \Theta | \Phi \vdash \phi $}
+    \RightLabel{$\forall_{vtm}$-I, $x \notin FV(\Phi)$}
+    \UnaryInfC{$\Gamma ; \Theta | \Phi \vdash \forall(x : A), \phi$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma ; \Theta | \Phi \vdash \forall (x : A), \phi$}
+    \AxiomC{$\Gamma \vdash t : A$}
+    \RightLabel{$\forall_{vtm}$-E}
+    \BinaryInfC{$\Gamma ; \Theta | \Phi \vdash \phi[t/x]$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma ; \Theta | \Phi \vdash \phi$}
+    \RightLabel{$\forall_{vty}$-I, $X \notin FV(\Gamma , \Theta , \Phi)$}
+    \UnaryInfC{$\Gamma ; \Theta | \Phi \vdash \forall X,\phi$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma ; \Theta | \Phi \vdash \forall X , \phi$}
+    \AxiomC{$A$ VType}
+    \RightLabel{$\forall_{vty}$-E}
+    \BinaryInfC{$\Gamma ; \Theta | \Phi \vdash \phi[A/X]$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma ; \Theta | \Phi \vdash \phi$}
+    \RightLabel{$\forall_{cty}$-I, $\underline{X} \notin FV(\Gamma , \Theta , \Phi)$}
+    \UnaryInfC{$\Gamma ; \Theta | \Phi \vdash \forall \underline{X},\phi$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma ; \Theta | \Phi \vdash \forall \underline{X} , \phi$}
+    \AxiomC{$\underline{A}$ CType}
+    \RightLabel{$\forall_{cty}$-E}
+    \BinaryInfC{$\Gamma ; \Theta | \Phi \vdash \phi[\underline{A}/\underline{X}]$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma ; \Theta , R : Rel_V[A,B] | \Phi \vdash \phi$}
+    \RightLabel{$\forall_{vrel}$-I}
+    \UnaryInfC{$\Gamma ; \Theta | \Phi \vdash \forall(R : Rel_V[A,B]),  \phi$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma ; \Theta | \Phi \vdash \forall(R : Rel_V[A,B]), \phi$}
+    \AxiomC{$\Gamma ; \Theta \vdash (x : A , y : B).\psi : Rel_V[A,B] $}
+    \RightLabel{$\forall{v_rel}$-E}
+    \BinaryInfC{$\Gamma ; \Theta | \Phi \vdash \phi[(\psi[t/x,u/y])/R(t,u)]$}
+\end{prooftree}
+
+
+\begin{prooftree}
+    \AxiomC{$\Gamma ; \Theta , \underline{R} : Rel_C[\underline{A},\underline{B}] | \Phi \vdash \phi$}
+    \RightLabel{$\forall_{crel}$-I}
+    \UnaryInfC{$\Gamma ; \Theta | \Phi \vdash \forall(\underline{R} : Rel_C[\underline{A},\underline{B}]),  \phi$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma ; \Theta | \Phi \vdash \forall(\underline{R} : Rel_C[\underline{A},\underline{B}]), \phi$}
+    \AxiomC{$\Gamma ; \Theta \vdash (x : \underline{A} , y : \underline{B}).\psi : Rel_C[\underline{A},\underline{B}] $}
+    \RightLabel{$\forall{crel}$-E}
+    \BinaryInfC{$\Gamma ; \Theta | \Phi \vdash \phi[(\psi[t/x,u/y])/\underline{R}(t,u)]$}
+\end{prooftree}
+
+\blue{TODO: deduction rules for existentials, routine}
+
+\blue{TODO: computation rules and term equalities, routine (except for )}
+
+\blue{TODO: definition of the substitution for relations into types}
+
+\section{Semantics}
+
+\subsection{PE Logic}
+
+PE logic uses an algebra model of CBPV with a subobject interpretation of the logic.
+The forgetful functor $U$ is faithful 
+\[
+   U_{X,Y} : C[ X , Y ]\hookrightarrow V[ UX , UY] 
+\] 
+so it is injective on homsets.
+
+Because $U$ preserves limits, every monomorphism $\underline{A} \rightarrow \underline{B}$ in $C$
+is mapped to a monomorphism $UA \rightarrow UB$ in $V$. Thus
+\[
+  \forall(\underline{X} : ob \; C), \; Sub_C(\underline{X}) \rightarrow Sub_V(U\underline{X})
+\]
+is an order embedding
+\[
+  x \leq y \iff f(x) \leq f(y)  
+\]
+
+Value types,$A$, are interpreted as a set $V\den{A}$ 
+and computation types,$\underline{A}$, are interpreted as algebras $C\den{\underline{A}}$.
+In PE logic, every computation type is also a value type.
+Thus it is given two interpretations and the relation between the interpretations is given by the equation
+ $U(C\den{\underline{A}}) = V\den{\underline{A}}$.
+ 
+
+\end{document}

@@ -106,6 +106,8 @@ module src.Data.HoffmanStreicher where
            -- Functor≡  (λ _ →  {!   !})  {!   !}
         Prop𝓒 .F-seq = {!   !}
 
+
+        -- IS (FUNCTOR (_↓𝒞 X) PropCat) a thin category / poset?
         cosliceFunEq : {x : ob 𝒞}{F G : Functor (x ↓𝒞) PropCat} → (∀ (o : (x ↓𝒞) .ob ) → F .F-ob o ≡ G .F-ob o) → F ≡ G 
         cosliceFunEq p = Functor≡ p (λ {c} {c'} f → isProp→PathP (λ i → isProp→ (p c' i .snd)) _ _)
 

@@ -121,9 +121,17 @@ module src.Data.DayConv where
         open import Cubical.Categories.Functors.HomFunctor
         open MonoidalStr
         open import Cubical.Categories.Yoneda.More
+        open import Cubical.Categories.NaturalTransformation
+        open NatTrans
         PshMon : MonoidalStr PshC 
         PshMon .tenstr = record { ─⊗─ = Day-Functor ; unit = I⨂ } --{! C [-, unit MC ] !} }
-        PshMon .α = {!   !}  
+        PshMon .α = 
+            record { 
+                trans = 
+                    natTrans 
+                        (λ{(P , Q , R) → natTrans (λ x x₂ → {!   !}) {!   !}}) 
+                        {!   !} ; 
+                    nIso = {!   !} }  
         PshMon .η = {!   !}
         PshMon .ρ = {!   !}
         PshMon .pentagon = {!   !}

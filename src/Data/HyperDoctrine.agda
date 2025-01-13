@@ -304,5 +304,22 @@ module src.Data.HyperDoctrine where
             Θ : (X : ob 𝓒) → Iso (isFO .𝓟 .F-ob X .fst .fst) (𝓒 [ X , H .fst ]) 
 
 
+    module HDsyntax
+        (𝓒 : Category _ _ ) 
+        (term : Terminal 𝓒)
+        (bp : BinProducts 𝓒)
+        (exp : Exponentials 𝓒 bp )
+        (Hyp : HyperDoctrine 𝓒 term bp exp) where
+
+        open HyperDoctrine Hyp
+        open FirstOrderHyperDoc isFO
+
+        PROP : ob 𝓒 
+        PROP = H .fst
+
+        𝓣 : {X : ob 𝓒} → ob {! 𝓟   !} 
+        𝓣 = {!   !}
+
+
 
  
