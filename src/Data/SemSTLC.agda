@@ -3,6 +3,8 @@ module src.Data.SemSTLC where
     open import Cubical.Categories.Instances.Sets
     open import Cubical.Categories.Category hiding (isUnivalent)
     open Category
+    open import Cubical.Categories.Functor
+    open Functor
     open import Cubical.Foundations.Prelude
     open import Cubical.Foundations.Structure 
     open import Cubical.Data.Unit 
@@ -19,6 +21,41 @@ module src.Data.SemSTLC where
     module toSet where 
         set : Category _ _ 
         set = SET ℓ-zero
+
+        {-
+            possible refinement 
+            Category 
+                ob := Σ[ u : U ] El u
+                mor (u1 , T1) (u2 , T2) := El (arr u1 u2) 
+        -}
+        set' : Category _ _ 
+        set' .ob = Σ[ u ∈ U ] El u
+        set' .Hom[_,_] (u1 , T1) (u2 , T2) = El (arr u1 u2) -- T1 → T2 
+        set' .id x = x
+        set' ._⋆_ f g x = g (f x)
+        set' .⋆IdL f = refl
+        set' .⋆IdR f = refl
+        set' .⋆Assoc f g h = refl
+        set' .isSetHom = isSet→ (isSetEl _)
+
+        open import Cubical.Categories.Displayed.Base
+        syn : Category _ _  
+        syn .ob = Ctx
+        syn .Hom[_,_] = CtxMap
+        syn .id  = idCtxMap 
+        syn ._⋆_  = seqCtxMap
+        syn .⋆IdL f = ≡CtxMap (funExt λ x → subId)
+        syn .⋆IdR f = ≡CtxMap refl
+        syn .⋆Assoc f g h = ≡CtxMap (funExt λ x → subSeq {f = f}{g} (CtxMap.terms h x))
+        syn .isSetHom = isSetCtxMap
+
+
+        cl : Functor syn set 
+        -- closed terms
+        cl .F-ob Γ = (syn [ ⊘ , Γ ]) , (syn .isSetHom)
+        cl .F-hom {Γ}{Δ} Γ→Δ ∅→Γ = seqCtxMap ∅→Γ Γ→Δ
+        cl .F-id = funExt λ x → ≡CtxMap refl
+        cl .F-seq f g = funExt λ h → sym (syn .⋆Assoc h f g)
 
         ⟪_⟫ty : U → ob set
         ⟪ unit ⟫ty = (El unit) , isSetEl unit
@@ -59,6 +96,12 @@ module src.Data.SemSTLC where
 
             g : El A2 
             g = transport (lemma A2) (M γ)
+
+        ⟪_⟫tm {Γ} {A} (app f x) γ = g where 
+            fx : El A
+            fx = {! ⟪ f ⟫tm γ (⟪ x ⟫tm γ) !}
+            g : fst ⟪ A ⟫ty 
+            g = {! f  !}
             
         ⟪_⟫tm {Γ} {.(snd Γ i)} (var i) γ = g where 
             -- tricky, but doable

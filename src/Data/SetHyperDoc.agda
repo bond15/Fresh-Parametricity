@@ -1,4 +1,4 @@
-{-# OPTIONS --cubical --type-in-type --allow-unsolved-metas #-}
+{-# OPTIONS --cubical --type-in-type  --allow-unsolved-metas #-}
 
 module src.Data.SetHyperDoc where
 
@@ -54,9 +54,239 @@ module src.Data.SetHyperDoc where
                 refl 
                 ((λ a' x y → set .isSetHom  _ _ x y)) 
                 λ Z→Y→X p → funExt λ z → funExt λ y → funExt⁻ (sym p)  (z , y) }}
-        
 
 
+
+    open import src.Data.HeytingAlg
+
+    -- Theorem 4.6 a taste of categorical logic
+    -- let H be any complete Heyting Algebra, 
+    -- Then Set together with a functor Hom_Set[_,H] and generic object H
+    -- is a hyperdoctrine
+    module HomHyperDoc (H : hSet _) (compHA : isCompleteHeytingAlg H) where
+        open import Cubical.Relation.Binary.Preorder 
+
+        open isCompleteHeytingAlg compHA
+        open isHeytingAlg isHA renaming (poset to P)
+        open PreorderStr (P .fst .snd)
+
+        module homposet (X : hSet _) where 
+
+            _≤f_ : set [ X , H ] → set [ X , H ] → Type ℓ-zero
+            _≤f_ f g = (x : X .fst) → f x ≤ g x
+
+            open PosetFromLattice ((H .fst) , islat) (H .snd) using (ref ; trn)
+
+            fpre : IsPreorder _≤f_ 
+            fpre = ispreorder 
+                    (λ a b  → isPropΠ λ x → H .snd (a x) _) 
+                    (λ f x → ref (f x)) 
+                    λ f g h p1 p2 x → trn (f x) (g x) (h x) (p1 x) (p2 x)
+
+            pre : PreorderStr ℓ-zero (set [ X , H ])
+            pre = preorderstr 
+                _≤f_ 
+                fpre
+
+            HX : ob poset 
+            HX = ((set [ X , H ]) , pre) , {!   !}
+
+        fob : ob set → ob poset 
+        fob X = HX where open homposet X
+
+        𝓟 : Functor (set ^op) (POSET ℓ-zero ℓ-zero) 
+        𝓟 .F-ob = fob
+        𝓟 .F-hom f = record { f = λ P y → P (f y) ; isMon = λ {P}{Q} P≤Q y → P≤Q (f y) }
+        𝓟 .F-id = eqMon _ _ refl
+        𝓟 .F-seq _ _ = eqMon _ _ refl
+
+        𝓟XisSet : (X : ob set) → isSet (𝓟 .F-ob X .fst .fst)
+        𝓟XisSet = {!   !}
+
+        module _ (X : ob set) where 
+
+            homlat : LatticeStr (fob X .fst .fst)
+            homlat = 
+                latticestr 
+                (λ x → {! ⊥  !}) 
+                {!   !} 
+                {!   !} 
+                {!   !} 
+                {!   !}
+            
+        isHAHom : (X : ob set) → isHeytingAlg (𝓟 .F-ob X .fst .fst , 𝓟XisSet X) 
+        isHAHom X = record { 
+            islat = homlat X ; 
+            ⇒l = {!   !} ; 
+            l₁ = {!   !} ; 
+            l₂ = {!   !} ; 
+            l₃ = {!   !} ; 
+            l₄ = {!   !} }
+
+        FO : FirstOrderHyperDoc set bp 
+        FO = record
+            { 𝓟 = 𝓟
+            ; 𝓟_isSet = 𝓟XisSet
+            ; isHA = isHAHom
+            ; isHomo = {!   !}
+            ; eq = {!   !}
+            ; quant = {!   !}
+            ; beck₁ = {!   !}
+            ; beck₂ = {!   !}}
+
+        HD : HyperDoctrine set term bp exp
+        HD = record { 
+            isFO = FO ; 
+            H = {!   !} ; 
+            Θ = {!   !} }
+
+
+
+
+{-
+    -- TODO Complete Heyting Algebra
+    open PreorderStr
+    
+    -- let P be a preorder, the upwards closed subsets of P is a complete Heyting Algebra
+    ↑_ : Preorder _ _ → Set 
+    ↑_ (X , P) = Σ[ A ∈ ℙ X ] ((x y : X) → x ∈ A → P ._≤_ x y → y ∈ A)
+    -- A is a subset of X
+    -- such that
+    -- for any x ∈ A 
+    -- if there is some y ∈ X that is x ≤ y
+    -- then y ∈ A
+    
+    open import Cubical.Foundations.HLevels
+
+    ↑isSet : {P : Preorder _ _ } → isSet (↑ P)
+    ↑isSet {P} = isSetΣ isSetℙ λ x → isSetΠ2 λ y z → isSet→ (isSet→ (isProp→isSet (∈-isProp x z)))
+
+    HeytingAlg : Set 
+    HeytingAlg = TypeWithStr _ isHeytingAlg where 
+        open isHeytingAlg
+
+
+    power≡ : {X : Set}{A B : ℙ X} → (prf : (x : X) → (x ∈ A → x ∈ B) × ( x ∈ B → x ∈ A)) → A ≡ B 
+    power≡ {X}{A}{B} prf = ⊆-extensionality A B ((λ x → prf x .fst) , λ x → prf x .snd)
+    
+    ↑≡ : {P : Preorder _ _ }{A B : ↑ P} → (prf : A .fst ≡ B .fst) → A ≡ B 
+    -- (prf : (x : P .fst) → (x ∈ A .fst → x ∈ B .fst) × ( x ∈ B .fst → x ∈ A .fst)) → A ≡ B 
+    ↑≡ {P}{A}{B} prf = Σ≡Prop (λ x → isPropΠ2 λ y z → isProp→ (isProp→ (∈-isProp x z))) prf
+    -- (power≡ prf)
+        --Σ≡Prop (λ x → isPropΠ2 λ y z → isProp→ (isProp→ (∈-isProp x z))) prf
+
+    open import Cubical.Functions.Logic 
+    open import Cubical.Data.Unit
+    open import  Cubical.HITs.PropositionalTruncation renaming (map to Hmap ; map2 to Hmap2 ; elim to Helim ; rec to Hrec)
+    open import Cubical.Data.Sum renaming (rec to Srec ; map to Smap)
+    
+    _∪_ : {X : Set} → ℙ X → ℙ X → ℙ X 
+    A ∪ B = λ x → A x ⊔ B x
+
+    _∪↑_ : {P : Preorder _ _ } → ↑ P → ↑ P → ↑ P 
+    _∪↑_ {P} (A , prfA)(B , prfB) = ((A ∪ B)) , prfA∪B where 
+    
+        prfA∪B : (x y : fst P) → x ∈ (A ∪ B) → snd P ._≤_ x y → y ∈ (A ∪ B) 
+        prfA∪B x y x∈A∪B x≤y = Hmap (Smap (λ x∈A → prfA x y x∈A x≤y) λ x∈B → prfB x y x∈B x≤y) x∈A∪B
+    
+    _∩_ : {X : Set} → ℙ X → ℙ X → ℙ X 
+    A ∩ B = λ x → A x ⊓ B x
+
+    _∩↑_ : {P : Preorder _ _ } → ↑ P → ↑ P → ↑ P 
+    _∩↑_ {P} (A , prfA)(B , prfB) = ((A ∩ B)) , prfA∩B where 
+    
+        prfA∩B : (x y : fst P) → x ∈ (A ∩ B) → snd P ._≤_ x y → y ∈ (A ∩ B) 
+        prfA∩B x y (x∈A , x∈B ) x≤y = prfA x y x∈A x≤y , prfB x y x∈B x≤y
+
+
+    distrib₁ : {P : Preorder _ _ }{X Y : ↑ P} → (_∪↑_{P} X (_∩↑_{P} X Y)) ≡ X
+    distrib₁ {P}{X}{Y} = 
+        ↑≡ {P} (funExt λ x → 
+            ⇔toPath 
+                (Hrec (X .fst x .snd) (λ {(_⊎_.inl e) → e
+                                        ; (_⊎_.inr (e , _)) → e}))
+                λ e → ∣ _⊎_.inl e ∣₁)
+    distrib₂ : {P : Preorder _ _ }{X Y : ↑ P} → (_∩↑_{P} X (_∪↑_{P} X Y)) ≡ X
+    distrib₂ {P}{X}{Y} = ↑≡ {P} (funExt λ x → ⇔toPath fst λ e → e , ∣ _⊎_.inl e ∣₁)
+
+    ≤Prop : {P : Preorder _ _ } → (x y : P .fst) → hProp _ 
+    ≤Prop {P} x y = (P .snd ._≤_ x y) , P .snd .isPreorder .ipv  _ _ where 
+        open import Cubical.Relation.Binary.Preorder
+        open IsPreorder renaming (is-prop-valued to ipv)
+
+    
+    ≤P : (P : Preorder _ _ ) → fst P → fst P → Type
+    ≤P P = P .snd ._≤_ 
+
+    ≤-refl : (P : Preorder _ _ )(x : fst P ) → (≤P P x x)
+    ≤-refl P = P .snd .isPreorder .(IsPreorder.is-refl)
+
+    ≤-trans : (P : Preorder _ _ )(x y z : fst P ) → ≤P P x y → ≤P P y z → ≤P P x z
+    ≤-trans P = P .snd .isPreorder .(IsPreorder.is-trans) 
+
+    _⇒Power_ : {P : Preorder _ _ } → ℙ (P .fst) → ℙ(P .fst) → ℙ(P .fst) 
+    _⇒Power_ {P} A B x = ∀[ y ∶ (fst P) ] ≤Prop {P} x y ⇒ (y ∈ A , ∈-isProp A y) ⇒ (y ∈ B , ∈-isProp B y)
+    
+    _⇒↑_ : {P : Preorder _ _ } → ↑ P → ↑ P → ↑ P 
+    _⇒↑_ {P} (A , prfA) (B , prfB) = A ⇒P B , powerup where 
+
+
+        _⇒P_ = _⇒Power_{P}
+
+       
+        powerup : (x y : fst P) → x ∈ (A ⇒P B) → ≤P P x y → y ∈ (A ⇒P B)
+        powerup x y x∈A⇒B x≤y = λ z y≤z z∈A → x∈A⇒B z (≤-trans P x y z x≤y y≤z) z∈A
+
+    ∅ : {A : Set} → ℙ A 
+    ∅ x = ⊥ 
+
+    upSetHA : Preorder _ _ → HeytingAlg 
+    upSetHA P = ↑ P , g where
+        open isHeytingAlg
+
+
+        l : LatticeStr (↑ P) 
+        l = latticestr 
+            (∅ , λ _ _ ()) -- empty set for 0 
+            ((λ x → ⊤) , λ _ _ _ _ → tt*)  -- the full set P for 1
+            (_∪↑_{P}) 
+            (_∩↑_{P}) 
+            (islattice 
+                (issemilattice 
+                    (iscommmonoid 
+                        (ismonoid 
+                            (issemigroup 
+                                (↑isSet {P})
+                                λ X Y Z → ↑≡ {P}(funExt λ x → ⊔-assoc (X .fst x) (Y .fst x) (Z .fst x) )) 
+                            (λ _ → ↑≡ {P} (funExt λ _ → ⊔-identityʳ _)) 
+                            λ _ → ↑≡ {P} (funExt λ _ → ⊔-identityˡ _)) 
+                        λ X Y → ↑≡ {P} (funExt λ x → ⊔-comm (X .fst x) (Y .fst x) )) 
+                    λ X → ↑≡ {P} (funExt λ x → ⊔-idem (X .fst x))) 
+                (issemilattice 
+                    (iscommmonoid 
+                        (ismonoid 
+                            (issemigroup 
+                                (↑isSet {P}) 
+                                λ X Y Z → ↑≡ {P}(funExt λ x → ⊓-assoc (X .fst x) (Y .fst x) (Z .fst x) )) 
+                            (λ _ → ↑≡ {P} (funExt λ _ → ⊓-identityʳ _)) 
+                            λ _ → ↑≡ {P} (funExt λ _ → ⊓-identityˡ _)) 
+                        λ X Y → ↑≡ {P} (funExt λ x → ⊓-comm (X .fst x) (Y .fst x) ))
+                        λ X → ↑≡ {P} (funExt λ x → ⊓-idem (X .fst x))) 
+                λ X Y → distrib₁ {P}{X}{Y} , distrib₂ {P}{X}{Y})
+
+        g : isHeytingAlg (↑ P)
+        g .islat = l
+        g .⇒l  = _⇒↑_ {P}
+        g .l₁ X = ↑≡ {P} (funExt λ x → ⇔toPath (λ _ → tt*) λ x₁ x₂ x₃ x₄ → x₄)
+        g .l₂ X Y = ↑≡ {P} (funExt λ x → ⇔toPath (λ {(x∈X , f) → x∈X , f x (≤-refl P x) x∈X}) λ{ (x∈X , x∈Y) → x∈X , (λ y x≤y y∈X → Y .snd x y x∈Y x≤y) })
+        g .l₃ X Y = ↑≡ {P} (funExt λ x → ⇔toPath fst λ x∈Y → Y .snd x x x∈Y (≤-refl P x) , λ y x≤y y∈X → Y .snd x y x∈Y x≤y )
+        g .l₄ X Y Z = ↑≡ {P} (funExt λ x → 
+            ⇔toPath 
+                (λ x∈X⇒Y∩Z → (λ y x≤y y∈X → x∈X⇒Y∩Z y x≤y y∈X  .fst) , λ y x≤y y∈X → x∈X⇒Y∩Z y x≤y y∈X  .snd) 
+                λ { (x∈X⇒Y , x∈X⇒Z) → λ y x≤y y∈X → x∈X⇒Y y x≤y y∈X , x∈X⇒Z y x≤y y∈X} )
+
+-}
+{- 
     open import Cubical.Relation.Binary.Preorder
 
     -- the internal heyting algebra
@@ -91,7 +321,7 @@ module src.Data.SetHyperDoc where
                                                   ; (_⊎_.inr x) → x .fst}) e}) (λ {e → ∣ _⊎_.inl e ∣₁}) , 
                     ⇔toPath fst  λ x → x , ∣ _⊎_.inl x ∣₁)
 
-    propHA : isHeytingAlg prop
+    propHA : isHeytingAlg (prop , {!   !})
     propHA = record { 
         islat = proplat ; 
         ⇒l = _⇒_ ; 
@@ -100,7 +330,8 @@ module src.Data.SetHyperDoc where
         l₃ = λ x y → ⇔toPath fst λ z → z , λ _ → z ; 
         l₄ = ⇒-⊓-distrib }
 
-
+    -- same one used in Iris as Upred Entails
+    -- https://plv.mpi-sws.org/coqdoc/iris/iris.base_logic.upred.html#uPred_entails
     _≤p_ : prop → prop → Set 
     -- alternative (found on Wiki ..)
     -- This means that it is possible to deduce P from Q?
@@ -134,6 +365,8 @@ module src.Data.SetHyperDoc where
                                 λ p≡q p≡q≡oe → isSetHProp _ _ _ _ } }
                             
 
+    -- instead of powerset, use down
+
 
     open PreorderStr
     open import Cubical.Foundations.Powerset
@@ -164,9 +397,9 @@ module src.Data.SetHyperDoc where
                     (funExt (λ x → ⇔toPath (oe .left x) (oe .right x))) 
                     ((isPropOrderEquivalent _ _)) 
                     {!   !}
-                    {!   !} } }
+                    {!   !} }} 
 
-    funPropHA : (X : ob set) → isHeytingAlg (funPropPoset X .fst .fst)
+    funPropHA : (X : ob set) → isHeytingAlg (funPropPoset X .fst .fst , {!   !})
     funPropHA X = record { 
         islat = latticestr 
             (λ x → ⊥) 
@@ -200,6 +433,9 @@ module src.Data.SetHyperDoc where
 
     _×s_ : ob set → ob set → ob set 
     _×s_ (X , XisSet)(Y , YisSet) = X × Y , isSetΣ XisSet  λ _ → YisSet
+
+    all : isRightAdjointMon (𝓟 .F-hom (λ r → fst r)) 
+    all = (record { f = {!   !} ; isMon = {!   !} }) , {!   !}
     
     open import  Cubical.HITs.PropositionalTruncation renaming (map to Hmap)
     open import  Cubical.Categories.Adjoint 
@@ -208,7 +444,7 @@ module src.Data.SetHyperDoc where
     setFO = record{ 
         𝓟 = 𝓟; 
         isHA = funPropHA; 
-        isHomo = {! opF  !}; 
+        isHomo = {!   !}; 
         -- functor (X → Prop) (X × X → Prop)
         eq = λ {X} → (
             record { 
@@ -237,6 +473,13 @@ module src.Data.SetHyperDoc where
             H = (prop , isSetHProp) , {!   !} ; 
             Θ = λ X → idIso }     
 
+
+ -}
+
+
+
+
+{-
     open FirstOrderHyperDoc setFO renaming (𝓟 to 𝓟s)
 
     open import Cubical.Categories.Instances.EilenbergMoore
@@ -312,273 +555,6 @@ module src.Data.SetHyperDoc where
         prf' tt* = ∣ {!   !} ∣₁ , tt*
 
 
-    module simplelang where
 
-        data U : Set where 
-            unit bool : U
-            prod arr : U → U → U
-
-        El : U → Set 
-        El unit = Unit 
-        El bool = Bool
-        El (arr x y) = El x → El y
-        El (prod x y) = El x × El y
-
-
-        -- closed terms
-        {-
-        data terms : U → Set where 
-            var : {t : U} → El t → terms t
-            u : El unit → terms unit
-            tru : El bool → terms bool
-            fls : El bool → terms bool
-            pair : {t1 t2 : U} → El t1 → El t2 → terms (prod t1 t2)
-            lam : {t1 t2 : U} → (El t1 → terms t2) → terms (arr t1 t2)
-
-        _ : terms (arr unit (arr unit (prod unit unit))) 
-        _ = lam λ x → lam λ y → pair x y
-        -}
-        open import Cubical.Data.List 
-        open import Cubical.Data.Fin renaming (elim to felim)
-        open import Cubical.Data.Nat
-        open import Cubical.Data.FinData.Base renaming (Fin to FinData) hiding (¬Fin0 ; toℕ)
-        
-        pattern z = (zero , _)
-        pattern sc n = (suc n , _)
-        
-        
-        Ctx : Set
-        Ctx = Σ[ n ∈ ℕ ] (Fin n → U)
-
-        ctxToU : Ctx → U 
-        ctxToU (zero , f) = unit
-        ctxToU (suc n , f) = sumFinGen prod unit f
-
-        module demo where 
-
-            -- why doesn't pattern matching pick up on the impossiblity of the last cases here?
-            asdfadf : Fin 2 → U 
-            asdfadf (zero , snd₁) = unit
-            asdfadf (suc zero , snd₁) = bool
-            asdfadf (suc (suc zero) , fst₁ , snd₁) = {!   !} 
-            asdfadf _ = {!   !}
-
-            -- FinDataIsoFin
-            also : Fin 2 → U 
-            also = felim (λ _ → U) unit {!   !}
-
-            ctx : Ctx 
-            ctx = 2 , asdfadf
-
-            _ = {! ctxToU ctx  !}
-            -- {!   !} where
-           -- _ : U
-           -- _ = felim (λ x → U) unit (λ{k} → λ {fn} → prod (f (k , {!   !}))) {!   !}
-
-        -- We want this to be somethin
-        ectx : Ctx 
-        ectx = 0 , felim (λ _ → U) unit (λ z → z) {0}
-        
-
-        open import Cubical.Data.Nat.Order
-        
-        upd : {n : ℕ}(f : Fin n → U)(u : U) → (Fin (suc n) → U)
-        upd {n} f u (zero , _) = u
-        upd {n} f u (suc m , d) = f (m , pred-≤-pred d)
-
-
-        upd' : Ctx → U → Ctx 
-        upd' (n , γ) u = (suc n) , upd γ u
-       
-
-        listToCtx : List U → Ctx 
-        listToCtx [] = ectx
-        listToCtx (x ∷ xs) = (suc (hm .fst)) , (upd (hm .snd) x) where 
-            hm : Ctx
-            hm = listToCtx xs
-
-
-           -- m : Fin (suc (length xs)) → U 
-           -- m ((length xs), D)= {!   !}
-          --  m _ = ?
-            --(length xs) , felim  {!   !} {!   !} {!   !} {!   !}
-
-        elCtx : Ctx → Set 
-        elCtx (n , γ) = (i : Fin n) → El (γ i)
-
-
-        fillList : (L : List U) → elCtx (listToCtx L)
-        fillList [] = λ i → {!   !}
-        fillList (x ∷ L₁) = λ i → {! !}
-
-        open import Cubical.Data.Empty renaming (⊥ to Empty ; rec to emptyrec)
-        
-        asProd : Ctx → Set 
-        asProd (n , Γ) = sumFinGen _×_ Unit λ i → El (Γ i)
-
-        module _ where
-            d : asProd (listToCtx (unit ∷ bool ∷ []) )
-            d = true , (tt , tt)
-
-
-        _∘s_ : {A B C : Set} → (A → B) → (B → C) → A → C 
-        _∘s_ f g = λ z → g (f z)
-
-        
-        open Iso renaming (fun to fwd)
-        module _ (n : ℕ)(Γ : Fin (suc n) → U) where 
-            
-            toProd : ((x : Fin (suc n)) → (Γ ∘s El) x) → (Γ ∘s El) fzero × ((x : Σ ℕ _) → (Γ ∘s El) (fsuc x))
-            toProd = CharacΠFinIso n { Γ ∘s El} .fwd
-            {- CharacΠFinIso : ∀ {ℓ} (n : ℕ) {B : Fin (suc n) → Type ℓ}
-  → Iso ((x : _) → B x) (B fzero × ((x : _) → B (fsuc x)))
-   -}
-
-        -- a term is a map from gamma to a type
-        -- these are open terms since there is no gamma
-        data terms : Ctx → U → Set where 
-            u : {Γ : Ctx} → El unit → terms Γ unit
-            b : {Γ : Ctx} → El bool → terms Γ bool 
-            pair : {Γ : Ctx}{t1 t2 : U} → terms Γ t1 → terms Γ t2 → terms Γ (prod t1 t2)
-            fun : {Γ : Ctx}{t1 t2 : U} → (El t1 → terms Γ t2) → terms Γ (arr t1 t2)
-            -- this seems like cheatin..
-           -- const : {Γ : Ctx}{t : U} → El t → terms Γ t
-            var : {(n , Γ) : Ctx} → (i : Fin n) → terms (n , Γ) (Γ i)
-            --var : {(n , Γ) : Ctx} → (γ : elCtx Γ → ) → terms (n , Γ) (Γ i)
-          --  lam : {γ : Ctx}{t1 t2 : U} →(El t1 → terms γ t2) → terms γ (arr t1 t2)
-           -- lam : {γ : Ctx}
-        --   lam : {t1 t2 : U} → (El t1 → terms t2) → terms (arr t1 t2)
-    {-}    data Singleton {a} {A : Set a} (x : A) : Set a where
-            _with≡_ : (y : A) → x ≡ y → Singleton x
-
-        inspect : ∀ {a} {A : Set a} (x : A) → Singleton x
-        inspect x = x with≡ refl -}
-
-        denote : {Γ : Ctx}{ty : U} → terms Γ ty → (elCtx Γ → El ty) --set [ elCtx Γ , El ty ] 
-        denote (u x) γ = x
-        denote (b x) γ = x
-        denote (pair M1 M2) γ = denote M1 γ , denote M2 γ
-        denote (fun f) γ = λ x → denote (f x) γ
-        denote (var i) γ = γ i
-
-        module denoteToCCC where 
-            -- really this is just El, but with the extra isSet
-            denTy : U → ob set 
-            denTy unit = Unit , isSetUnit
-            denTy bool = Bool , isSetBool
-            denTy (prod d₁ d₂) = denTy d₁ ×s denTy d₂
-            denTy (arr d₁ d₂) = (denTy d₁ .fst → denTy d₂ .fst) , {!   !}
-            
-            -- need to make Γ to product
-            den : {Γ : Ctx}{ty : U} → terms Γ ty → set .Hom[_,_] {! denTy Γ  !} {!   !} 
-            den = {!   !}
-
-
-        -- terms that dont use the context
-        pure : {Γ : Ctx}{ty : U} → El ty → terms Γ ty 
-        pure {Γ} {unit} x = u x
-        pure {Γ}{bool} x = b x
-        pure {Γ}{prod ty ty₁} (x , y) = pair (pure x) (pure y)
-        pure {Γ}{arr ty ty₁} f = fun λ x → pure (f x)
-
-
-    {-}
-        lft : {Γ : Ctx}{ty : U} → (elCtx Γ → El ty) → terms Γ ty 
-        lft {Γ} {unit} f = u (f λ i → {!   !})
-        lft {Γ} {bool} f = {!   !}
-        lft {Γ} {prod ty ty₁} f = {!   !}
-        lft {Γ} {arr ty ty₁} f = {!   !}
-
--}
-
-        _ : terms (listToCtx (unit ∷ bool ∷ [])) (prod unit bool) 
-        _ = pair (var 0) (var 1)
-
-        module _ {a b} {A : Set a} {B : A → Set b} where
-
-            data Graph (f : ∀ x → B x) (x : A) (y : B x) : Set b where
-                ingraph : f x ≡ y → Graph f x y
-
-            inspect : (f : ∀ x → B x) (x : A) → Graph f x (f x)
-            inspect _ _ = ingraph refl
-
-        closedTerm : {Γ : Ctx}{t : U} → (M : terms Γ t) → elCtx Γ → terms ectx t
-        closedTerm {n , Γ} {.unit} (u x) γ = u x
-        closedTerm {n , Γ} {.bool} (b x) γ = b x
-        closedTerm {n , Γ} {_} (pair x y) γ = pair (closedTerm x γ) (closedTerm y γ) 
-        closedTerm {n , Γ} {_} (fun f) γ = fun λ x → closedTerm (f x) γ
-
-        -- Heres where we eliminate variables using the context
-        closedTerm {n , Γ} {.(Γ i)} (var i) γ with (Γ i) | inspect Γ i
-        closedTerm {n , Γ} {.(Γ i)} (var i) γ | unit | ingraph p = pure (subst El p (γ i))
-        closedTerm {n , Γ} {.(Γ i)} (var i) γ | bool | ingraph p = pure (subst El p (γ i))
-        closedTerm {n , Γ} {.(Γ i)} (var i) γ | prod t1 t2 | ingraph p  = pure (((subst El p (γ i)) .fst) , ((subst El p (γ i)) .snd))
-        closedTerm {n , Γ} {.(Γ i)} (var i) γ | arr t1 t2 | ingraph p = pure (subst El p (γ i))  
-
-
-        example : terms (listToCtx (unit ∷ bool ∷ [])) (arr unit (prod bool unit)) 
-        example = fun λ x → pair (var 1) (pure x)
-
-        
-        _ = {! upd' ectx bool  !}
-
-        pattern z = (zero , _)
-        pattern sc n = (suc n , _)
-
-        module foo where 
-            ctx : Ctx 
-            ctx = listToCtx ( bool ∷ unit ∷ [])
-
-            filled : elCtx ctx 
-            filled z = true 
-            filled (sc n) = {! tt  !}
-
-        _ = closedTerm example {!   !}
-
-        homadj : {Γ : List U}{A B : U} → Iso (terms (listToCtx (Γ ++ [ A ])) B) (terms (listToCtx Γ) (arr A B)) 
-        homadj = iso 
-                    (λ x → fun λ a → {!   !} )--pure (denote x {!   !})) 
-                    (λ x → pure (denote x {!   !} {!   !})) 
-                    {!   !} 
-                    {!   !}
-
-       -- closedTerm {(n , Γ)}{t} M γ with (Γ i) | inspect ? ? 
-     --   closedTerm {(n , Γ)}{t} M γ | unit | _ = ?
-
-        
-
-      --  closedTerm (const x) γ = const x
-        
-        {-closedTerm {(n , Γ)} (var i) γ with inspect (Γ i)
-        closedTerm {n , Γ} (var i) γ | (unit with≡ p)= goal where 
-            goal : terms ectx unit 
-            goal = {!   !}
-        
-        --subst (λ u → terms ectx u) (sym p) {! u (γ i)  !}
-        closedTerm {n , Γ} (var i) γ | (bool with≡ p) = {!   !}
-        closedTerm {n , Γ} (var i) γ | (prod d d₁) with≡ p = {!   !}
-        closedTerm {n , Γ} (var i) γ | (arr d d₁) with≡ p = {!   !} -}
-
-        _ : terms ectx unit
-        _ = u tt
-
-        -- no.. we want to distinguist this from arr
-       -- _ : terms ectx (arr unit unit)
-       -- _ = const λ x → x
-{-
-        adjl : (γ : Ctx)(t1 t2 : U)(M : terms γ (arr t1 t2)) → terms (upd' γ t1) t2 
-        adjl γ t1 t2 M = {! M  !}
-        
-        _ : terms ectx unit
-        _ = u tt
-
-        _ : terms (listToCtx (bool ∷ unit ∷ [])) unit
-        _ = var (fromNat 1)
-
-        _ = {! lam ?  !}
-
--}
-  
-
-        
-  
+    -}
+   

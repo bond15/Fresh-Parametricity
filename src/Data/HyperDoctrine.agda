@@ -9,85 +9,79 @@ module src.Data.HyperDoctrine where
     open import Cubical.Categories.Category
     open import Cubical.Categories.Functor
     open import Cubical.Categories.Instances.Preorders.Monotone hiding (_≤X_ ; _≤Y_)
-    
+    open import Cubical.Categories.Limits.BinProduct
+    open BinProduct
+    open import Cubical.Foundations.Powerset
     open Category
     open Functor
-
-    record isHeytingAlg (X : Set) : Set where
-        field 
-            islat : LatticeStr X
-        module L = LatticeStr islat 
-            renaming (
-                1l to top ; 
-                0l to bot )
-        
-        field 
-            ⇒l : X → X → X
-            l₁ : (x : X) → ⇒l x x ≡ L.top
-            l₂ : (x y : X) → L._∧l_ x (⇒l x y) ≡ L._∧l_ x y
-            l₃ : (x y : X) → L._∧l_ y (⇒l x y) ≡ y 
-            l₄ : (x y z : X) → ⇒l x (L._∧l_ y z) ≡ L._∧l_ (⇒l x y) (⇒l x z)
-
-    open isHeytingAlg
-
-    HeytingAlg : Set 
-    HeytingAlg = TypeWithStr _ isHeytingAlg
-
-    record IsHAHom 
-        {A : Set} {B : Set} 
-        (L : isHeytingAlg A) 
-        (f : A → B) 
-        (M : isHeytingAlg B) : Set where
-        field 
-            islatHom : IsLatticeHom (L .islat) f (M .islat)
-            presImp : (x y : A) → f (L .⇒l x y) ≡ M .⇒l (f x) (f y)
-
-
+    open import Cubical.Algebra.Semilattice
+    open import Cubical.Algebra.CommMonoid
+    open import Cubical.Algebra.Monoid
+    open import Cubical.Algebra.Semigroup
+    open import Cubical.Data.Sigma
     open import Cubical.Relation.Binary.Preorder
+    open import Cubical.Foundations.Isomorphism
+    open import Cubical.Relation.Binary.Preorder renaming (isUnivalent to isUniv)
+    open import Cubical.Data.Sigma
+    open import Cubical.Categories.Limits.Terminal
+    open import Cubical.Categories.Exponentials
+    open import Cubical.Categories.Adjoint
+    open import Cubical.Data.Sigma
+    open import Cubical.Foundations.HLevels
+
+    
+    module bpOps (𝓒 : Category _ _ )(bp : BinProducts 𝓒)  where 
+        _×𝓒_ : ob 𝓒 → ob 𝓒 → ob 𝓒 
+        _×𝓒_ x y = bp x y .binProdOb
+
+
+        π₁ : {X Y : ob 𝓒} → 𝓒 [ X ×𝓒 Y , X ]
+        π₁  {X} {Y} = bp X Y .binProdPr₁
+
+        π₂ : {X Y : ob 𝓒} → 𝓒 [ X ×𝓒 Y , Y ]
+        π₂  {X} {Y} = bp X Y .binProdPr₂
+
+        Δ : (X : ob 𝓒) → 𝓒 [ X , bp X X .binProdOb ]
+        Δ X = bp X X .univProp (𝓒 .id{X}) (𝓒 .id{X}) .fst .fst
+
+        bimap : {X Y Z W : ob 𝓒} → 𝓒 [ X , Z ] → 𝓒 [ Y , W ] → 𝓒 [ bp X Y .binProdOb , bp Z W .binProdOb ]
+        bimap {X}{Y}{Z}{W} f g = bp Z W .univProp (π₁ {X} {Y} ⋆⟨ 𝓒 ⟩ f) (π₂ {X} {Y} ⋆⟨ 𝓒 ⟩ g) .fst .fst
+
+    module bptOps (𝓒 : Category _ _ )(bp : BinProducts 𝓒)(term : Terminal 𝓒)  where
+
+        open bpOps 𝓒 bp
+
+        𝟙 : ob 𝓒 
+        𝟙 = term .fst
+
+        binop : {H : ob 𝓒} → 𝓒 [ H ×𝓒 H , H ] → (x y : 𝓒 [ 𝟙 , H ]) → 𝓒 [ 𝟙 , H ]
+        binop op x y =  Δ 𝟙 ⋆⟨ 𝓒 ⟩ bimap x y ⋆⟨ 𝓒 ⟩ op
+
+
     open PreorderStr
+    open NaturalBijection
 
     poset = POSET _ _ 
-    
-    toCat : ob poset → Category _ _ 
-    toCat P .ob = P .fst .fst
-    toCat P .Hom[_,_] = P .fst .snd ._≤_
-    toCat P .id = P .fst .snd .is-refl _
-    toCat P ._⋆_ = P .fst .snd .is-trans _ _ _
-    toCat P .⋆IdL f = P .fst .snd .is-prop-valued _ _ _ _
-    toCat P .⋆IdR f = P .fst .snd .is-prop-valued _ _ _ _
-    toCat P .⋆Assoc f g h = P .fst .snd .is-prop-valued _ _ _ _
-    toCat P .isSetHom = isProp→isSet (P .fst .snd .is-prop-valued _ _)
-
-    toFun : {x y : ob poset}→ (f : poset [ x , y ]) → Functor (toCat x) (toCat y)
-    toFun f .F-ob = MonFun.f f
-    toFun {x} {y} f .F-hom g = MonFun.isMon {_}{_}{x .fst} {y .fst} f g
-    toFun {x}{y} f .F-id {x'}=  y .fst .snd .is-prop-valued _ _ _ _
-    toFun {x}{y} f .F-seq g h = y .fst .snd .is-prop-valued _ _ _ _
-
-    open import Cubical.Foundations.Isomorphism
-
-    open MonFun
-
-    toMon : {x y : ob poset} → Functor (toCat x) (toCat y) → MonFun (x .fst) (y .fst)
-    toMon F .f = F .F-ob
-    toMon F .isMon = F .F-hom
-
-    MonFunIso : {x y : ob poset} → Iso (poset [ x , y ]) (Functor (toCat x) (toCat y)) 
-    MonFunIso {x} {y} = 
-        iso 
-            (toFun {x} {y}) 
-            (toMon {x} {y}) 
-            (λ F → Functor≡ (λ _ → refl) λ _ → refl) 
-            λ f → eqMon _ _  refl
-
-
     set = SET _
-    open import Cubical.Categories.Limits.BinProduct
-    open import Cubical.Categories.Adjoint
-    open NaturalBijection
-    open BinProduct
-    open import Cubical.Data.Sigma
+
+   -- isPoset : Set → Set 
+   -- isPoset X = Σ[ P ∈ PreorderStr _ X ] isUniv (X , P)
     
+    open import src.Data.HeytingAlg
+            
+    record IsHAHom 
+        {A : hSet _} {B : hSet _} 
+        (L : isHeytingAlg A) 
+        (f : A .fst → B .fst) 
+        (M : isHeytingAlg B) : Set where
+        open isHeytingAlg 
+        field 
+            islatHom : IsLatticeHom (L .islat) f (M .islat)
+            presImp : (x y : A .fst) → f (L .⇒l x y) ≡ M .⇒l (f x) (f y)
+
+            
+
+
     -- This is just a Galois connection?
     record adjMon {X Y : ob poset} (f : poset [ X , Y ])(g : poset [ Y , X ]) : Set where 
         Xob = X .fst .fst
@@ -111,69 +105,32 @@ module src.Data.HyperDoctrine where
     isRightAdjointMon : {X Y : ob poset} → poset [ Y , X ] → Set 
     isRightAdjointMon {X} {Y} g = Σ[ f ∈ poset [ X , Y ] ] adjMon {X} {Y} f g
 
-    -- adjMon is enough
-    module example {X Y : ob poset} (f : poset [ X , Y ])(g : poset [ Y , X ])(adj : adjMon {X}{Y} f g) where 
-
-        open adjMon
-        prf : toFun {X} {Y} f ⊣ toFun {Y} {X} g
-        prf = record { 
-                adjIso = 
-                    iso 
-                    (adj .fwd) 
-                    (adj .bkwd) 
-                    (λ _ → X .fst .snd .is-prop-valued _ _ _ _) 
-                    (λ _ → Y .fst .snd .is-prop-valued _ _ _ _) ; 
-                adjNatInD = λ _ _ → (X .fst .snd .is-prop-valued _ _ _ _) ; 
-                adjNatInC = λ _ _ → (Y .fst .snd .is-prop-valued _ _ _ _) } 
-
-    
     record FirstOrderHyperDoc (𝓒 : Category _ _ )(bp : BinProducts 𝓒) : Set where 
-        _×𝓒_ : ob 𝓒 → ob 𝓒 → ob 𝓒 
-        _×𝓒_ x y = bp x y .binProdOb
-
-
-        π₁ : {X Y : ob 𝓒} → 𝓒 [ X ×𝓒 Y , X ]
-        π₁  {X} {Y} = bp X Y .binProdPr₁
-
-        π₂ : {X Y : ob 𝓒} → 𝓒 [ X ×𝓒 Y , Y ]
-        π₂  {X} {Y} = bp X Y .binProdPr₂
-
-        Δ : (X : ob 𝓒) → 𝓒 [ X , bp X X .binProdOb ]
-        Δ X = bp X X .univProp (𝓒 .id{X}) (𝓒 .id{X}) .fst .fst
-
-        bimap : {X Y Z W : ob 𝓒} → 𝓒 [ X , Z ] → 𝓒 [ Y , W ] → 𝓒 [ bp X Y .binProdOb , bp Z W .binProdOb ]
-        bimap {X}{Y}{Z}{W} f g = bp Z W .univProp (π₁ {X} {Y} ⋆⟨ 𝓒 ⟩ f) (π₂ {X} {Y} ⋆⟨ 𝓒 ⟩ g) .fst .fst
+        open bpOps 𝓒 bp
         
         field 
             𝓟 : Functor (𝓒 ^op) (POSET _ _)
-            isHA : (X : ob 𝓒) → isHeytingAlg (𝓟 .F-ob X .fst .fst)
+            𝓟_isSet : (X : ob 𝓒) → isSet (𝓟 .F-ob X .fst .fst) 
+            isHA : (X : ob 𝓒) → isHeytingAlg (𝓟 .F-ob X  .fst .fst , 𝓟_isSet X )
             isHomo : {X Y : ob 𝓒} → (f : 𝓒 [ X , Y ]) → IsHAHom  (isHA Y) (MonFun.f (𝓟 .F-hom f)) (isHA X)
-        --    eq : {X : ob 𝓒} → 
-                -- is Right Adjoint, so there exists a left
-  --              isRightAdjoint  
-    --                (toFun {𝓟 .F-ob (X ×𝓒 X)} {𝓟 .F-ob X} (𝓟 .F-hom (Δ X)))
+
             eq : {X : ob 𝓒} → isRightAdjointMon  {𝓟 .F-ob X}{𝓟 .F-ob (X ×𝓒 X)} (𝓟 .F-hom (Δ X))
-            {-}
-            quant : {Γ X : ob 𝓒} → (π : 𝓒 [ Γ ×𝓒 X , Γ ]) → 
-                    isLeftAdjoint ((toFun {𝓟 .F-ob Γ} {𝓟 .F-ob (Γ ×𝓒 X)} (𝓟 .F-hom π))) 
-                × 
-                    isRightAdjoint (((toFun {𝓟 .F-ob Γ} {𝓟 .F-ob (Γ ×𝓒 X)} (𝓟 .F-hom π))))
-                    -}
+
             quant : {Γ X : ob 𝓒} → 
                     (isLeftAdjointMon  {𝓟 .F-ob Γ} {𝓟 .F-ob (Γ ×𝓒 X)}(𝓟 .F-hom π₁))
                 × 
                     (isRightAdjointMon  {𝓟 .F-ob (Γ ×𝓒 X)}{𝓟 .F-ob Γ} (𝓟 .F-hom π₁))
+
+                    
         ∃F : {Γ X : ob 𝓒} → MonFun (𝓟 .F-ob ( Γ ×𝓒 X) .fst) ((𝓟 .F-ob Γ) .fst)
         ∃F {Γ} {X} = quant .fst .fst
 
         ∀F : {Γ X : ob 𝓒} → MonFun (𝓟 .F-ob ( Γ ×𝓒 X) .fst) ((𝓟 .F-ob Γ) .fst)
-        ∀F {Γ} {X}   = quant .snd .fst
+        ∀F {Γ} {X} = quant .snd .fst
 
         =F : {X : ob 𝓒} → MonFun ((𝓟 .F-ob X) .fst) (𝓟 .F-ob ( X ×𝓒 X) .fst)
         =F {X}  = eq  .fst
         
-        _ = {! Cubical.Categories.Functor._^opF  !}
-
         field
             beck₁ : {Γ Γ' X : ob 𝓒}{s : 𝓒 [ Γ , Γ' ]} → 
                     (∃F {Γ'} {X}) 
@@ -192,70 +149,15 @@ module src.Data.HyperDoctrine where
                         ⋆⟨ poset ⟩ 
                     (∀F {Γ} {X})
 
-
-
-{-
-        ∃F : {Γ X : ob 𝓒} → (π : 𝓒 [ Γ ×𝓒 X , Γ ]) → Functor (toCat (𝓟 .F-ob ( Γ ×𝓒 X))) (toCat (𝓟 .F-ob Γ)) 
-        ∃F π  = quant π .fst .fst
-
-        ∀F : {Γ X : ob 𝓒} → (π : 𝓒 [ Γ ×𝓒 X , Γ ]) → Functor (toCat (𝓟 .F-ob ( Γ ×𝓒 X))) (toCat (𝓟 .F-ob Γ))
-        ∀F π = quant π .snd .fst
-
-        =F : {X : ob 𝓒} → (Δ : 𝓒 [ X , X ×𝓒 X ]) → Functor (toCat (𝓟 .F-ob X)) (toCat (𝓟 .F-ob ( X ×𝓒 X))) 
-        =F Δ = eq  Δ .fst
-
-        π₁ : {X Y : ob 𝓒} → 𝓒 [ X ×𝓒 Y , X ]
-        π₁ {X} {Y} = bp X Y .binProdPr₁
-
-        field
-            bimap : {X Y W Z : ob 𝓒} → 𝓒 [ X , Y ] → 𝓒 [ W , Z ] → 𝓒 [ X ×𝓒 W , Y ×𝓒 Z ]       
-            beck₁ : {Γ Γ' X : ob 𝓒}{s : 𝓒 [ Γ , Γ' ]} → 
-                    toMon {𝓟 .F-ob (Γ' ×𝓒 X)} {𝓟 .F-ob Γ'} (∃F {Γ'} {X} (π₁ {Γ'} {X})) 
-                        ⋆⟨ poset ⟩ 
-                    𝓟 .F-hom s 
-                 ≡ 
-                    𝓟 .F-hom (bimap s (𝓒 .id)) 
-                        ⋆⟨ poset ⟩ 
-                    toMon {𝓟 .F-ob (Γ ×𝓒 X)} {𝓟 .F-ob Γ} (∃F {Γ} {X} (π₁ {Γ} {X}))
-
-            beck₂ : {Γ Γ' X : ob 𝓒}{s : 𝓒 [ Γ , Γ' ]} → 
-                    toMon {𝓟 .F-ob (Γ' ×𝓒 X)} {𝓟 .F-ob Γ'} (∀F {Γ'} {X} (π₁ {Γ'} {X})) 
-                        ⋆⟨ poset ⟩ 
-                    𝓟 .F-hom s 
-                 ≡ 
-                    𝓟 .F-hom (bimap s (𝓒 .id)) 
-                        ⋆⟨ poset ⟩ 
-                    toMon {𝓟 .F-ob (Γ ×𝓒 X)} {𝓟 .F-ob Γ} (∀F {Γ} {X} (π₁ {Γ} {X}))
--}
-    open import Cubical.Categories.Limits.Terminal
-    open import Cubical.Categories.Exponentials
-
-    module Ops 
+    module InternalHADef
         (𝓒 : Category _ _ )
         (term : Terminal 𝓒)
         (bp : BinProducts 𝓒) where 
+        
+        open bpOps 𝓒 bp
+        open bptOps 𝓒 bp term
 
-        𝟙 : ob 𝓒 
-        𝟙 = term .fst
-
-        _×𝓒_ : ob 𝓒 → ob 𝓒 → ob 𝓒 
-        _×𝓒_ X Y = bp X Y .binProdOb
-
-        π₁𝓒 : {X Y : ob 𝓒} → 𝓒 [ X ×𝓒 Y , X ]
-        π₁𝓒  {X} {Y} = bp X Y .binProdPr₁
-
-        π₂𝓒 : {X Y : ob 𝓒} → 𝓒 [ X ×𝓒 Y , Y ]
-        π₂𝓒  {X} {Y} = bp X Y .binProdPr₂
-
-        Δ : (X : ob 𝓒) → 𝓒 [ X , bp X X .binProdOb ]
-        Δ X = bp X X .univProp (𝓒 .id{X}) (𝓒 .id{X}) .fst .fst
-
-        bimap : {X Y Z W : ob 𝓒} → 𝓒 [ X , Z ] → 𝓒 [ Y , W ] → 𝓒 [ bp X Y .binProdOb , bp Z W .binProdOb ]
-        bimap {X}{Y}{Z}{W} f g = bp Z W .univProp (π₁𝓒 {X} {Y} ⋆⟨ 𝓒 ⟩ f) (π₂𝓒 {X} {Y} ⋆⟨ 𝓒 ⟩ g) .fst .fst
-
-        binop : {H : ob 𝓒} → 𝓒 [ H ×𝓒 H , H ] → (x y : 𝓒 [ 𝟙 , H ]) → 𝓒 [ 𝟙 , H ]
-        binop op x y =  Δ 𝟙 ⋆⟨ 𝓒 ⟩ bimap x y ⋆⟨ 𝓒 ⟩ op
-
+        -- what about completeness
         record InternalHA (H : ob 𝓒): Set where 
             field 
                 top bot : 𝓒 [ 𝟙 , H ]
@@ -291,35 +193,145 @@ module src.Data.HyperDoctrine where
                 l₄ : (x y z : 𝓒 [ 𝟙 , H ]) → imp' x (and' y z) ≡ and' (imp' x y) (imp' x z) 
 
 
-    open FirstOrderHyperDoc
     record HyperDoctrine 
         (𝓒 : Category _ _ ) 
         (term : Terminal 𝓒)
         (bp : BinProducts 𝓒)
-        (exp : Exponentials 𝓒 bp ) : Set where     
+        (exp : Exponentials 𝓒 bp ) : Set where    
+        
+        open FirstOrderHyperDoc 
+        open InternalHADef 𝓒 term bp
+
         field 
             isFO : FirstOrderHyperDoc 𝓒 bp
-            H : Σ[ H ∈ ob 𝓒 ] Ops.InternalHA 𝓒 term bp H
+            H : Σ[ H ∈ ob 𝓒 ] InternalHA H
             -- should be "natural bijection"
             Θ : (X : ob 𝓒) → Iso (isFO .𝓟 .F-ob X .fst .fst) (𝓒 [ X , H .fst ]) 
 
 
-    module HDsyntax
+{-     -- Theorem 4.6 a taste of categorical logic
+    -- let H be any complete Heyting Algebra, 
+    -- Then Set together with a functor Hom_Set[_,H] and generic object H
+    -- is a hyperdoctrine
+    
+    record HomHyperDoc 
         (𝓒 : Category _ _ ) 
         (term : Terminal 𝓒)
         (bp : BinProducts 𝓒)
-        (exp : Exponentials 𝓒 bp )
-        (Hyp : HyperDoctrine 𝓒 term bp exp) where
-
-        open HyperDoctrine Hyp
-        open FirstOrderHyperDoc isFO
-
-        PROP : ob 𝓒 
-        PROP = H .fst
-
-        𝓣 : {X : ob 𝓒} → ob {! 𝓟   !} 
-        𝓣 = {!   !}
+        (exp : Exponentials 𝓒 bp ) : Set where -}
 
 
 
- 
+
+    --    (Ω : ob 𝓒)
+       -- (≤Hom : (X : ob 𝓒) → isPoset (𝓒 [ X , Ω ])) : Set where    
+{-}
+        open FirstOrderHyperDoc
+        𝓟' : Functor (𝓒 ^op) (POSET ℓ-zero ℓ-zero)
+        𝓟' .F-ob X = ((𝓒 [ X , Ω ]) , ≤Hom X .fst) , ≤Hom X .snd
+        𝓟' .F-hom f  = record { f = λ g → f ⋆⟨ 𝓒 ⟩ g ; isMon = λ x₁ → {!   !} } where 
+            open import Cubical.Categories.Instances.Preorders.Monotone
+        𝓟' .F-id = {!   !}
+        𝓟' .F-seq = {!   !}
+
+        fo : FirstOrderHyperDoc 𝓒 bp 
+        fo .𝓟 = {! HomFunctor  !}
+        fo .isHA = {!   !}
+        fo .isHomo = {!   !}
+        fo .eq = {!   !}
+        fo .quant = {!   !}
+        fo .beck₁ = {!   !}
+        fo .beck₂ = {!   !}
+
+-}
+
+
+
+{-
+    -- Cruft, posets as categories
+
+    
+    toCat : ob poset → Category _ _ 
+    toCat P .ob = P .fst .fst
+    toCat P .Hom[_,_] = P .fst .snd ._≤_
+    toCat P .id = P .fst .snd .is-refl _
+    toCat P ._⋆_ = P .fst .snd .is-trans _ _ _
+    toCat P .⋆IdL f = P .fst .snd .is-prop-valued _ _ _ _
+    toCat P .⋆IdR f = P .fst .snd .is-prop-valued _ _ _ _
+    toCat P .⋆Assoc f g h = P .fst .snd .is-prop-valued _ _ _ _
+    toCat P .isSetHom = isProp→isSet (P .fst .snd .is-prop-valued _ _)
+
+    toFun : {x y : ob poset}→ (f : poset [ x , y ]) → Functor (toCat x) (toCat y)
+    toFun f .F-ob = MonFun.f f
+    toFun {x} {y} f .F-hom g = MonFun.isMon {_}{_}{x .fst} {y .fst} f g
+    toFun {x}{y} f .F-id {x'}=  y .fst .snd .is-prop-valued _ _ _ _
+    toFun {x}{y} f .F-seq g h = y .fst .snd .is-prop-valued _ _ _ _
+
+    open import Cubical.Foundations.Isomorphism
+
+    open MonFun
+
+    toMon : {x y : ob poset} → Functor (toCat x) (toCat y) → MonFun (x .fst) (y .fst)
+    toMon F .f = F .F-ob
+    toMon F .isMon = F .F-hom
+
+    MonFunIso : {x y : ob poset} → Iso (poset [ x , y ]) (Functor (toCat x) (toCat y)) 
+    MonFunIso {x} {y} = 
+        iso 
+            (toFun {x} {y}) 
+            (toMon {x} {y}) 
+            (λ F → Functor≡ (λ _ → refl) λ _ → refl) 
+            λ f → eqMon _ _  refl
+
+
+
+    -- adjMon is enough
+    module example {X Y : ob poset} (f : poset [ X , Y ])(g : poset [ Y , X ])(adj : adjMon {X}{Y} f g) where 
+
+        open adjMon
+        prf : toFun {X} {Y} f ⊣ toFun {Y} {X} g
+        prf = record { 
+                adjIso = 
+                    iso 
+                    (adj .fwd) 
+                    (adj .bkwd) 
+                    (λ _ → X .fst .snd .is-prop-valued _ _ _ _) 
+                    (λ _ → Y .fst .snd .is-prop-valued _ _ _ _) ; 
+                adjNatInD = λ _ _ → (X .fst .snd .is-prop-valued _ _ _ _) ; 
+                adjNatInC = λ _ _ → (Y .fst .snd .is-prop-valued _ _ _ _) } 
+
+    
+            
+
+        ∃F : {Γ X : ob 𝓒} → (π : 𝓒 [ Γ ×𝓒 X , Γ ]) → Functor (toCat (𝓟 .F-ob ( Γ ×𝓒 X))) (toCat (𝓟 .F-ob Γ)) 
+        ∃F π  = quant π .fst .fst
+
+        ∀F : {Γ X : ob 𝓒} → (π : 𝓒 [ Γ ×𝓒 X , Γ ]) → Functor (toCat (𝓟 .F-ob ( Γ ×𝓒 X))) (toCat (𝓟 .F-ob Γ))
+        ∀F π = quant π .snd .fst
+
+        =F : {X : ob 𝓒} → (Δ : 𝓒 [ X , X ×𝓒 X ]) → Functor (toCat (𝓟 .F-ob X)) (toCat (𝓟 .F-ob ( X ×𝓒 X))) 
+        =F Δ = eq  Δ .fst
+
+        π₁ : {X Y : ob 𝓒} → 𝓒 [ X ×𝓒 Y , X ]
+        π₁ {X} {Y} = bp X Y .binProdPr₁
+
+        field
+            bimap : {X Y W Z : ob 𝓒} → 𝓒 [ X , Y ] → 𝓒 [ W , Z ] → 𝓒 [ X ×𝓒 W , Y ×𝓒 Z ]       
+            beck₁ : {Γ Γ' X : ob 𝓒}{s : 𝓒 [ Γ , Γ' ]} → 
+                    toMon {𝓟 .F-ob (Γ' ×𝓒 X)} {𝓟 .F-ob Γ'} (∃F {Γ'} {X} (π₁ {Γ'} {X})) 
+                        ⋆⟨ poset ⟩ 
+                    𝓟 .F-hom s 
+                 ≡ 
+                    𝓟 .F-hom (bimap s (𝓒 .id)) 
+                        ⋆⟨ poset ⟩ 
+                    toMon {𝓟 .F-ob (Γ ×𝓒 X)} {𝓟 .F-ob Γ} (∃F {Γ} {X} (π₁ {Γ} {X}))
+
+            beck₂ : {Γ Γ' X : ob 𝓒}{s : 𝓒 [ Γ , Γ' ]} → 
+                    toMon {𝓟 .F-ob (Γ' ×𝓒 X)} {𝓟 .F-ob Γ'} (∀F {Γ'} {X} (π₁ {Γ'} {X})) 
+                        ⋆⟨ poset ⟩ 
+                    𝓟 .F-hom s 
+                 ≡ 
+                    𝓟 .F-hom (bimap s (𝓒 .id)) 
+                        ⋆⟨ poset ⟩ 
+                    toMon {𝓟 .F-ob (Γ ×𝓒 X)} {𝓟 .F-ob Γ} (∀F {Γ} {X} (π₁ {Γ} {X}))
+-}

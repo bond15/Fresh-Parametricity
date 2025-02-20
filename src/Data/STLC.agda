@@ -1,4 +1,7 @@
+{-# OPTIONS --allow-unsolved-metas #-} 
 module src.Data.STLC where
+
+
 
     open import Cubical.Data.Unit 
     open import Cubical.Data.Bool hiding (_≤_)
@@ -36,6 +39,11 @@ module src.Data.STLC where
         unit bool : U
         prod arr : U → U → U
 
+
+    _ = isSetBool
+    isSetU : isSet U 
+    isSetU = {!   !}
+
     El : U → Set 
     El unit = Unit 
     El bool = Bool
@@ -50,6 +58,9 @@ module src.Data.STLC where
 
     Ctx : Set
     Ctx = Σ[ n ∈ ℕ ] (Fin n → U)
+
+    isSetCtx : isSet Ctx 
+    isSetCtx = isSetΣ isSetℕ λ x → isSet→ isSetU
 
     -- \o/ 
     ⊘ : Ctx 
@@ -89,6 +100,7 @@ module src.Data.STLC where
     elCtx' : Ctx → Set
     elCtx' c = El (ctxToU c)
 
+
     open import Cubical.Foundations.Isomorphism
     open import Cubical.Data.Empty
     {-}
@@ -104,12 +116,80 @@ module src.Data.STLC where
             _ = {! refl  !}
     -}
     
+    -- include eliminators?
     data _⊢_ : Ctx → U → Set where 
         u : {Γ : Ctx} → El unit → Γ ⊢ unit
         b : {Γ : Ctx} → El bool → Γ ⊢ bool 
         pair : {Γ : Ctx}{t1 t2 : U} → Γ ⊢ t1 → Γ ⊢ t2 → Γ ⊢ (prod t1 t2)
         fun : {Γ : Ctx}{t1 t2 : U} → (El t1 → Γ ⊢ t2) → Γ ⊢ (arr t1 t2)
+        app :  {Γ : Ctx}{t1 t2 : U} → Γ ⊢ (arr t1 t2) → Γ ⊢ t1 → Γ ⊢ t2
         var : {(n , Γ) : Ctx} → (i : Fin n) → (n , Γ) ⊢ (Γ i)
+
+    isSetTerm : {Γ : Ctx}{A : U} → isSet (Γ ⊢ A)
+    isSetTerm {Γ}{A} = {!   !}
+        
+    record CtxMap (Γ Δ : Ctx): Set where
+        field 
+            terms : (i : Fin (Δ .fst)) → Γ ⊢ (Δ .snd i)
+    open CtxMap 
+
+    isSetCtxMap : {Γ Δ : Ctx} → isSet (CtxMap Γ Δ)
+    isSetCtxMap =  {!   !}
+
+    ≡CtxMap : {Γ Δ : Ctx} {f g : CtxMap Γ Δ} → (f .terms ≡ g .terms) → f ≡ g 
+    ≡CtxMap  prf i = record { terms = prf i }
+
+    idCtxMap : {Γ : Ctx} → CtxMap Γ Γ 
+    idCtxMap = record { terms = var }
+
+    sub : {Γ Δ : Ctx}{A : U} → CtxMap Γ Δ → Δ ⊢ A → Γ ⊢ A 
+    sub f (u x) = u x
+    sub f (b x) = b x
+    sub f (pair x y) = pair (sub f x) (sub f y)
+    sub f (fun x) = fun λ e → sub f (x e)
+    sub f (app x y) = app (sub f x) (sub f y)
+    sub f (var i) = f .terms i
+
+    subId : {Γ : Ctx}{A : U}{M : Γ ⊢ A} → sub {Γ}{Γ}{A} idCtxMap M ≡ M
+    subId {M = u x} = refl
+    subId {M = b x} = refl
+    subId {M = pair M M₁} = cong₂ pair (subId {M = M}) (subId {M = M₁})
+    subId {M = fun x} = cong fun (funExt λ e → subId {M = x e})
+    subId {M = app M M₁} = cong₂ app (subId {M = M}) (subId {M = M₁})
+    subId {M = var i} = refl
+
+    seqCtxMap : {Γ Δ Θ : Ctx} → CtxMap Γ Δ → CtxMap Δ Θ → CtxMap Γ Θ 
+    seqCtxMap f record { terms = g } = 
+        record { terms = λ i → sub f (g i) }
+
+    subSeq : {Γ Δ Θ : Ctx}{A : U}{f : CtxMap Γ Δ}{g : CtxMap Δ Θ} →
+        (M : Θ ⊢ A) →  
+        sub (seqCtxMap f g) M ≡ sub f (sub g M)
+    subSeq (u x) = refl
+    subSeq (b x) = refl
+    subSeq (pair M M₁) = cong₂ pair (subSeq M) (subSeq M₁)
+    subSeq (fun x) = cong fun (funExt λ e → subSeq (x e))
+    subSeq (app M M₁) = cong₂ app (subSeq M) (subSeq M₁)
+    subSeq (var i) = refl
+
+    module examplemap where 
+        Γ : Ctx 
+        Γ = 3 , λ { zero → bool
+                  ; (suc zero) → arr unit bool
+                  ; (suc (suc zero)) → unit}
+
+        Δ : Ctx 
+        Δ = 4 , λ { zero → bool
+                  ; (suc zero) → bool
+                  ; (suc (suc zero)) → bool 
+                  ; (suc (suc (suc zero))) → bool}
+
+        Γ→Δ : CtxMap Γ Δ 
+        Γ→Δ = record { terms = 
+            λ{ zero → var (iS (iS (toFin 0)))
+             ; (suc zero) → app (var (iS (toFin 1))) (var (toFin 2))
+             ; (suc (suc zero)) → b true
+             ; (suc (suc (suc zero))) → b false }}
 
     -- terms that dont use the context
     pure : {Γ : Ctx}{ty : U} → El ty → Γ ⊢ ty 
@@ -133,14 +213,13 @@ module src.Data.STLC where
     closedTerm {n , Γ} {.bool} (b x) γ = b x
     closedTerm {n , Γ} {_} (pair x y) γ = pair (closedTerm x γ) (closedTerm y γ) 
     closedTerm {n , Γ} {_} (fun f) γ = fun λ x → closedTerm (f x) γ
-
+    closedTerm {n , Γ} {_} (app f x) γ = app (closedTerm f γ) (closedTerm x γ)
     -- Heres where we eliminate variables using the context
     closedTerm {n , Γ} {.(Γ i)} (var i) γ with (Γ i) | inspect Γ i
     closedTerm {n , Γ} {.(Γ i)} (var i) γ | unit | ingraph p = pure (subst El p (γ i))
     closedTerm {n , Γ} {.(Γ i)} (var i) γ | bool | ingraph p = pure (subst El p (γ i))
     closedTerm {n , Γ} {.(Γ i)} (var i) γ | prod t1 t2 | ingraph p  = pure (((subst El p (γ i)) .fst) , ((subst El p (γ i)) .snd))
     closedTerm {n , Γ} {.(Γ i)} (var i) γ | arr t1 t2 | ingraph p = pure (subst El p (γ i))  
-
  
     module testing where 
         c1 : Ctx 
@@ -213,6 +292,56 @@ module src.Data.STLC where
         _ : (closedTerm {c4} term1 t9) ≡ fun (λ x → pair (fun λ b → _⊢_.b (not b)) (fun (λ x₁ → b false))) 
         _ = refl
 
+
+
+{- 
+
+
+
+    module _ (g : ℕ → Bool) where
+
+        data _⊢'_ : Ctx → U → Set where 
+            u : {Γ : Ctx} → El unit → Γ ⊢' unit
+            b : {Γ : Ctx} → El bool → Γ ⊢' bool 
+            pair : {Γ : Ctx}{t1 t2 : U} → Γ ⊢' t1 → Γ ⊢' t2 → Γ ⊢' (prod t1 t2)
+            fun : {Γ : Ctx}{t1 t2 : U} → (El t1 → Γ ⊢' t2) → Γ ⊢' (arr t1 t2)
+            var : {(n , Γ) : Ctx} → (i : Fin n) → (n , Γ) ⊢' (Γ i)
+            ite : {Γ : Ctx}{A : U} → Γ ⊢' bool → Γ ⊢' A → Γ ⊢' A →  Γ ⊢' A
+            pi1 : {Γ : Ctx}{A B : U} → Γ ⊢' (prod A B) → Γ ⊢' A 
+            pi2 : {Γ : Ctx}{A B : U} → Γ ⊢' (prod A B) → Γ ⊢' B
+
+            hmm : {Γ : Ctx}{A B : U} → (p :  Γ ⊢' (prod A B)) → 
+                p ≡ pair (pi1 p) (pi2 p)
+
+ 
+        what : ⊘ ⊢' bool → ℕ
+        what (b x) = {!   !}
+        what (ite t t₁ t₂) = {!   !}
+        what (pi1 t) = {!   !}
+        what (pi2 t) = {!   !}
+
+        what' : {Γ : Ctx}{A : U}→  Γ  ⊢' A → ℕ
+        what' (u x) = {!   !}
+        what' (b x) = {!   !}
+        what' (pair t t₁) = 0
+        what' (fun x) = {!   !}
+        what' (var i) = {!   !}
+        what' (ite t t₁ t₂) = {!   !}
+        what' (pi1 t) = 0
+        what' (pi2 t) = 0
+        what' (hmm t i) = {!  0 !}
+
+
+
+
+
+        -- is this cheating the syntax?
+        _ : ⊘ ⊢ bool 
+        _ = b (g 9)
+
+        _ : ⊘ ⊢ bool 
+        _ = {! fun   !}
+-}
 
 
  --   ctxToU : Ctx → U 
