@@ -90,7 +90,7 @@ module src.Models.WithWeakening.Denotation {ℓS} where
         OSum .F-ob (((X , Xfin) , tt* ) , w) = 
             (Σ[ x ∈ X ] ((tys (w x)) ⟅ (((X , Xfin) , _ ) , w) ⟆) .fst) , 
             isSetΣ (isFinSet→isSet Xfin) λ x → ((tys (w x)) ⟅ (((X , Xfin) , _ ) , w) ⟆) .snd
-        OSum .F-hom f (x , elem) = f .fst .fst .fst x , {! elem  !}
+        OSum .F-hom f (x , elem) = f .fst .fst .fst x , {!  !}
         OSum .F-id = {!   !}
         OSum .F-seq = {!   !}
 
