@@ -1,0 +1,164 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\graphicspath{ {./images/} }
+\usepackage{simplebnf}
+\usepackage{bussproofs}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{stmaryrd}
+\usepackage{comment}
+\usepackage{bm}
+\usepackage{amsthm}
+
+%used in colored inline comments
+\usepackage[dvipsnames]{xcolor}
+
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+%using biblatex https://www.overleaf.com/learn/latex/Bibliography_management_with_biblatex
+\usepackage[
+    backend=biber,
+    style=trad-abbrv,
+  ]{biblatex}
+\addbibresource{ref-overview.bib}
+
+
+\newtheorem{thm}{Theorem}
+\newtheorem{deff}{Definition}
+
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{cor}[thm]{Corollary}
+\newtheorem{rem}[thm]{Remark}
+\newtheorem*{remark}{Remark}
+\newtheorem*{question}{\red{Question}}
+\newtheorem{definition}[deff]{Definition}
+\newtheorem*{construction}{Construction}
+\newtheorem{conj}[thm]{Conjecture}
+
+% why isn't this resoled by \includin{commands} ?
+\newcommand{\blue}[1]{\textcolor{blue}{#1}}
+\newcommand{\red}[1]{\textcolor{red}{#1}}
+
+
+
+\begin{document}
+\include{commands}
+
+\title{Towards a Parametricity Logic for Gradual Type Theory}
+\maketitle
+
+\section{Introduction}
+It is well known that binary parametricity is a useful principle for 
+reasoning about programs in a polymorphic language\cite{Reynolds}\cite{wadler_theorems_1989}.
+\red{don't just state, provide elaboration on why it is useful. 
+examples of parametricity proofs in different domains (ex security/noninterference)}
+Parametricity in the presence of a dynamic type has proven tricky to establish 
+and existing definitions break full abstraction relative to System F\cite{TwoParamThreeUniv}.
+Even so, we claim that the \textit{Type World Logical Relation} method used to establish parametricity 
+in the presence of a dynamic type captures relevant relational reasoning principles\blue{like what?}.
+To demonstrate this, we provide a parametricity logic\cite{PlotkinAbadi} to reason about data abstraction.
+This logic is sound \blue{relative to our operational semantics?} and the model is constructed in Iris. 
+
+
+
+\section{Languages}
+\subsection{Poly G}
+\cite{SemFoundGradType} page 274.
+
+\subsection{Poly C}
+\cite{SemFoundGradType} page 282
+
+\subsection{Poly G to Poly C}
+\cite{SemFoundGradType} page 283
+
+\subsection{Poly C to OSum}
+\cite{SemFoundGradType} page 292
+\red{syntax for OSum}
+
+\red{contract translation?}
+
+\section{Parametricity}
+
+Parametricity is formulated and proved via a family of proof methods titled \textit{logical relations}.
+The typical structure of a binary logical relation proof method consists of an inductive assignment of 
+types to binary relations on values. 
+These relations are meant to capture when two values of a type should be considered related.
+The prototypical example of parametricity is given by a Reynolds-style binary logical relation defined on the types of pure System F.
+
+It is well known that parametricity changes in the presence of effects.
+To accomidate effects such as higher order store and recursion, 
+the logical relation is enhanced to a step indexed Kripke logical relation.
+The logical relation used to establish parametricity for a language with a dynamic type
+is based off of that of higher order store. In order establish parametricity in 
+the presence of a dynamic type....
+
+\subsection{Binary Logical Relation for OSum}
+Untyped, using de Bruijn indicies, based on \cite{ALogicalApproachTypeSound}
+\begin{align*}
+\mathcal{V}\llbracket X\rrbracket\rho&= \rho(X)\\
+\mathcal{V}\llbracket Unit\rrbracket\rho&=\{(*,*)\}\\
+\mathcal{V}\llbracket Bool\rrbracket\rho&=\{(true,true),(false,false)\}\\
+\mathcal{V}\llbracket OSum\rrbracket\rho&=\{(inj_{\sigma_1} v_1, inj_{\sigma_2} v_2) \;|\;
+(\sigma_1 , \sigma_2) \mapsto R \;\land\; (v_1,v_2) \in \rhd R  \}\\
+\mathcal{V}\llbracket Case \;X\rrbracket\rho&=\{(\sigma_1 , \sigma_2) \; | \; (\sigma_1 , \sigma_2) \mapsto \mathcal{V}\llbracket X \rrbracket \rho \}\\
+\mathcal{V}\llbracket X \times Y \rrbracket\rho&= \{((v_1,v_2),(v_3,v_4)) 
+\;|\; (v_1,v_3) \in \mathcal{V}\llbracket X \rrbracket \rho
+\; \land \; (v_2,v_4) \in \mathcal{V}\llbracket Y \rrbracket \rho\}\\
+\mathcal{V}\llbracket X \rightarrow Y \rrbracket\rho&= 
+\{ (f,g) \; | \; \square (\forall x y, (x , y) \in \mathcal{V}\llbracket X \rrbracket \rho \implies (f x , g y) \in \mathcal{E}\llbracket Y \rrbracket \rho)\} \\
+\mathcal{V}\llbracket \forall X. Y\rrbracket\rho&= 
+\{(f , g) \;| \; \square (\forall R, (f[X],g[X]) \in \mathcal{E}\llbracket Y \rrbracket (\rho , X \mapsto R))\}\\
+\mathcal{V}\llbracket \exists X. Y\rrbracket\rho&= 
+\{ (pack \;v_1 , pack \; v_2) \; | \exists R, (v_1,v_2) \in \mathcal{E}\llbracket Y \rrbracket (\rho, X \mapsto R)\; \}\\
+\end{align*}
+
+\subsection{Binary Logical Relation for PolyG}
+
+\section{Logic}
+
+\section{Examples}
+By switching from a RLR to a TWLR\cite{TwoParamThreeUniv}, we have lost full abstraction.
+But do we care? Do we loose the ability to reason about contextual equivalences we'd like to show?
+
+\subsection{Simple, Pure examples}
+swap (see theorem 273 of \cite{SemFoundGradType})
+\subsection{Data Abstraction}
+\subsection{Universal Properties}
+\subsection{Local Store}
+\cite{NominalRelReason} \cite{ParamAndLocalVars} An example of relating programs which use different numbers of allocations.
+\[
+let\; \sigma = new\; \tau; M \cong_{ctx} M  
+\]
+where $\sigma$ is not used in $M$.
+
+\begin{comment}
+\subsubsection{Reynolds-Style Logical Relation}
+\blue{Example binary logical relation on system F. 
+Threading through a "map" of type variables to relations.}
+
+\subsubsection{Type World Logical Relation}
+\blue{Example binary logical relation on system F. 
+Using a Kripke World to "hold" the mapping of type variables to relations }
+
+\subsubsection{Reconciling the Difference}
+
+\cite{TwoParamThreeUniv}
+\red{Conjecture: The claim that the degeneracy of the universal type can't be shown in TWLR 
+seems to suffer from lack of imagination. 
+Consider a richer Kripke world in which type variables can be tagged as deallocated 
+based on their lexical scope.}
+
+\section{Parametricity Logics}
+\subsection{Pure}
+\cite{PlotkinAbadi}
+\subsection{With Recursion}
+\cite{birkedal2006linear}
+\cite{LSILR}
+\subsection{Effects}
+\cite{mogelberg2009relational}
+\subsection{Substructural?}
+\end{comment}
+
+\printbibliography
+\end{document}

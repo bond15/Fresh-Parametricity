@@ -1,0 +1,182 @@
+
+@inproceedings{APL,
+author = {Plotkin, Gordon D. and Abadi, Mart\'{\i}n},
+title = {A Logic for Parametric Polymorphism},
+year = {1993},
+isbn = {3540565175},
+publisher = {Springer-Verlag},
+address = {Berlin, Heidelberg},
+booktitle = {Proceedings of the International Conference on Typed Lambda Calculi and Applications},
+pages = {361–375},
+numpages = {15},
+series = {TLCA '93}
+}
+
+@book{CBPV,
+author = {Levy, Paul Blain},
+title = {Call-By-Push-Value: A Functional/Imperative Synthesis (Semantics Structures in Computation, V. 2)},
+year = {2004},
+isbn = {1402017308},
+publisher = {Kluwer Academic Publishers},
+address = {USA}
+}
+
+@article{ForFreeForFree,
+author = {Ahmed, Amal and Jamner, Dustin and Siek, Jeremy G. and Wadler, Philip},
+title = {Theorems for free for free: parametricity, with and without types},
+year = {2017},
+issue_date = {September 2017},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {1},
+number = {ICFP},
+url = {https://doi.org/10.1145/3110283},
+doi = {10.1145/3110283},
+abstract = {The polymorphic blame calculus integrates static typing, including universal types, with dynamic typing. The primary challenge with this integration is preserving parametricity: even dynamically-typed code should satisfy it once it has been cast to a universal type. Ahmed et al. (2011) employ runtime type generation in the polymorphic blame calculus to preserve parametricity, but a proof that it does so has been elusive. Matthews and Ahmed (2008) gave a proof of parametricity for a closely related system that combines ML and Scheme, but later found a flaw in their proof. In this paper we present an improved version of the polymorphic blame calculus and we prove that it satisfies relational parametricity. The proof relies on a step-indexed Kripke logical relation. The step-indexing is required to make the logical relation well-defined in the case for the dynamic type. The possible worlds include the mapping of generated type names to their types and the mapping of type names to relations. We prove the Fundamental Property of this logical relation and that it is sound with respect to contextual equivalence. To demonstrate the utility of parametricity in the polymorphic blame calculus, we derive two free theorems.},
+journal = {Proc. ACM Program. Lang.},
+month = aug,
+articleno = {39},
+numpages = {28},
+keywords = {parametricity, logical relation, gradual typing, dynamic typing}
+}
+
+@inproceedings{IntTypeAnalysis,
+author = {Harper, Robert and Morrisett, Greg},
+title = {Compiling polymorphism using intensional type analysis},
+year = {1995},
+isbn = {0897916921},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/199448.199475},
+doi = {10.1145/199448.199475},
+abstract = {Traditional techniques for implementing polymorphism use a universal representation for objects of unknown type. Often, this forces a compiler to use universal representations even if the types of objects are known. We examine an alternative approach for compiling polymorphism where types are passed as arguments to polymorphic routines in order to determine the representation of an object. This approach allows monomorphic code to use natural, efficient representations, supports separate compilation of polymorphic definitions and, unlike coercion-based implementations of polymorphism, natural representations can be used for mutable objects such as refs and arrays.We are particularly interested in the typing properties of an intermediate language that allows run-time type  analysis to be coded within the language. This allows us to compile many representation transformations and many language features without adding new primitive operations to the language. In this paper, we provide a core target language where type-analysis operators can be coded within the language and the types of such operators can be accurately tracked. The target language is powerful enough to code a variety of useful features, yet type checking remains decidable. We show how to translate an ML-like language into the target language so that primitive operators can analyze types to produce efficient representations. We demonstrate the power of the “user-level” operators by coding flattened tuples, marshalling, type classes, and a form of type dynamic within the language.},
+booktitle = {Proceedings of the 22nd ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages},
+pages = {130–141},
+numpages = {12},
+location = {San Francisco, California, USA},
+series = {POPL '95}
+}
+
+@article{GradParam,
+author = {New, Max S. and Jamner, Dustin and Ahmed, Amal},
+title = {Graduality and parametricity: together again for the first time},
+year = {2019},
+issue_date = {January 2020},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {4},
+number = {POPL},
+url = {https://doi.org/10.1145/3371114},
+doi = {10.1145/3371114},
+abstract = {Parametric polymorphism and gradual typing have proven to be a difficult combination, with no language yet produced that satisfies the fundamental theorems of each: parametricity and graduality. Notably, Toro, Labrada, and Tanter (POPL 2019) conjecture that for any gradual extension of System F that uses dynamic type generation, graduality and parametricity are ``simply incompatible''. However, we argue that it is not graduality and parametricity that are incompatible per se, but instead that combining the syntax of System F with dynamic type generation as in previous work necessitates type-directed computation, which we show has been a common source of graduality and parametricity violations in previous work.  We then show that by modifying the syntax of universal and existential types to make the type name generation explicit, we remove the need for type-directed computation, and get a language that satisfies both graduality and parametricity theorems. The language has a simple runtime semantics, which can be explained by translation to a statically typed language where the dynamic type is interpreted as a dynamically extensible sum type. Far from being in conflict, we show that the parametricity theorem follows as a direct corollary of a relational interpretation of the graduality property.},
+journal = {Proc. ACM Program. Lang.},
+month = dec,
+articleno = {46},
+numpages = {32},
+keywords = {gradual typing, graduality, logical relation, parametricity, polymorphism}
+}
+
+@article{LAPL,
+  title={Linear Abadi and Plotkin Logic},
+  author={Lars Birkedal and Rasmus Ejlers M{\o}gelberg and Rasmus Lerchedahl Petersen},
+  journal={Log. Methods Comput. Sci.},
+  year={2006},
+  volume={2},
+  url={https://api.semanticscholar.org/CorpusID:14086681}
+}
+
+@article{NonParam,
+author = {Neis, Georg and Dreyer, Derek and Rossberg, Andreas},
+title = {Non-parametric parametricity},
+year = {2009},
+issue_date = {September 2009},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {44},
+number = {9},
+issn = {0362-1340},
+url = {https://doi.org/10.1145/1631687.1596572},
+doi = {10.1145/1631687.1596572},
+abstract = {Type abstraction and intensional type analysis are features seemingly at odds-type abstraction is intended to guarantee parametricity and representation independence, while type analysis is inherently non-parametric. Recently, however, several researchers have proposed and implemented "dynamic type generation" as a way to reconcile these features. The idea is that, when one defines an abstract type, one should also be able to generate at run time a fresh type name, which may be used as a dynamic representative of the abstract type for purposes of type analysis. The question remains: in a language with non-parametric polymorphism, does dynamic type generation provide us with the same kinds of abstraction guarantees that we get from parametric polymorphism?Our goal is to provide a rigorous answer to this question. We define a step-indexed Kripke logical relation for a language with both non-parametric polymorphism (in the form of type-safe cast) and dynamic type generation. Our logical relation enables us to establish parametricity and representation independence results, even in a non-parametric setting, by attaching arbitrary relational interpretations to dynamically-generated type names. In addition, we explore how programs that are provably equivalent in a more traditional parametric logical relation may be "wrapped" systematically to produce terms that are related by our non-parametric relation, and vice versa. This leads us to a novel "polarized" form of our logical relation, which enables us to distinguish formally between positive and negative notions of parametricity.},
+journal = {SIGPLAN Not.},
+month = aug,
+pages = {135–148},
+numpages = {14},
+keywords = {type-safe cast, step-indexed logical relations, representation independence, parametricity, intensional type analysis}
+}
+
+
+@article{ParamVSUniv,
+author = {Devriese, Dominique and Patrignani, Marco and Piessens, Frank},
+title = {Parametricity versus the universal type},
+year = {2017},
+issue_date = {January 2018},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {2},
+number = {POPL},
+url = {https://doi.org/10.1145/3158126},
+doi = {10.1145/3158126},
+abstract = {There has long been speculation in the scientific literature on how to dynamically enforce parametricity such as that yielded by System F. Almost 20 years ago, Sumii and Pierce proposed a formal compiler from System F into the cryptographic lambda calculus: an untyped lambda calculus extended with an idealised model of encryption. They conjectured that this compiler was fully abstract, i.e. that compiled terms are contextually equivalent if and only if the original terms were, a property that can be seen as a form of secure compilation. The conjecture has received attention in several other publications since then, but remains open to this day.  More recently, several researchers have been looking at gradually-typed languages that extend System F. In this setting it is natural to wonder whether embedding System F into these gradually-typed languages preserves contextual equivalence and thus parametricity.  In this paper, we answer both questions negatively. We provide a concrete counterexample: two System F terms whose contextual equivalence is not preserved by the Sumii-Pierce compiler, nor the embedding into the polymorphic blame calculus. This counterexample relies on the absence in System F of what we call a universal type, i.e., a type that all other types can be injected into and extracted from. As the languages in which System F is compiled have a universal type, the compilation cannot be fully abstract; this paper explains why.  We believe this paper thus sheds light on recent results in the field of gradually typed languages and it provides a perspective for further research into secure compilation of polymorphic languages.},
+journal = {Proc. ACM Program. Lang.},
+month = dec,
+articleno = {38},
+numpages = {23},
+keywords = {universal type, sealing, parametricity, fully abstract compilation, System F}
+}
+
+@InProceedings{PE,
+author="M{\o}gelberg, Rasmus Ejlers
+and Simpson, Alex",
+editor="Miculan, Marino
+and Scagnetto, Ivan
+and Honsell, Furio",
+title="A Logic for Parametric Polymorphism with Effects",
+booktitle="Types for Proofs and Programs",
+year="2008",
+publisher="Springer Berlin Heidelberg",
+address="Berlin, Heidelberg",
+pages="142--156",
+abstract="We present a logic for reasoning about parametric polymorphism in combination with arbitrary computational effects (nondeterminism, exceptions, continuations, side-effects etc.). As examples of reasoning in the logic, we show how to verify correctness of polymorphic type encodings in the presence of effects.",
+isbn="978-3-540-68103-8"
+}
+
+
+@article{ToroGradParam,
+author = {Toro, Mat\'{\i}as and Labrada, Elizabeth and Tanter, \'{E}ric},
+title = {Gradual parametricity, revisited},
+year = {2019},
+issue_date = {January 2019},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {3},
+number = {POPL},
+url = {https://doi.org/10.1145/3290330},
+doi = {10.1145/3290330},
+abstract = {Bringing the benefits of gradual typing to a language with parametric polymorphism like System F, while preserving relational parametricity, has proven extremely challenging: first attempts were formulated a decade ago, and several designs were recently proposed. Among other issues, these proposals can however signal parametricity errors in unexpected situations, and improperly handle type instantiations when imprecise types are involved. These observations further suggest that existing polymorphic cast calculi are not well suited for supporting a gradual counterpart of System F. Consequently, we revisit the challenge of designing a gradual language with explicit parametric polymorphism, exploring the extent to which the Abstracting Gradual Typing methodology helps us derive such a language, GSF. We present the design and metatheory of GSF, and provide a reference implementation. In addition to avoiding the uncovered semantic issues, GSF satisfies all the expected properties of a gradual parametric language, save for one property: the dynamic gradual guarantee, which was left as conjecture in all prior work, is here proven to be simply incompatible with parametricity. We nevertheless establish a weaker property that allows us to disprove several claims about gradual free theorems, clarifying the kind of reasoning supported by gradual parametricity.},
+journal = {Proc. ACM Program. Lang.},
+month = jan,
+articleno = {17},
+numpages = {30},
+keywords = {polymorphism, parametricity, Gradual typing}
+}
+
+@article{TwoParamVSThreeUniv,
+author = {Devriese, Dominique and Patrignani, Marco and Piessens, Frank},
+title = {Two Parametricities Versus Three Universal Types},
+year = {2022},
+issue_date = {December 2022},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {44},
+number = {4},
+issn = {0164-0925},
+url = {https://doi.org/10.1145/3539657},
+doi = {10.1145/3539657},
+abstract = {The formal calculus System&nbsp;F models the essence of polymorphism and abstract data types, features that exist in many programming languages. The calculus’ core property is parametricity: a theorem expressing the language’s abstractions and validating important principles like information hiding and modularity.When System&nbsp;F is combined with features like recursive types, mutable state, continuations or exceptions, the formulation of parametricity needs to be adapted to follow suit, for example using techniques like step-indexing, Kripke world-indexing or biorthogonality. However, it is less clear how this formulation should change when System&nbsp;F is combined with untyped languages, gradual types, dynamic sealing and runtime type analysis (typecase) alongside type generation. Extensions of System&nbsp;F with these features have been proven to satisfy forms of parametricity (with Kripke worlds carrying semantic interpretations of types). However, the relative power of the modified formulations of parametricity with respect to others and the relative expressiveness of System&nbsp;F with and without these extensions are unknown.In this paper, we explain that the aforementioned different settings have a common characteristic: they do not enforce or preserve the lexical scope of System&nbsp;F’s type variables. Formally, this results in the existence of a universal type (note: this is not the same as a universally-quantified type). We explain why standard parametricity is incompatible with such a type and how type worlds resolve this. Building on these insights, we answer two open conjectures from the literature, negatively, and we point out a deficiency in current proposals for combining System&nbsp;F with gradual types.},
+journal = {ACM Trans. Program. Lang. Syst.},
+month = sep,
+articleno = {23},
+numpages = {43},
+keywords = {Fully abstract compilation, System F, sealing, parametricity, universal type}
+}

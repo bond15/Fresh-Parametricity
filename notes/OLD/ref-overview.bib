@@ -1,0 +1,157 @@
+@article{ALogicalApproachTypeSound,
+author = {Timany, Amin and Krebbers, Robbert and Dreyer, Derek and Birkedal, Lars},
+title = {A Logical Approach to Type Soundness},
+year = {2024},
+issue_date = {December 2024},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {71},
+number = {6},
+issn = {0004-5411},
+url = {https://doi.org/10.1145/3676954},
+doi = {10.1145/3676954},
+abstract = {Type soundness, which asserts that “well-typed programs cannot go wrong,” is widely viewed as the canonical theorem one must prove to establish that a type system is doing its job. It is commonly proved using the so-called syntactic approach (also known as progress and preservation), which has had a huge impact on the study and teaching of programming language foundations. Unfortunately, syntactic type soundness is a rather weak theorem. It only applies to programs that are well typed in their entirety and thus tells us nothing about the many programs written in “safe” languages that make use of “unsafe” language features. Even worse, it tells us nothing about whether type systems achieve one of their main goals: enforcement of data abstraction. One can easily define a language that enjoys syntactic type soundness and yet fails to support even the most basic modular reasoning principles for abstraction mechanisms like closures, objects, and abstract data types. Given these concerns, we argue that programming languages researchers should no longer be satisfied with proving syntactic type soundness and should instead start proving semantic type soundness, a more useful theorem that captures more accurately what type systems are actually good for. Semantic type soundness is an old idea—Milner’s original account of type soundness from 1978 was semantic—but it fell out of favor in the 1990s due to limitations and complexities of denotational models. In the succeeding decades, thanks to a series of technical advances—notably, step-indexed Kripke logical relations constructed over operational semantics and higher-order concurrent separation logic as consolidated in the Iris framework in Coq—we can now build (machine-checked) semantic soundness proofs at a much higher level of abstraction than was previously possible. The resulting “logical” approach to semantic type soundness has already been employed to great effect in a number of recent papers, but those papers typically (a) concern advanced problem scenarios that complicate the presentation, (b) assume significant prior knowledge of the reader, and (c) suppress many details of the proofs. Here, we aim to provide a gentler, more pedagogically motivated introduction to logical type soundness, targeted at a broader audience that may or may not be familiar with logical relations and Iris. As a bonus, we also show how logical type soundness proofs can easily be generalized to establish an even stronger relational property—representation independence—for realistic type systems.},
+journal = {J. ACM},
+month = nov,
+articleno = {40},
+numpages = {75},
+keywords = {Type soundness, data abstraction, logical relations, step-indexing, concurrent separation logic, Iris, Coq}
+}
+
+@article{birkedal2006linear,
+  title={Linear abadi and plotkin logic},
+  author={Birkedal, Lars and M{\o}gelberg, Rasmus E and Petersen, Rasmus Lerchedahl},
+  journal={Logical Methods in Computer Science},
+  volume={2},
+  year={2006},
+  publisher={Episciences. org}
+}
+
+@INPROCEEDINGS{LSILR,
+  author={Dreyer, Derek and Ahmed, Amal and Birkedal, Lars},
+  booktitle={2009 24th Annual IEEE Symposium on Logic In Computer Science}, 
+  title={Logical Step-Indexed Logical Relations}, 
+  year={2009},
+  volume={},
+  number={},
+  pages={71-80},
+  keywords={Logic;Computer science;Computer errors;Digital arithmetic;Context modeling;Safety;Clocks;Mathematical model;Machinery;Reasoning about programs;Step-indexed logical relations;Plotkin-Abadi logic;parametricity;recursive types;contextual equivalence},
+  doi={10.1109/LICS.2009.34}}
+
+@article{mogelberg2009relational,
+  title={Relational parametricity for computational effects},
+  author={M{\o}gelberg, Rasmus Ejlers and Simpson, Alex},
+  journal={Logical Methods in Computer Science},
+  volume={5},
+  year={2009},
+  publisher={Episciences. org}
+}
+
+
+@article{ParamAndLocalVars,
+author = {O'Hearn, P. W. and Tennent, R. D.},
+title = {Parametricity and local variables},
+year = {1995},
+issue_date = {May 1995},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {42},
+number = {3},
+issn = {0004-5411},
+url = {https://doi.org/10.1145/210346.210425},
+doi = {10.1145/210346.210425},
+abstract = {We propose that the phenomenon of local state may be understood in terms of Strachey's concept of parametric (i.e., uniform) polymorphism. The intuitive basis for our proposal is the following analogy: a non-local procedure is independent of locally-declared variables in the same way that a parametrically polymorphic function is independent of types to which it is instantiated.A connection between parametricity and representational abstraction was first suggested by J.C. Reynolds. Reynolds used logical relations to formalize this connection in languages with type variables and user-defined types. We use relational parametricity to construct a model for an Algol-like language in which interactions between local and non-local entities satisfy certain relational criteria.  Reasoning about local variables essentially involved proving properties of polymorphic functions. The new model supports straightforward validations of all the test equivalences that have been proposed in the literature for local-variable semantics, and encompasses standard methods of reasoning about data representations. It is not known whether our techniques yield fully abstract semantics. A model based on partial equivalence relations on the natural numbers is also briefly examined.},
+journal = {J. ACM},
+month = may,
+pages = {658–709},
+numpages = {52},
+keywords = {algol-like languages, local state, logical relations, parametric polymorphism}
+}
+
+@inproceedings{PlotkinAbadi,
+author = {Plotkin, Gordon D. and Abadi, Mart\'{\i}n},
+title = {A Logic for Parametric Polymorphism},
+year = {1993},
+isbn = {3540565175},
+publisher = {Springer-Verlag},
+address = {Berlin, Heidelberg},
+booktitle = {Proceedings of the International Conference on Typed Lambda Calculi and Applications},
+pages = {361–375},
+numpages = {15},
+series = {TLCA '93}
+}
+
+@inproceedings{NominalRelReason,
+author = {Benton, Nick and Leperchey, Benjamin},
+title = {Relational reasoning in a nominal semantics for storage},
+year = {2005},
+isbn = {3540255931},
+publisher = {Springer-Verlag},
+address = {Berlin, Heidelberg},
+url = {https://doi.org/10.1007/11417170_8},
+doi = {10.1007/11417170_8},
+abstract = {We give a monadic semantics in the category of FM-cpos to a higher-order CBV language with recursion and dynamically allocated mutable references that may store both ground data and the addresses of other references, but not functions. This model is adequate, though far from fully abstract. We then develop a relational reasoning principle over the denotational model, and show how it may be used to establish various contextual equivalences involving allocation and encapsulation of store.},
+booktitle = {Proceedings of the 7th International Conference on Typed Lambda Calculi and Applications},
+pages = {86–101},
+numpages = {16},
+location = {Nara, Japan},
+series = {TLCA'05}
+}
+
+@inproceedings{Reynolds,
+  author = {Reynols, John C.},
+  title  = {{Types, Abstraction and Parametric Polymorphism}},
+  booktitle = {Information Processing 83},
+  series = {IFIP Congress Series},
+  volume = 9,
+  pages = {513--523},
+  year   = 1983,
+  editor = {Mason, R.E.A.},
+  publisher = {Elsevier Science Publishers B.V.},
+  address = {Amsterdam, The Netherlands}
+}
+
+@phdthesis{SemFoundGradType,
+author = {New, Max Stewart and Felleisen, Matthias and Wand, Mitchell and Licata, Daniel and Garcia, Ronald and Thiemann, Peter},
+advisor = {Amal, Ahmed,},
+title = {A Semantic Foundation for Sound Gradual Typing},
+year = {2020},
+isbn = {9798557038935},
+publisher = {Northeastern University},
+address = {USA},
+abstract = {Gradually typed programming languages provide a way forward in the debate between static and dynamic typing. In a gradual language, statically typed and dynamically typed programs can intermingle, and dynamically typed scripts can be gradually migrated to a statically typed style. In a sound gradually typed language, static type information is just as reliable as in a static language, establishing correctness of type-based refactoring and optimization. To ensure this in the presence of dynamic typing ,runtime type casts are inserted automatically at the boundary between static and dynamic code. However the design of these languages is somewhat ad hoc, with little guidance on how to ensure that static reasoning principles are valid.In my dissertation, I present a semantic framework for design and metatheoretic analysis of gradually typed languages based on the theory of embedding-projection pairs. I show that this semantics enables proofs of the fundamental soundness theorems of gradual typing, and that it is robust, applying it to different evaluation orders and programming features.},
+note = {AAI28263083}
+}
+
+@article{TwoParamThreeUniv,
+author = {Devriese, Dominique and Patrignani, Marco and Piessens, Frank},
+title = {Two Parametricities Versus Three Universal Types},
+year = {2022},
+issue_date = {December 2022},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {44},
+number = {4},
+issn = {0164-0925},
+url = {https://doi.org/10.1145/3539657},
+doi = {10.1145/3539657},
+abstract = {The formal calculus System&nbsp;F models the essence of polymorphism and abstract data types, features that exist in many programming languages. The calculus’ core property is parametricity: a theorem expressing the language’s abstractions and validating important principles like information hiding and modularity.When System&nbsp;F is combined with features like recursive types, mutable state, continuations or exceptions, the formulation of parametricity needs to be adapted to follow suit, for example using techniques like step-indexing, Kripke world-indexing or biorthogonality. However, it is less clear how this formulation should change when System&nbsp;F is combined with untyped languages, gradual types, dynamic sealing and runtime type analysis (typecase) alongside type generation. Extensions of System&nbsp;F with these features have been proven to satisfy forms of parametricity (with Kripke worlds carrying semantic interpretations of types). However, the relative power of the modified formulations of parametricity with respect to others and the relative expressiveness of System&nbsp;F with and without these extensions are unknown.In this paper, we explain that the aforementioned different settings have a common characteristic: they do not enforce or preserve the lexical scope of System&nbsp;F’s type variables. Formally, this results in the existence of a universal type (note: this is not the same as a universally-quantified type). We explain why standard parametricity is incompatible with such a type and how type worlds resolve this. Building on these insights, we answer two open conjectures from the literature, negatively, and we point out a deficiency in current proposals for combining System&nbsp;F with gradual types.},
+journal = {ACM Trans. Program. Lang. Syst.},
+month = sep,
+articleno = {23},
+numpages = {43},
+keywords = {Fully abstract compilation, System F, sealing, parametricity, universal type}
+}
+
+@inproceedings{wadler_theorems_1989,
+    address = {New York, New York, USA},
+    title = {Theorems for free!},
+    volume = {112},
+    isbn = {0-89791-328-0},
+    doi = {10.1145/99370.99404},
+    booktitle = {Proceedings of the fourth {International} {Ponference} on {Functional} {Programming} languages and computer architecture - {FPCA} '89},
+    publisher = {ACM Press},
+    author = {Wadler, Philip},
+    year = {1989},
+    pages = {347--359}
+}
