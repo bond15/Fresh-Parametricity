@@ -139,15 +139,61 @@ module src.Data.Glue where
         module M = Syn M 
         module N = Syn N 
         field 
-            MCon : M.Con → N.Con
-            MTy : (Γ : M.Con) → M.Ty Γ → N.Ty (MCon Γ)
+            H : M.Con → N.Con
+            HTy : (Γ : M.Con) → M.Ty Γ → N.Ty (H Γ)
+            HSub : (Γ Δ : M.Con) → M.Sub Γ Δ → N.Sub (H Γ) (H Δ)
+            HTm : (Γ : M.Con)(A : M.Ty Γ) → M.Tm Γ A → N.Tm (H Γ) (HTy Γ A)
+        -- which preserve all the equations
 
     -- there is an eliminator that is the unique section
     record DisplayedMap (M : Syn) : Set₁ where 
         module M = Syn M 
         field 
-            DCon : M.Con → Set
-            DTY : {Γ : M.Con} → DCon Γ → M.Ty Γ → Set
+            D : M.Con → Set
+            DTY : {Γ : M.Con} → D Γ → M.Ty Γ → Set
+            DSub : {Γ Δ : M.Con} → D Γ → D Δ → M.Sub Γ Δ → Set
+            DTm : {Γ : M.Con}{A : M.Ty Γ}→ (ΓQ : D Γ) → DTY {Γ} ΓQ A → M.Tm Γ A → Set 
+
+    record Section (M : Syn) (DM : DisplayedMap M) : Set₁ where
+        module M = Syn M
+        module DM = DisplayedMap DM
+        field 
+            I' : (Γ : M .Con) → DM.D Γ
+            ITy : {Γ : M.Con} → (A : M.Ty Γ) → DM.DTY {Γ} (I' Γ) A
+            ISub : {Γ Δ : M.Con} → (σ : M.Sub Γ Δ) → DM.DSub (I' Γ) (I' Δ) σ
+
+    module _ where
+        -- Monoid
+        record Monoid : Set where 
+            field 
+                carrier : Set
+
+        -- Free Monoid
+        data Fm (X : Set): Set where
+            i_ : X → Fm X 
+            e : Fm X 
+            _⊕_ : Fm X → Fm X → Fm X 
+            -- equations
+            idl' : (x : Fm X) → e ⊕ x ≡ x
+            idr' : (x : Fm X) → x ⊕ e ≡ x
+            assoc' : (x y z : Fm X) → x ⊕ (y ⊕ z) ≡ (x ⊕ y) ⊕ z
+            -- truncate
+            -- trunc : isSet (Fm X)
+        open import Cubical.Data.Bool hiding (_⊕_)
+        
+        B = Fm Bool
+
+        ex : ( i true) ⊕ ((i false) ⊕ e) ≡ (i true) ⊕ (i false)
+        ex = cong ((i true) ⊕_) (idr' _)
+
+        
+
+
+        
+
+    -- Initial Model
+    data Init : Set where 
+
 
     -- The Set Model
     open import Cubical.Data.Unit 
