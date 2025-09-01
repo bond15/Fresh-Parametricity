@@ -229,6 +229,9 @@ module src.Data.BiDCC where
                                 sym (η≡  λ {((y , z) , (x→y⊗z , Py) , Qz) → 
                                     funExt⁻ (sym (b .N-hom _)) _ 
                                         ∙ cong (λ h → b .N-ob x h) (day-apₘ {MC = SMC} P Q (C .⋆IdR _))} ))) 
+
+            ⨂≡map : {m n : 𝓥 [ P ⨂ᴰ Q , R ]} → (⨂UP. fun m ≡ ⨂UP .fun n) → m ≡ n 
+            ⨂≡map {m}{n} p = sym (⨂UP .leftInv m) ∙ cong (λ h → ⨂UP .inv h) p ∙ ⨂UP .leftInv n 
  
         {-
         alternative def using right adjoint instead of iso of homsets

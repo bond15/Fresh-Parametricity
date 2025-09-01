@@ -105,7 +105,7 @@ module src.Models.WithWeakening.Denotation {ℓS} where
             = f x , transport lemma wx≡ty where 
 
                 lemma : Lift (w x ≡ ty) ≡ Lift (w' (f x) ≡ ty)
-                lemma = cong Lift (cong ( _≡ ty ) {!  Δ !})
+                lemma = cong Lift (cong ( _≡ ty ) λ i → (sym Δ) i x)
         Case ty .F-id = {!   !}
         Case ty .F-seq = {!   !}
 
@@ -126,7 +126,8 @@ module src.Models.WithWeakening.Denotation {ℓS} where
         sep A B .F-ob w = (∀ (w' : ob W) → (SET ℓ)[ A .F-ob w' , B .F-ob (_⨂_ .F-ob (w , w')) ]) , isSetΠ  λ _ → (SET ℓ) .isSetHom
         sep A B .F-hom {w₁}{w₂} w₁→w₂ end w₃ Aw₃ = B .F-hom (_⨂_ .F-hom (w₁→w₂ , W .id)) (end w₃ Aw₃)
         sep A B .F-id = funExt λ end → funExt λ w₃  → funExt λ Aw₃ → cong (λ x → (B .F-hom x) (end w₃ Aw₃) ) (_⨂_ .F-id) ∙ funExt⁻ (B .F-id) ((end w₃ Aw₃))
-        sep A B .F-seq f g = funExt λ end → funExt λ w₃  → funExt λ Aw₃ → {! funExt⁻ (B .F-seq _ _) _ ∙ ?  !}
+        sep A B .F-seq f g = funExt λ end → funExt λ w₃  → funExt λ Aw₃ → {!   !}
+        --cong (λ h → B .F-hom h (end w₃ Aw₃))  {!   !} ∙  funExt⁻ ( (B .F-seq _ _)) _
         -- cong (λ x → (B .F-hom x) (end w₃ Aw₃) ) {! _⨂_ .F-seq _ _  !} ∙ funExt⁻ (B .F-seq _ _ ) ((end w₃ Aw₃))
 
         Termᶜ : ob 𝒞 
@@ -294,7 +295,7 @@ module src.Models.WithWeakening.Denotation {ℓS} where
                     (λ{record { α = α } → comp≡ (funExt λ w → funExt λ Γw → funExt λ w' → funExt λ Aw' → {!  refl !}) })
                     (λ{record { α = α } → comp≡ (funExt λ w → funExt λ {(SetCoequalizer.inc ((w₂ , w₃) , (w→w₂⊗w₃ , Γw₂) , Aw₃)) → {!  refl!}
                                                                       ; (coeq a i) → {!   !}
-                                                                      ; (squash x x₁ p q i i₁) → {!   !}}) })
+                                                  Ø→y                    ; (squash x x₁ p q i i₁) → {!   !}}) })
         -}
 
         -- morphism in the day convolution is the wrong direction..?
@@ -416,6 +417,24 @@ module src.Models.WithWeakening.Denotation {ℓS} where
                             a : fst (F-ob (tys A) w)
                             a = transport eqty (osum .snd)   
  
-        test' : {w : ob W} → (fun OSum (sep (Case b) (F .F-ob {!   !}))) .F-ob w .fst
-        test' = {!   !}
+
+        module Testing where
+            open import src.Data.BiDCC
+            open Mod strmon
+
+            _+p_ : ob 𝓥 → ob 𝓥  → ob 𝓥 
+            (A +p B) .F-ob x = (A .F-ob x .fst ⊎ B .F-ob x .fst) , (isSet⊎ (A .F-ob x .snd) (B .F-ob x .snd))
+            (A +p B) .F-hom = {!   !}
+            (A +p B) .F-id = {!   !}
+            (A +p B).F-seq = {!   !}
             
+            test' : {w : ob W}{s : SynTy'} → fun OSum (F .F-ob  (Case s ⊸ (Termᵛ +p tys s))) .F-ob w .fst
+            ---(fun OSum (sep (Case b) (F .F-ob {!   !}))) .F-ob w .fst
+            test' {w} {s} (σ₁ , e:〚w⦅σ₁⦆〛) = w' , f , natTrans (λ{w'' (σ₂ , w''⦅σ₂⦆≡s) → inr {!   !}}) {!   !} where 
+                w' : ob W 
+                w' = w
+
+                f : (W ^op)[ w , w' ]
+                f = W .id
+            
+ 

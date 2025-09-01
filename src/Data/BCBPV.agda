@@ -151,6 +151,12 @@ module src.Data.BCBPV where
                 _  :{A : ob 𝓥} → ret' {A} ≡ ret .N-ob A
                 _ = makeNatTransPath (funExt λ x → funExt λ Ax → refl)
 
+                module _ (A : ob 𝓥) (x y : ob C)(f : C [ y , x ]) where 
+                    fmap : T .F-ob A .F-ob x .fst → T .F-ob A .F-ob y .fst 
+                    fmap tax .end z z→y = tax .end z (f ⋆⟨ C ^op ⟩ z→y) 
+
+                    _ : T .F-ob A .F-hom f ≡ fmap
+                    _ = refl
 
 
         𝓞× : ob 𝓥 → ob 𝓥 → ob 𝓒 → Set ℓm
@@ -408,4 +414,4 @@ module src.Data.BCBPV where
                     d = inc ((x' , y') , ((v→x'⊗y' , Px') , Qy'))
         
                 goal .N-hom = {!   !}
-  
+   

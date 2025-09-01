@@ -137,6 +137,16 @@ module src.Models.WithWeakening.Base {ℓS : Level} where
         adjU : Inc^op* ⊣ U' 
         adjU = Past.adj
 
+        private 
+            open import Cubical.Categories.Functors.Constant
+            open import Cubical.Data.Unit
+            open NatTrans
+            ex : (A : ob 𝒱) → 𝒞 [ Constant _ _ (Unit* , isSetUnit*) , F .F-ob A ]
+            ex A .N-ob x tt* = y , f , {! A .F-hom f !} where 
+                postulate y : ob W
+                postulate f : (W ^op)[ x , y ]
+            ex A .N-hom = {!   !}
+
     module Monoids where 
         open Worlds 
         open CBPV {ℓS} W wset
@@ -185,6 +195,7 @@ module src.Models.WithWeakening.Base {ℓS : Level} where
 
 
         -- Monoid on Values
+
         open import src.Data.DayConv
         _⨂ᴰᵥ_ : ob 𝒱 → ob 𝒱 → ob 𝒱
         A ⨂ᴰᵥ B = _⊗ᴰ_ {MC = strmon} A B 

@@ -1,0 +1,353 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{simplebnf}
+\usepackage{bussproofs}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{stmaryrd}
+\usepackage{comment}
+\usepackage{bm}
+
+\begin{document}
+\include{commands}
+
+\section{Object Language}
+A simply typed CBPV language.
+\subsection{Raw Terms}
+\begin{bnf}
+    $A$ : Value Types ::= Unit
+    | $A \times A$
+    | $U \underline{B}$
+    ;;
+    $\underline{B}$ : Computation Types ::= $A \rightarrow \underline{B}$
+    | $F A$
+    ;;
+    $V$ : Values ::= $x$
+    | $tt$
+    | $(V , V)$
+    | thunk $M$
+    ;;
+    $M$ : Computations ::= 
+     $\lambda x \colon A . M$
+    | $M V$
+    | ret $V$
+    | force $V$
+    | $x \leftarrow M ;M'$
+    | let $x$ = $V ; M'$
+    | let ($x , y$) = $V ; M$
+    ;;
+    $\Gamma$ : Value Context ::= $\cdot$
+    | $\Gamma , x \colon A$ 
+    ;;
+\end{bnf}
+\subsection{Typed Terms}
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{Var}
+    \UnaryInfC{$\Gamma, x \colon A \vdash_v x : A$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{I-Unit}
+    \UnaryInfC{$\Gamma \vdash_v tt : $ Unit}
+\end{prooftree}
+
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash_v t : A$}
+    \AxiomC{$\Gamma \vdash_v t : A'$}
+    \RightLabel{I-$\times$}
+    \BinaryInfC{$\Gamma \vdash_v  (t , u): A \times A' $ }
+\end{prooftree}
+
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash_c M : \underline{B}$}
+    \RightLabel{}
+    \UnaryInfC{$\Gamma \vdash_v \textrm{thunk } M : U \underline{B}$}
+\end{prooftree}
+
+
+\begin{prooftree}
+    \AxiomC{$\Gamma , x : A \vdash_c M : \underline{B}$}
+    \RightLabel{I - $\rightarrow$}
+    \UnaryInfC{$\Gamma \vdash_c (\lambda (x : A) . M) : A \rightarrow \underline{B}$}
+\end{prooftree}
+
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash_c M : A \rightarrow \underline{B}$}
+    \AxiomC{$\Gamma \vdash_v V : A$}
+    \RightLabel{E-$\rightarrow$}
+    \BinaryInfC{$\Gamma \vdash_c : M V : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash_v V : A$}
+    \RightLabel{}
+    \UnaryInfC{$\Gamma \vdash_c \textrm{ret } V : F A$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash_v V : U \underline{B}$}
+    \RightLabel{}
+    \UnaryInfC{$\Gamma \vdash_c \textrm{force } V : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash_c M : F A$}
+    \AxiomC{$\Gamma , x : A \vdash_c N : \underline{B}$}
+    \RightLabel{}
+    \BinaryInfC{$\Gamma \vdash_c x \leftarrow M ; N: \underline{B}$}
+\end{prooftree}
+
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash_v V : A$}
+    \AxiomC{$\Gamma , x : A \vdash_c N : \underline{B}$}
+    \RightLabel{}
+    \BinaryInfC{$\Gamma \vdash_c \textrm{let x } = V ; N : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash_v V : A \times A'$}
+    \AxiomC{$\Gamma , x : A, y : A' \vdash_c M : \underline{B}$}
+    \RightLabel{E-$\times$}
+    \BinaryInfC{$\Gamma \vdash_c \textrm{let (x,y) } = V ; M : \underline{B}$}
+\end{prooftree}
+
+\section{Simple Logic}
+The usual presentation of a logic except that we make a distinction between value and 
+\subsection{Formation Rules}
+\subsubsection{Value Fragment}
+Judgments: 
+Value Propositions are over a value context.
+\[
+  \Gamma \vdash \phi \textrm{ VProp}  
+\]
+ Connectives\footnote{Focusing on just a few connectives for the moment}
+ \footnote{should there be a logical equivalent to $U \underline{B}$ ($U \underline{\phi}$) here?}: 
+ \[
+   \phi := \top | \phi \land \phi | \phi \implies \phi 
+ \]
+\begin{prooftree}
+    \AxiomC{}
+    \UnaryInfC{$\Gamma \vdash \top  \textrm{ VProp}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash \phi \textrm{ VProp}$}
+    \AxiomC{$\Gamma \vdash \psi \textrm{ VProp}$}
+    \BinaryInfC{$\Gamma \vdash \phi \land \psi  \textrm{ VProp}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash \phi \textrm{ VProp}$}
+    \AxiomC{$\Gamma \vdash \psi \textrm{ VProp}$}
+    \BinaryInfC{$\Gamma \vdash \phi \implies \psi  \textrm{ VProp}$}
+\end{prooftree}
+\subsubsection{Computation Fragment}
+Judgments: 
+Computation Propositions are over a value context and a stoup.
+\[
+  \Gamma ; \Delta \vdash \underline{\phi} \textrm{ CProp}  
+\]
+In our intended semantics, this judgment should be interpreted as a subalgebra of $\den{ \Gamma ; \Delta }$.
+We need some way of combining the value object $\den{ \Gamma }$ with computation object $\den{ \Delta }$.
+Maybe we can use some $\Gamma $ fold copower\footnote{This copower connective is definable in PE} of $\Delta$, $\den{ \Gamma } \oslash \den{ \Delta } $, 
+which is a connective in the Enriched Effect Calculus?
+\\
+ Connectives: The purpose of this document is to explore this new kind of connective, the computational implication. 
+ \footnote{Need weakest precondition as part of the syntax for the logical interpretation of $A \rightarrow \underline{B}$?}
+ 
+ \[
+   \underline{\phi} := \underline{\top} | \underline{\phi} \land \underline{\psi} | \blue{\phi \implies \underline{\psi}}
+ \]
+ \begin{prooftree}
+    \AxiomC{}
+    \UnaryInfC{$\Gamma ; \Delta \vdash \underline{\top}  \textrm{ CProp}$}
+\end{prooftree}
+
+
+\begin{prooftree}
+    \AxiomC{$\Gamma ;\Delta \vdash \underline{\phi} \textrm{ CProp}$}
+    \AxiomC{$\Gamma ; \Delta \vdash \underline{\psi} \textrm{ CProp}$}
+    \BinaryInfC{$\Gamma ; \Delta \vdash \underline{\phi} \land \underline{\psi}  \textrm{ CProp}$}
+\end{prooftree}
+
+The computation implication formation rule, similar to the computation function type in CBPV, takes both a value proposition and a computation proposition.
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash \phi \textrm{ VProp}$}
+    \AxiomC{$\Gamma ; \Delta \vdash \underline{\psi} \textrm{ CProp}$}
+    \BinaryInfC{$\Gamma ; \Delta \vdash \phi \implies \underline{\psi}  \textrm{ CProp}$}
+\end{prooftree}
+
+\subsection{Derivation Rules}
+\subsubsection{Value Derivations}
+Value Derivation Judgement
+\[
+    \Gamma | \Phi \vdash \phi 
+\]
+where $\Phi$ is a conjunction of value propositions.
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{I-$\top$}
+    \UnaryInfC{$\Gamma | \Phi \vdash \top$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma | \Phi \vdash \phi$}
+    \AxiomC{$\Gamma | \Phi \vdash \psi $}
+    \RightLabel{I-$\land$}
+    \BinaryInfC{$\Gamma | \Phi \vdash \phi \land \psi$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma | \Phi \vdash \phi \land \psi$}
+    \RightLabel{E1-$\land$}
+    \UnaryInfC{$\Gamma | \Phi \vdash \phi $}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma | \Phi \vdash \phi \land \psi$}
+    \RightLabel{E2-$\land$}
+    \UnaryInfC{$\Gamma | \Phi \vdash \psi $}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma | \Phi, \phi \vdash \psi $}
+    \RightLabel{I-$\implies$}
+    \UnaryInfC{$\Gamma | \Phi \vdash \phi \implies \psi $}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma | \Phi \vdash \phi \implies \psi $}
+    \AxiomC{$\Gamma | \Phi \vdash \phi$}
+    \RightLabel{E-$\implies$}
+    \BinaryInfC{$\Gamma | \Phi \vdash \psi $}
+\end{prooftree}
+
+\subsubsection{Computation Derivations}
+Computation Derivation Judgment:
+\[
+  \Gamma ; \Delta | \Phi ; \blue{\underline{\Psi}} \vdash \underline{\phi}  
+\]
+If computation derivations are allowed a context of computation propositions, 
+we'll need a way to combine subobjects of the value category with subobjects of the computation category\footnote{Similar to how value contexts are combined with the stop}.
+
+\[
+\oslash^*_{\Gamma ; \Delta} : Sub_V(\den{\Gamma}) \times Sub_C(\den{\Gamma} \oslash \den{\Delta}) \rightarrow Sub_C(\den{\Gamma} \oslash \den{\Delta})
+\]
+\[
+  \den{ \Gamma ; \Delta | \Phi ; \blue{\underline{\Psi}} \vdash \underline{\phi} } : Sub_C(\Gamma \oslash \Delta)[\oslash^*(\Phi,\blue{\underline{\Psi}}), \underline{\phi}]
+\]
+What is this operation? (should it be adjoint to computation implication?)
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{I-$\top$}
+    \UnaryInfC{$\Gamma ; \Delta | \Phi ; \underline{\Psi}\vdash \underline{\top}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma ; \Delta | \Phi ; \underline{\Psi}\vdash \underline{\phi}$}
+    \AxiomC{$\Gamma ; \Delta | \Phi ; \underline{\Psi}\vdash \underline{\psi} $}
+    \RightLabel{I-$\land$}
+    \BinaryInfC{$\Gamma ; \Delta | \Phi ; \underline{\Psi}\vdash \underline{\phi} \land \underline{ \psi}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma ; \Delta | \Phi ; \underline{\Psi}\vdash \underline{\phi} \land \underline{ \psi}$}
+    \RightLabel{E1-$\land$}
+    \UnaryInfC{$\Gamma ; \Delta | \Phi ; \underline{\Psi}\vdash \underline{\phi} $}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma ; \Delta | \Phi ; \underline{\Psi}\vdash \underline{\phi} \land \underline{ \psi}$}
+    \RightLabel{E2-$\land$}
+    \UnaryInfC{$\Gamma ; \Delta | \Phi ; \underline{\Psi}\vdash \underline{ \psi}$}
+\end{prooftree}
+
+\blue{Not clear what the semantics for this connective should be.} 
+Normally, the implication would be the exponential object in the category of subobjects over $\Gamma$.
+Here we might be able to say something about adjointness with $\oslash$.
+
+\begin{prooftree}
+    \AxiomC{$\Gamma ; \Delta | \Phi , \phi ; \underline{\Psi}\vdash  \underline{\psi}$}
+    \RightLabel{I-$\implies$}
+    \UnaryInfC{$\Gamma ; \Delta | \Phi ; \underline{\Psi}\vdash \phi \implies \underline{\psi}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma ; \Delta | \Phi ; \underline{\Psi}\vdash \phi \implies \underline{\psi}$}
+    \AxiomC{$\Gamma | \Phi \vdash \phi$}
+    \RightLabel{E-$\implies$}
+    \BinaryInfC{$\Gamma ; \Delta | \Phi ; \underline{\Psi}\vdash \underline{\psi}$}
+\end{prooftree}
+
+\section{Model}
+\subsection{Object Language Model}
+Assume we have a typical, set based, algebra model of a simply typed CBPV language consisting of a value category 
+$\mathcal{V}=Set$, a monad $T$ on $\mathcal{V}$, a computation category $\mathcal{C}$ which is the category of algebras for monad $T$, 
+with the usual functors $F,U$.
+\subsection{Logic Model}
+Starting with the interpretation of the judgments
+\begin{align*}
+    \den{ \Gamma \vdash \phi } &: \textrm{ object of } Sub_{\mathcal{V}}(\den{ \Gamma })\\
+    \den{  \Gamma | \Phi \vdash \phi } &: Sub_{\mathcal{V}}[\den{ \Phi } , \den{ \phi }]\\
+    \den{ \Gamma ; \Delta \vdash \underline{\phi}} &: \textrm{ object of } Sub_{\mathcal{C}}(\den{ \Gamma } \oslash \den{ \Delta }) \\
+    \den{ \Gamma ; \Delta | \Phi ; \underline{\Psi} \vdash \underline{\phi}} &:Sub_{\mathcal{C}}(\den{ \Gamma } \oslash \den{ \Delta })[\oslash^*_{\Gamma ; \Delta}(\den{ \Phi },\den{ \underline{\Psi} }), \den{ \phi }] \\
+\end{align*}
+\blue{What laws should we expect $\oslash$ and $\oslash^*_{\Gamma , \Delta}$ to obey?} 
+\subsubsection{Values}
+Denotation of the value propositions:
+\begin{align*}
+    \den{\Gamma \vdash \top} &= \mathbf{1}\\
+    \den{\Gamma \vdash \phi \land \psi} &= \den{\Gamma \vdash \phi} \times \den{\Gamma \vdash \psi} \\
+    \den{\Gamma \vdash \phi \implies \psi} &= \den{\Gamma \vdash \psi}^{\den{\Gamma \vdash \phi}}\\
+\end{align*}
+Denotation of the value derivations:
+\\
+Unique map into the terminal object.
+\begin{prooftree}
+    \AxiomC{}
+    \UnaryInfC{$\den{\Gamma | \Psi \vdash \top} = \;!$}
+\end{prooftree}
+\begin{comment}
+
+Pullback.
+\begin{prooftree}
+    \AxiomC{$\den{\Gamma | \Psi \vdash \phi}= X \xhookrightarrow{\phi} \den{\Gamma}$}
+    \AxiomC{$\den{\Gamma | \Psi \vdash \psi} = Y \xhookrightarrow{\psi} \den{\Gamma}$}
+    \BinaryInfC{$\den{\Gamma | \Psi \vdash \phi \land \psi } = X \times_{\den{\Gamma}} Y \hookrightarrow \den{\Gamma} $}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\den{\Gamma | \Psi \vdash \phi \land \psi } = X \times_{\den{\Gamma}} Y \hookrightarrow \den{\Gamma} $}
+    \UnaryInfC{$\den{\Gamma | \Psi \vdash \phi  } = ? $}
+\end{prooftree}
+\begin{prooftree}
+    \AxiomC{$\den{\Gamma | \Psi \vdash \phi}= X \xhookrightarrow{\phi} \den{\Gamma}$}
+    \AxiomC{$\den{\Gamma | \Psi \vdash \psi} = Y \xhookrightarrow{\psi} \den{\Gamma}$}
+    \BinaryInfC{$\den{\Gamma | \Psi \vdash \phi \implies \psi } = \;? $}
+\end{prooftree}
+\end{comment}
+
+\subsubsection{Computations}
+Denotation of the computation propositions:
+\begin{align*}
+    \den{\Gamma ; \Delta \vdash \top} &= \mathbf{1}\\
+    \den{\Gamma ; \Delta \vdash \phi \land \psi} &= \den{\Gamma ; \Delta \vdash \phi} \times \den{\Gamma ; \Delta \vdash \psi} \\
+    \den{\Gamma ; \Delta \vdash \phi \implies \underline{\psi}} &= ? \\
+\end{align*}
+\section{Unary Relational Interpretation}
+\begin{itemize}
+    \item Add predicates?
+    \item Why do we need a unary relational interpretaiton of types? As a way to propogate predicates over types?
+    \item Do we need to add weakest precondition as a piece of syntax to describe the unary relational interpretation of $A \rightarrow \underline{B}$?
+\end{itemize}
+
+\end{document}

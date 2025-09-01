@@ -1,4 +1,4 @@
-{-# OPTIONS --safe #-}
+{-# OPTIONS --allow-unsolved-metas #-}
 -- following 1 Lab
 -- https://1lab.dev/Cat.Diagram.Coend.Sets.html
 
@@ -142,7 +142,7 @@ module src.Data.Coend where
             open CoendAlt
 
             open import Cubical.Data.Sigma
-            {-
+            
             coendalt : CoendAlt F
             coendalt .U = univ
             coendalt .univMor W m = 
@@ -150,7 +150,7 @@ module src.Data.Coend where
                     (record { factor = factoring W ; commutes = λ c → refl }) 
                     (funExt (λ x → {! W .nadir .snd  !})) 
                     {! λ a →  (cowedgeMorphismisSet F univ W) _ a      !} -- we'd have this if we 
-                    λ a' x  → {! uniqueness ? ? ? ? ? ? ?  !} -}
+                    λ a' x  → {! uniqueness ? ? ? ? ? ? ?  !} 
 
             coend' : Coend' F 
             coend' .U = univ

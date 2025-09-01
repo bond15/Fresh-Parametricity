@@ -1,0 +1,206 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{simplebnf}
+\usepackage{bussproofs}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{stmaryrd}
+\usepackage{comment}
+\usepackage{bm}
+
+\usepackage[english]{babel}
+\usepackage{amsthm}
+
+\newtheorem{thm}{Theorem}
+\newtheorem{deff}{Definition}
+
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{cor}[thm]{Corollary}
+\newtheorem{rem}[thm]{Remark}
+\newtheorem*{remark}{Remark}
+\newtheorem{definition}[deff]{Definition}
+\newtheorem*{construction}{Construction}
+\newtheorem{conj}[thm]{Conjecture}
+
+\begin{document}
+\include{commands}
+\section{Presheaf Hyperdoctrine}
+
+Goal: Define a higher order logic for a simply typed language with a syntactic extensible sum type.
+Since the term model uses presheaves, our hyperdoctrine will be based on presheaves. 
+Let our base category be denoted $\mathbf{C}$. 
+\blue{NOTE: we are working with covariant presheaves.}
+Our term model with be denoted as $\widehat{\mathbf{C}} = [\bf{C} , \bf{SET}]$
+
+Following the definition TODO Cite (biering bi hyperdoc 2007) a First-Order hyperdoctrine,
+consists of a functor $\mathcal{P}$
+\[
+ \mathcal{P} : \bf{C}^{op} \rightarrow \bf{Poset}   
+\]
+such that
+\begin{align*}
+    & \forall (X : ob \;\bf{C}), \mathcal{P}(X) \textrm{ is a heyting algebra}\\
+    & \forall (f : \bf{C}[X , Y]), \mathcal{P} : \mathcal{P}(Y) \rightarrow \mathcal{P}(X) \textrm{ is a heyting homomorphism}\\
+    & diagonal \\
+    & adjoints
+\end{align*}
+
+A cannonical way to construct a first order hyperdocrine is to have an \textit{internal} heyting algebra $H : ob \; \widehat{\bf{C}}$
+and take $\mathcal{P}= y(H) = \widehat{\bf{C}}[- , H]$ where $y$ is the yonedda embedding.
+\begin{thm}
+    There exists an internal Heyting algebra $Prop$ in $Set$
+\end{thm}
+\begin{proof}
+    details pending
+\end{proof}
+
+\begin{thm}
+    $Prop$ can be \textit{lifted} to $\widehat{\bf{C}}$, 
+    denoted as $Prop_{\widehat{\bf{C}}}$, and it is an internal Heyting algebra in $\widehat{\bf{C}}$.
+\end{thm}
+\begin{proof}
+    details pending
+\end{proof}
+
+\begin{thm}
+    $\mathcal{P} = \widehat{\bf{C}}[- , Prop_{\widehat{\bf{C}}}]$ is a hyperdoctrine on $\widehat{\bf{C}}$.
+\end{thm}
+\begin{proof}
+    details pending, Each $\mathcal{P}(X)$ is a heyting algebra \textit{pointwise}.
+    We have an ordering \textit{pointwise} as well.. but what is the ordering of the 
+    internal heyting algebra $Prop{\widehat{\bf{C}}}$? 
+    Is it the \textit{default} ordering you can define from a heyting algebra (page 199 \cite{Sheaves})
+    \[
+      X \leq Y \iff X \land Y = X  
+    \]
+    where does this equaltiy "live"?
+    \blue{Answer} For separation logic it is the sieve of downward closed subsets 
+    where the downward closed subsets use an extension ordering on heaps. 
+    The collection of subsets in the sieve is then ordered by inclusion. 
+    This is the ordering for a bialgebra
+\end{proof}
+
+With a hyperdoctrine in hand, we can interpret a higher order logic over 
+a simply typed language. 
+
+\begin{bnf}
+    $\alpha$ : Types ::= Unit | $\alpha \times \alpha$ | $\alpha \rightarrow \alpha$ ;;
+    $M$ : Terms ::= $tt$ | $(M , N)$ | $\pi_1 M$ | $\pi_2 M$ | $\lambda (x \colon \alpha). M$ | $MN$
+\end{bnf}
+
+\begin{construction}
+    Denotation of Types
+\end{construction}
+\begin{align*}
+    \den{Unit} &:= \bf{1} \\
+    \den{\alpha \times \beta} &= \den{\alpha} \times \den{\beta}\\
+    \den{\alpha \rightarrow \beta} &= \den{\beta}^{\den{\alpha}}
+\end{align*}
+
+\begin{construction}
+    Denotation of Terms
+\end{construction}
+\begin{align*}
+    \den{\Gamma \vdash tt : Unit} &= \den{\Gamma} \xrightarrow{\den{tt}} \den{Unit}\\ 
+    \den{\Gamma \vdash (M , N) : \alpha \times \beta} &= \den{\Gamma} \xrightarrow{\Delta} \den{\Gamma} \times \den{\Gamma} \xrightarrow{\den{\Gamma \vdash M : \alpha}\times \den{\Gamma \vdash N : \beta}} \den{\alpha} \times \den{\beta}\\
+    etc..
+\end{align*}
+
+\begin{definition}
+    A higher order logic over the simply typed language.
+\end{definition}
+\begin{bnf}
+    $\phi$ ::= $\top$ | $\bot$ | $P(x)$| $x =_{\alpha} y$ | $\phi \land \psi$ | $\phi \lor \psi$ | $\phi \implies \psi$ | $\forall (x \colon \alpha), \phi$ | $\exists (x \colon \alpha), \phi$ ;;
+\end{bnf}
+
+\begin{definition}
+    Logic formation rules.
+\end{definition}
+\begin{remark}
+    $\Gamma$ is a context of terms, $\Phi$ is a context of propositions.
+\end{remark} 
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{$\top$-Form}
+    \UnaryInfC{$\Gamma ; \Phi \vdash \top \textrm{ Prop}$}
+\end{prooftree}
+
+\begin{remark}
+    $\bf{prop}$ is an additional type added to the term language.
+    See page 313 \cite{Jacobs}
+\end{remark}
+\begin{remark}
+    $\den{\bf{prop}} = Prop_{\widehat{\bf{C}}}$
+\end{remark}
+\begin{remark}
+    $\bf{Prop}$ is a judgement stating the term is a well formed proposition.
+\end{remark}
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash P : \alpha \rightarrow \bf{prop}$}
+    \AxiomC{$\Gamma \vdash x : \alpha$}
+    \RightLabel{$P$-Form}
+    \BinaryInfC{$\Gamma ; \Phi \vdash P(x) \textrm{ Prop}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash M : \alpha$}
+    \AxiomC{$\Gamma \vdash N : \alpha$}
+    \RightLabel{$=$-Form}
+    \BinaryInfC{$\Gamma ; \Phi \vdash M =_{\alpha} N \textrm{ Prop}$}
+\end{prooftree}
+
+\begin{remark}
+    Notice the term context in $\forall$-Form
+\end{remark}
+\begin{prooftree}
+    \AxiomC{$\Gamma , x : \alpha ; \Phi \vdash \phi \textrm{ Prop}$}
+    \RightLabel{$\forall$-Form}
+    \UnaryInfC{$\Gamma ; \Phi \vdash \forall(x : \alpha), \phi \textrm{ Prop}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma ; \Phi \vdash \phi \textrm{ Prop}$}
+    \AxiomC{$\Gamma ; \Phi \vdash \psi \textrm{ Prop}$}
+    \RightLabel{$\land$-Form}
+    \BinaryInfC{$\Gamma ; \Phi \vdash \phi \land \psi \textrm{ Prop}$}
+\end{prooftree}
+etc..
+
+\begin{construction}
+    Denotation of propositions.
+\end{construction}
+Generic form: Given $\Gamma ; \Phi \vdash \phi \textrm{ Prop}$,
+we have $\mathcal{P}(\den{\Gamma}) : ob \; \bf{Poset}$ 
+which has an order $\leq_{\mathcal{P}(\den{\Gamma})}$.
+\[
+  \den{\Gamma ; \Phi \vdash \phi } = \den{\Phi} \leq _{\mathcal{P}(\den{\Gamma})} \den{\phi}  
+\]
+The relation $\den{\Phi} \leq _{\mathcal{P}(\den{\Gamma})} \den{\phi}$ may or may not hold. 
+Our logic is proof irrelevant.
+
+Specific Form:
+\begin{align*}
+    \den{\Gamma ; \Phi \vdash \top} &= \den{\Phi} \leq_{\mathcal{P}(\den{\Gamma})} \top \\
+    \den{\Gamma ; \Phi \vdash \bot} &= \den{\Phi} \leq_{\mathcal{P}(\den{\Gamma})} \bot \\
+    \den{\Gamma, x : \alpha ; \Phi \vdash P(x)} &= ? \\
+    \den{\Gamma, x : \alpha , y : \alpha ; \Phi \vdash x =_{\alpha} y} &= ? \\
+    \den{\Gamma ; \Phi \vdash \phi \lor \psi } &= \den{\Phi} \leq_{\mathcal{P}(\den{\Gamma})} (\den{\phi} \lor \den{\psi}) \\
+    \den{\Gamma ; \Phi \vdash \phi \lor \psi } &= \den{\Phi} \leq_{\mathcal{P}(\den{\Gamma})} (\den{\phi} \lor \den{\psi}) \\
+    \den{\Gamma ; \Phi \vdash \phi \implies \psi } &= \den{\Phi} \leq_{\mathcal{P}(\den{\Gamma})} (\den{\phi} \implies \den{\psi}) \\
+    \den{\Gamma ; \Phi \vdash \forall(x : \alpha), \phi } &= \den{\Phi} \leq_{\mathcal{P}(\den{\Gamma})} \forall_{(\den{\Gamma}, \den{\alpha})}(\den{\phi}) \\
+    \den{\Gamma ; \Phi \vdash \exists(x : \alpha), \phi } &= \den{\Phi} \leq_{\mathcal{P}(\den{\Gamma})} \exists_{(\den{\Gamma}, \den{\alpha})}(\den{\phi})
+\end{align*}
+
+\begin{definition}
+    A proposition $\Gamma ; \cdot \vdash \phi$ is said to be \textbf{valid} when $\top \leq_{\mathcal{P}(\den{\Gamma})} \den{\phi}$
+\end{definition}
+
+derivations
+
+relations?
+
+\bibliographystyle{acm}
+\bibliography{ref}
+\end{document}cite{}

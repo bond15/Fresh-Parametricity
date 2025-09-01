@@ -1,0 +1,1089 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{simplebnf}
+\usepackage{bussproofs}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{stmaryrd}
+\usepackage{comment}
+\usepackage{bm}
+
+\begin{document}
+\include{commands}
+
+
+\section{Judgements}
+The context is split into Local Value Types and Global Value Types.
+\begin{align*}
+    \Gamma_G  ;\Gamma_L &\; \textrm{Ctx}\\
+\end{align*}
+We have three \textit{kinds} of type: Global Value Type, Local Value Type, and Computation Type.
+Global value types consist of the universes.
+\blue{remove global type context from local type judgement?(Do need global context for existential types)}
+\begin{align*}
+    \Gamma_G ; \Gamma_L &\vdash A \textrm{ Global}\\
+    \Gamma_G ; \Gamma_L &\vdash A \textrm{ Local}\\
+    \Gamma_G ; \Gamma_L | \Delta &\vdash \underline{B} \textrm{ Comp}\\
+\end{align*}
+For the logic, we have Value Propositions and Computation Propositions.
+\begin{align*}
+    \Gamma_G ; \Gamma_L &\vdash \phi \; \textrm{Prop}_V\\
+    \Gamma_G ; \Gamma_L | \Delta & \vdash \underline{\phi} \; \textrm{Prop}_C\\
+\end{align*}
+Derivation judgements
+\begin{align*}
+    \Gamma_G ; \Gamma_L &\vdash_d \phi \\ 
+    \Gamma_G ; \Gamma_L | \Delta &\vdash_d \underline{\phi} \\ 
+\end{align*}
+\begin{comment}
+    
+\begin{align*}
+    &\Gamma \vdash A  \textrm{ VType}_0\\\    
+    &\Gamma \vdash A  \textrm{ VType}_1\\
+    &\Gamma \vdash \underline{B}  \textrm{ CType}\\
+    &\Gamma \vdash M : A \\
+    &\Gamma | \Delta \vdash M : \underline{B}\\
+    &\Gamma \vdash \phi  \textrm{ VProp} \\
+    &\Gamma | \Delta \vdash \underline{\phi}  \textrm{ CProp}
+\end{align*}
+\begin{itemize}
+    \item context judgements? (bunching rules, how contexts are constructed)
+    \item relation judgement?
+\end{itemize}
+\end{comment}
+
+\section{Formation Rules}
+\subsection{Contexts}
+
+\begin{prooftree}
+    \AxiomC{}
+    \UnaryInfC{$\cdot ; \cdot \; \textrm{Ctx}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L  \; \textrm{Ctx}$}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash X \; \textrm{Global}$}
+    \BinaryInfC{$\Gamma_G, (x : \lfloor X \rfloor) ; \Gamma_L \; \textrm{Ctx}$}
+    %\AxiomC{$\Gamma_G ; \Gamma_L \vdash x : \lfloor X \rfloor$}
+   % \TrinaryInfC{$\Gamma_G, (x : \lfloor X \rfloor) ; \Gamma_L \; \textrm{Ctx}$}
+\end{prooftree}
+
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L  \; \textrm{Ctx}$}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash X \; \textrm{Local}$}
+    \BinaryInfC{$\Gamma_G ; \Gamma_L ,(x :  X )  \; \textrm{Ctx}$}
+    %\AxiomC{$\Gamma_G ; \Gamma_L \vdash x : \lfloor X \rfloor$}
+   % \TrinaryInfC{$\Gamma_G, (x : \lfloor X \rfloor) ; \Gamma_L \; \textrm{Ctx}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L  \; \textrm{Ctx}$}
+    \AxiomC{$\Gamma_G ; \Gamma_L'  \; \textrm{Ctx}$}
+    \BinaryInfC{$\Gamma_G ; \Gamma_L, \Gamma_L'  \; \textrm{Ctx}$}
+\end{prooftree}
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L  \; \textrm{Ctx}$}
+    \AxiomC{$\Gamma_G ; \Gamma_L'  \; \textrm{Ctx}$}
+    \BinaryInfC{$\Gamma_G ; \Gamma_L* \Gamma_L'  \; \textrm{Ctx}$}
+\end{prooftree}
+
+%bunch rules?
+
+%https://ncatlab.org/nlab/show/Martin-L\%C3\%B6f+dependent+type+theory\#JudgmentsAndContexts
+\subsection{Types}
+\subsubsection{Global Value Types}
+Global types consist of our \textit{universe} types. 
+\begin{prooftree}
+    \AxiomC{$\Gamma_G; \Gamma_L \vdash A ; \textrm{Local}$}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L \vdash V  A \; \textrm{Global}$}
+\end{prooftree}
+\blue{The addition of $V  A$ as a global type in conjunction with the context rules allows terms of Local Type to exist in the Global Type context.
+See the dependent linear non-linear paper}
+\begin{prooftree}
+    \AxiomC{}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L \vdash U_V \textrm{ Global}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L \vdash U_C \textrm{ Global}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash A \textrm{ Local}$}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L \vdash P_V \;A \textrm{ Global}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash \underline{B} \textrm{ Comp}$}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L \vdash P_C\; \underline{B}\textrm{ Global}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash  A \; \textrm{Local}$}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash  A' \; \textrm{Local}$}
+    \BinaryInfC{$\Gamma_G ; \Gamma_L \vdash R_V \; A \; A' \;\textrm{Global} $}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash  \underline{B}\; \textrm{Comp}$}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash  \underline{B}'\;\textrm{Comp}$}
+    \BinaryInfC{$\Gamma_G ; \Gamma_L \vdash R_C \; \underline{B} \; \underline{B}' \;\textrm{Global} $}
+\end{prooftree}
+
+\subsubsection{Local Value Types}
+
+\begin{prooftree}
+    \AxiomC{}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L  \vdash \textrm{Unit Local}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L  \vdash \textrm{OSum Local}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L  \vdash A \textrm{ Local}$}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L  \vdash \textrm{Case }A \textrm{ Local}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L  \vdash A \textrm{ Local}$}
+    \AxiomC{$\Gamma_G ; \Gamma_L  \vdash A' \textrm{ Local}$}
+    \BinaryInfC{$\Gamma_G ; \Gamma_L  \vdash A \times A' \textrm{ Local}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L  \vdash A \textrm{ Local}$}
+    \AxiomC{$\Gamma_G ; \Gamma_L  \vdash A' \textrm{ Local}$}
+    \BinaryInfC{$\Gamma_G ; \Gamma_L  \vdash A * A' \textrm{ Local}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash \underline{B} \textrm{ Comp}$}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L  \vdash U \underline{B} \; \textrm{Local}$}
+\end{prooftree}
+
+\blue{existential type}
+
+
+
+
+\subsubsection{Computation Types}
+
+
+
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash A \; \textrm{Local}$}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash \underline{B} \; \textrm{Comp}$}
+    \BinaryInfC{$\Gamma_G ; \Gamma_L \vdash A \rightarrow \underline{B} \; \textrm{Comp}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash A \; \textrm{Local}$}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash \underline{B} \; \textrm{Comp}$}
+    \BinaryInfC{$\Gamma_G ; \Gamma_L \vdash A \sep \underline{B} \; \textrm{Comp}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash \underline{B} \; \textrm{Comp}$}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash \underline{B'} \; \textrm{Comp}$}
+    \BinaryInfC{$\Gamma_G ; \Gamma_L \vdash \underline{B} \;\underline{\times}\; \underline{B'} \; \textrm{Comp}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G, X : U_L ; \Gamma_L \vdash \underline{B}  \; \textrm{Comp}$}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L \vdash \forall (X : U_V). \underline{B} \; \textrm{Comp}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G, \underline{X} : U_C ; \Gamma_L \vdash \underline{B}  \; \textrm{Comp}$}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L \vdash \forall (\underline{X} : U_C). \underline{B} \; \textrm{Comp}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash A \; \textrm{Local}$}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L \vdash F A \; \textrm{Comp}$}
+\end{prooftree}
+
+\subsection{Propositions}
+\subsubsection{Value Propositions}
+  \begin{prooftree}
+    \AxiomC{}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L \vdash \top \textrm{ Prop}_V$}
+  \end{prooftree}
+
+  \begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash \phi \textrm{ Prop}_V$}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash \phi' \textrm{ Prop}_V$}
+    \BinaryInfC{$\Gamma_G ; \Gamma_L \vdash \phi \land \phi' \textrm{ Prop}_V$}
+  \end{prooftree}
+
+  \begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash x : A$}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash y : A$}
+    \BinaryInfC{$\Gamma_G ; \Gamma_L \vdash x =_A y \textrm{ Prop}_V$}
+  \end{prooftree}
+
+  \begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash P : P_V \;A$}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash x : A$}
+    \BinaryInfC{$\Gamma_G ; \Gamma_L \vdash P(x) \textrm{ Prop}_V$}
+  \end{prooftree}
+\blue{$\lceil \rceil \lfloor \rfloor?$}
+  \begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash R : R_V \; A \; A' $}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash x : A$}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash y : A'$}
+    \TrinaryInfC{$\Gamma_G ; \Gamma_L \vdash R(x,y) \textrm{ Prop}_V$}
+  \end{prooftree}
+
+
+\subsubsection{Computation Propositions}
+\blue{rethink the stoup component in these rules}
+
+\begin{prooftree}
+    \AxiomC{}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L | \Delta \vdash \underline{\top} \textrm{ Prop}_C$}
+  \end{prooftree}
+
+  \begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L | \Delta \vdash \underline{\phi} \textrm{ Prop}_C$}
+    \AxiomC{$\Gamma_G ; \Gamma_L | \Delta \vdash \underline{\phi'} \textrm{ Prop}_C$}
+    \BinaryInfC{$\Gamma_G ; \Gamma_L | \Delta \vdash \underline{\phi} \;\underline{\land}\; \underline{\phi'} \textrm{ Prop}_C$}
+  \end{prooftree}
+
+  \begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L | \Delta \vdash x : \underline{B}$}
+    \AxiomC{$\Gamma_G ; \Gamma_L | \Delta \vdash y : \underline{B}$}
+    \BinaryInfC{$\Gamma_G ; \Gamma_L | \Delta \vdash x =_{\underline{B}} y \textrm{ Prop}_C$}
+  \end{prooftree}
+
+  \begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash \phi \textrm{ Prop}_V$}
+    \AxiomC{$\Gamma_G ; \Gamma_L | \Delta \vdash \underline{\psi} \textrm{ Prop}_C$}
+    \BinaryInfC{$\Gamma_G ; \Gamma_L | \Delta \vdash \phi \implies \underline{\psi} \textrm{ Prop}_C$}
+  \end{prooftree}
+
+  \begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L | \Delta \vdash \underline{P} : P_C \;\underline{B}$}
+    \AxiomC{$\Gamma_G ; \Gamma_L | \Delta \vdash x : \underline{B}$}
+    \BinaryInfC{$\Gamma_G ; \Gamma_L | \Delta \vdash \underline{P}(x) \textrm{ Prop}_C$}
+  \end{prooftree}
+\blue{$\lceil \rceil \lfloor \rfloor ?$}
+  \begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L | \Delta \vdash \underline{R} : R_C \; \underline{B} \; \underline{B}' $}
+    \AxiomC{$\Gamma_G ; \Gamma_L | \Delta \vdash x : \underline{B}$}
+    \AxiomC{$\Gamma_G ; \Gamma_L | \Delta \vdash y : \underline{B}'$}
+    \TrinaryInfC{$\Gamma_G ; \Gamma_L | \Delta \vdash \underline{R}(x,y) \textrm{ Prop}_C$}
+  \end{prooftree}
+\blue{Can we have one rule to capture quantification over all the global types?
+That is, one formation rule for value terms, value and computation types, value and computation predicates, value and computation relations.
+For type quantification, we need a side condition that for $x : U_V $ then $\lfloor x \rfloor \notin FTV(\Gamma_G ; \Gamma_L| \Delta)$.
+TODO consider relevant free variable restrictions}
+  \begin{prooftree}
+    \AxiomC{$\Gamma_G , x : G ; \Gamma_L \Delta \vdash \phi \textrm{ Prop}_C$}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L | \Delta \vdash \forall (x : G). \phi \textrm{ Prop}_C $}
+  \end{prooftree}
+v.s. individual rules for each global type
+  \begin{prooftree}
+    \AxiomC{$\Gamma_G, (x : V A); \Gamma_L | \Delta \vdash \underline{\phi} \textrm{ Prop}_C$}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L | \Delta \vdash \forall (x : V A). \underline{\phi} \textrm { Prop}_C$}
+  \end{prooftree}
+
+  \begin{prooftree}
+    \AxiomC{$\Gamma_G, (x : U_V); \Gamma_L | \Delta \vdash \underline{\phi} \textrm{ Prop}_C$}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L | \Delta \vdash \forall (x : U_V). \underline{\phi} \textrm { Prop}_C$}
+  \end{prooftree}
+...
+\subsection{Predicates \& Relations}
+\blue{Try to cut out relations by taking them to be special predicates $P (A \times A')$. 
+That seems to complicate the definition of relational substitution when performing 
+two different type substitutions on the "input types" ($x : A[\overrightarrow{C}/\overrightarrow{X}], y : B[\overrightarrow{C'}/\overrightarrow{Y}]$)}
+
+\blue{Are the following sufficient? What is the justification for the rules in figure 5 of the PE logic paper?}
+
+\blue{Why introduce new judgement forms when we can directly declare membership of the appropriate universe type? 
+$(x : A).\phi \;\textrm{ Pred}_V \; A$ vs $(x : A).\phi : P_V A$. 
+In the Plotkin Abadi logic, this corresponds to the only formation rule for relations}
+
+\blue{Check the usage of the bunch/hole syntax}
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L(x : X) \vdash \phi \; \textrm{Prop}_V$}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L \vdash (x : X). \phi  \textrm{ Pred}_V \; X$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L(x : A , y : A') \vdash \phi \textrm{ Prop}_V$}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L \vdash (x : A , y : A'). \phi  \textrm{ Rel}_V \; A \; A'$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L | \cdot \vdash \underline{\phi} \textrm{ Prop}_C$}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L \vdash (x : F (Unit)) . \underline{\phi}  \textrm{ Pred}_C (F \;Unit)$}
+\end{prooftree}
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L | x : \underline{B} \vdash \underline{\phi} \textrm{ Prop}_C$}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L \vdash (x : \underline{B}).\phi  \textrm{ Pred}_C \;\underline{B}$}
+\end{prooftree}
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L | (p : \underline{B} \;\underline{\times}\; \underline{B'}) \vdash \underline{\phi} \textrm{ Prop}_C$}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L \vdash (x : \underline{B}, y : \underline{B'}) . \underline{\phi}  \textrm{ Rel}_C \; \underline{B} \; \underline{B'}$}
+\end{prooftree}
+
+Commented out formation rules akin to Figure 5 of PE logic paper. 
+\begin{comment}
+
+\subsubsection{Value Predicates}
+\begin{prooftree}
+    \AxiomC{}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L \vdash (x : A). \top : P_V A$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash (x : A). \phi : P_V A$}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash (x : A). \psi : P_V A$}
+    \BinaryInfC{$\Gamma_G ; \Gamma_L \vdash (x : A). \phi \land \psi : P_V A$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L(x : A) \vdash t : A'$}
+    \AxiomC{$\Gamma_G ; \Gamma_L(x : A) \vdash u : A'$}
+    \BinaryInfC{$\Gamma_G ; \Gamma_L \vdash (x : A). t =_{A'} u : P_V A$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L(x : A) \vdash t : A'$}
+    \UnaryInfC{$\Gamma_G, (P : P_V A'); \Gamma_L \vdash (x : A). P(t) : P_V A$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L(x : A) \vdash t : C$}
+    \AxiomC{$\Gamma_G ; \Gamma_L(x : A) \vdash u : C'$}
+    \BinaryInfC{$\Gamma_G, (R : R_V \;C \;C'); \Gamma_L \vdash (x : A). R(t,u) : P_V A$}
+\end{prooftree}
+
+\subsubsection{Value Relations}
+
+\begin{prooftree}
+    \AxiomC{}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L \vdash (x : A , y : A'). \top : R_V \; A \; A'$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash (x : A , y : A'). \phi : R_V \; A \; A'$}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash (x : A , y : A'). \psi : R_V \; A \; A'$}
+    \BinaryInfC{$\Gamma_G ; \Gamma_L \vdash (x : A , y : A'). \phi \land \psi : R_V \; A \; A'$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L(x : A) \vdash t : C$}
+    \AxiomC{$\Gamma_G ; \Gamma_L(y : A') \vdash u : C$}
+    \BinaryInfC{$\Gamma_G ; \Gamma_L \vdash (x : A , y : A'). t =_C u : R_V \; A \; A'$}
+\end{prooftree}
+Any requirement of $P$? 
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L(x : A) \vdash t : C$}
+    \AxiomC{$\Gamma_G ; \Gamma_L(y : A') \vdash u : C'$}
+    \BinaryInfC{$\Gamma_G , (P : P_V (C \times C')) ; \Gamma_L \vdash (x : A , y : A'). P((t , u)) : R_V \; A \; A'$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L(x : A) \vdash t : C$}
+    \AxiomC{$\Gamma_G ; \Gamma_L(y : A') \vdash u : C'$}
+    \BinaryInfC{$\Gamma_G , (R : R_V \; C \; C') ; \Gamma_L \vdash (x : A , y : A'). R(t , u) : R_V \; A \; A'$}
+\end{prooftree}
+
+\subsubsection{Computation Predicates}
+
+\begin{prooftree}
+    \AxiomC{}
+    \UnaryInfC{$\vdash (x : \underline{B}). \top$}
+\end{prooftree}
+\begin{prooftree}
+    \AxiomC{}
+    \UnaryInfC{$\vdash (x : \underline{B}). \underline{\phi} \land \underline{\psi}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{}
+    \UnaryInfC{$\vdash (x : \underline{B}). t=_{\underline{C}} u$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{}
+    \UnaryInfC{$\vdash (x : \underline{B}). \top$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{}
+    \UnaryInfC{$\vdash (x : \underline{B}). \underline{P}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{}
+    \UnaryInfC{$\vdash (x : \underline{B}). \underline{R}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{}
+    \UnaryInfC{$\vdash (x : \underline{B}). \forall (x : G) . \underline{\phi}$}
+\end{prooftree}
+
+\end{comment}
+
+\section{Introduction \& Elimination Rules}
+\subsection{Types}
+\subsubsection{Global Value Types}
+
+\blue{Check the rules for $V A$ against the dependent linear non-linear paper.}
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash x : A$}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L \vdash \lceil x \rceil : V A$}
+\end{prooftree}
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash x : V A$}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L \vdash \lfloor x \rfloor : A$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash A \; \textrm{Local}$}
+    \RightLabel{$U_V$-Intro}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L \vdash \lceil A \rceil : U_V$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash A : U_V$}
+    \RightLabel{$U_V$-Elim}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L \vdash \lfloor A \rfloor \; \textrm{Local}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash \underline{B} \; \textrm{Comp}$}
+    \RightLabel{$U_C$-Intro}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L \vdash \lceil \underline{B} \rceil : U_C$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash \underline{B} : U_C$}
+    \RightLabel{$U_C$-Elim}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L \vdash \lfloor \underline{B} \rfloor \; \textrm{Comp}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L $}
+    \UnaryInfC{$$}
+\end{prooftree}
+
+\begin{comment}
+\blue{Check this one. Using bunch hole syntax.}
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L(x : X) \vdash \phi \; \textrm{Prop}_V$}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L \vdash (x : X). \phi : P_V \; X$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L(x : A , Y : A') \vdash \phi \textrm{ Prop}_V$}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L \vdash (x : A , y : A'). \phi : R_V \; A \; A'$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L ; \cdot \vdash \underline{\phi} \textrm{ Prop}_C$}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L \vdash (x : F (Unit)) . \underline{\phi} : P_C (F \;Unit)$}
+\end{prooftree}
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L ; x : \underline{B} \vdash \underline{\phi} \textrm{ Prop}_C$}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L \vdash (x : \underline{B}).\phi : P_C \;\underline{B}$}
+\end{prooftree}
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L ; (p : \underline{B} \;\underline{\times}\; \underline{B'}) \vdash \underline{\phi} \textrm{ Prop}_C$}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L \vdash (x : \underline{B}, y : \underline{B'}) . \underline{\phi} : R_C \; \underline{B} \; \underline{B'}$}
+\end{prooftree}
+
+\end{comment}
+%\blue{can't just summon an arbitrary $y : X$. Does the $Rel$ type in the original Plotkin Abadi logic have an Elim rule?}
+%\begin{prooftree}
+%    \AxiomC{$\Gamma_G ; \Gamma_L \vdash \phi : P_V \; X$}
+%   \UnaryInfC{$\Gamma_G ; \Gamma_L(y : X) \vdash \phi[y/x] \; \textrm{Prop}_V$}
+%\end{prooftree}
+
+
+\subsubsection{Local Value Types}
+
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{Unit-I}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L \vdash tt : \textrm{Unit}$}
+\end{prooftree}
+
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L  \vdash \sigma : \textrm{Case} A$}
+    \AxiomC{$\Gamma_G ; \Gamma_L  \vdash V : A$}
+    \RightLabel{OSum-I}
+    \BinaryInfC{$\Gamma_G ; \Gamma_L  \vdash \injj{\sigma}{V}: \textrm{OSum}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L  \vdash V : \textrm{OSum}$}
+    \AxiomC{$\Gamma_G ; \Gamma_L  \vdash \sigma : \textrm{Case }A$}
+    \AxiomC{$\Gamma_G ; \Gamma_L  ( x : A) | \Delta \vdash M : \underline{B}$}
+    \AxiomC{$\Gamma_G ; \Gamma_L  | \Delta \vdash N : \underline{B}$}
+    \RightLabel{OSum-E}
+    \QuaternaryInfC{$\Gamma_G ; \Gamma_L |\Delta \vdash \textrm{match } V \textrm{ with } \sigma \{ \textrm{ inj }x. M \| N\} : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash V : A$}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash V' : A'$}
+    \RightLabel{$\times$-I}
+    \BinaryInfC{$\Gamma_G ; \Gamma_L \vdash (V,V') : A \times A'$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash p : A \times A'$}
+    \RightLabel{$\times$-E1}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L \vdash \pi_1 \;p : A$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash p : A \times A'$}
+    \RightLabel{$\times$-E2}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L \vdash \pi_2 \;p : A'$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_{L_1} \vdash V_1 : A_1$}
+    \AxiomC{$\Gamma_G ; \Gamma_{L_2} \vdash V_2 : A_2$}
+    \RightLabel{*-I}
+    \BinaryInfC{$\Gamma_G ; \Gamma_{L_1} * \Gamma_{L_2} \vdash (V_1 * V_2) : A_1 * A_2$}
+\end{prooftree}
+
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash V : A * A'$}
+    \AxiomC{$\Gamma_G ; \Gamma_L ( x : A * y : A') | \Delta \vdash M : \underline{B}$}
+    \RightLabel{*-E}
+    \BinaryInfC{$\Gamma_G ; \Gamma_L | \Delta \vdash$ let $(x*y) = V; M : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L(x : A) \vdash M : A'$}
+    \RightLabel{$\rightarrow$-I}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L \vdash (\lambda (x : A) . M) : A \rightarrow A' $}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash M : A \rightarrow A'$}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash N : A$}
+    \RightLabel{$\rightarrow$-E}
+    \BinaryInfC{$\Gamma_G ; \Gamma_L \vdash M N : A'$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{\red{TODO}}
+    \RightLabel{$\exists$-I}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L \vdash \textrm{pack}(A',V) \textrm{ as } \exists X .A : \exists X .A$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{\red{TODO}}
+    \RightLabel{$\exists$-E}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L \vdash : \textrm {unpack} (X , x) = V ; M : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L | \Delta \vdash M : \underline{B} $}
+    \RightLabel{$U$-I}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L \vdash \textrm{thunk } M : U \underline{B}$}
+\end{prooftree}
+
+
+
+\subsubsection{Computation Types}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L (x : A) | \Delta \vdash M : \underline{B}$}
+    \RightLabel{$\rightarrow_c$-I}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L | \Delta \vdash  \lambda x : A . M : A \rightarrow \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L | \Delta \vdash M : A \rightarrow \underline{B}$}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash N : A$}
+    \RightLabel{$\rightarrow_c$-E}
+    \BinaryInfC{$\Gamma_G ; \Gamma_L | \Delta \vdash M N : \underline{B}$}
+\end{prooftree}
+check bunch
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L * x : A | \Delta \vdash M : \underline{B}$}
+    \RightLabel{$\sep$-I}
+    \UnaryInfC{$\Gamma_G ; \Gamma_L | \Delta \vdash   \alpha x : A . M : A \sep \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L | \Delta \vdash_ M : A \sep \underline{B}$}
+    \AxiomC{$\Gamma_G ; \Gamma_L' \vdash N : A$}
+    \RightLabel{$\sep$-E}
+    \BinaryInfC{$\Gamma_G ; \Gamma_L * \Gamma_L' | \Delta \vdash M @ N : \underline{B}$}
+\end{prooftree}
+
+Commented rules to be converted.
+\begin{comment}
+\begin{prooftree}
+    \AxiomC{$\Gamma_G ; \Gamma_L \vdash M : \underline{B}$}
+    \RightLabel{}
+    \UnaryInfC{$\Xi ; \Gamma_G ; \Gamma_L \vdash_c \Lambda X . M : \forall X . \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Xi ; \Gamma \vdash_c : M : \forall X . \underline{B}$}
+    \AxiomC{$\Xi \vdash A$}
+    \RightLabel{}
+    \BinaryInfC{$\Xi ; \Gamma \vdash_c M[A] : \underline{B}[A / X]$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Xi ; \Gamma \vdash_v V : A$}
+    \RightLabel{}
+    \UnaryInfC{$\Xi ; \Gamma \vdash _c \textrm{ret } V : F A$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Xi ; \Gamma \vdash_c M : F A $}
+    \AxiomC{$\Xi ; \Gamma , x : A \vdash_c N : \underline{B}$}
+    \BinaryInfC{$\Xi ; \Gamma \vdash_c x \leftarrow M ; N : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Xi ; \Gamma \vdash_v V : U \underline{B}$}
+    \RightLabel{}
+    \UnaryInfC{$\Xi ; \Gamma \vdash_c : \textrm{force } V : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Xi ; \Gamma * (\sigma : \textrm{Case}A ) \vdash_c M : \underline{B}$}
+    \AxiomC{$\Xi \vdash A$}
+    \RightLabel{}
+    \BinaryInfC{$\Xi ; \Gamma \vdash_c \textrm{newcase}_{A} x ; M : \underline{B}$}
+\end{prooftree}
+
+
+
+\begin{prooftree}
+    \AxiomC{$\Xi ; \Gamma \vdash_v V : A_1 \times A_2$}
+    \AxiomC{$\Xi ; \Gamma , x : A_1 , y : A_2 \vdash_c M : \underline{B}$}
+    \RightLabel{}
+    \BinaryInfC{$\Xi ; \Gamma \vdash_c$ let $(x,y) = V; M : \underline{B}$}
+\end{prooftree}
+\end{comment}
+
+
+\begin{comment}
+    
+
+\begin{prooftree}
+    \AxiomC{}
+    \UnaryInfC{$\Gamma \vdash \textrm{Unit VType}_0$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash A \textrm{ VType}_0$}
+    \UnaryInfC{$\Gamma \vdash \textrm{Case } A \textrm{ VType}_0$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{}
+    \UnaryInfC{$\Gamma \vdash \textrm{OSum VType}_0$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash A \textrm{ VType}_0$}
+    \AxiomC{$\Gamma \vdash A' \textrm{ VType}_0$}
+    \BinaryInfC{$\Gamma \vdash A \times A' \textrm{ VType}_0$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash A \textrm{ VType}_0$}
+    \AxiomC{$\Gamma \vdash A' \textrm{ VType}_0$}
+    \BinaryInfC{$\Gamma \vdash A * A' \textrm{ VType}_0$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash A \textrm{ VType}_0$}
+    \AxiomC{$\Gamma \vdash A' \textrm{ VType}_0$}
+    \BinaryInfC{$\Gamma \vdash A \rightarrow A' \textrm{ VType}_0$}
+\end{prooftree}
+impredicativity
+\begin{prooftree}
+    \AxiomC{$\Gamma , X : Val \vdash A \textrm{ VType}_0$}
+    \UnaryInfC{$\Gamma \vdash \exists (X : Val) . A\textrm{ VType}_0$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma  \vdash \underline{B} \textrm{ CType}$}
+    \UnaryInfC{$\Gamma \vdash U \underline{B}\textrm{ VType}_0$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{}
+    \UnaryInfC{$\Gamma \vdash Val \textrm{ VType}_1$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{}
+    \UnaryInfC{$\Gamma \vdash Comp \textrm{ VType}_1$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{}
+    \UnaryInfC{$\Gamma \vdash Prop_v \textrm{ VType}_1$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{}
+    \UnaryInfC{$\Gamma \vdash Prop_c \textrm{ VType}_1$}
+\end{prooftree}
+
+\subsubsection{Computation Types}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash A \textrm{ VType}_0$}
+    \AxiomC{$\Gamma \vdash \underline{B} \textrm{ CType}$}
+    \BinaryInfC{$\Gamma \vdash A \rightarrow \underline{B} \textrm{ CType}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash A \textrm{ VType}_0$}
+    \AxiomC{$\Gamma \vdash \underline{B} \textrm{ CType}$}
+    \BinaryInfC{$\Gamma \vdash A \sep \underline{B} \textrm{ CType}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash \underline{B} \textrm{ CType}$}
+    \AxiomC{$\Gamma \vdash \underline{B'} \textrm{ CType}$}
+    \BinaryInfC{$\Gamma \vdash \underline{B} \;\underline{\times}\; \underline{B'} $ CType}
+\end{prooftree}
+
+impredicativity
+\begin{prooftree}
+    \AxiomC{$\Gamma, X : Val \vdash \underline{B}$ CType}
+    \UnaryInfC{$\Gamma \vdash \forall (X : Val) . \underline{B}$ CType}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma, X : Comp \vdash \underline{B}$ CType}
+    \UnaryInfC{$\Gamma \vdash \forall (X : Comp) . \underline{B}$ CType}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash A \textrm{ VType}_0$}
+    \UnaryInfC{$\Gamma \vdash F A $ CType}
+\end{prooftree}
+
+\subsection{Propositions}
+
+\subsubsection{Value Propositions}
+
+\begin{prooftree}
+    \AxiomC{}
+    \UnaryInfC{$\Gamma \vdash \top $ VProp}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash \phi$ VProp}
+    \AxiomC{$\Gamma \vdash \phi$ VProp}
+    \BinaryInfC{$\Gamma \vdash \phi \land \psi$ VProp}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash t : A$}
+    \AxiomC{$\Gamma \vdash u : A$}
+    \BinaryInfC{$\Gamma \vdash t =_A u$ VProp}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash R : A \times A' \rightarrow Prop_v$}
+    \AxiomC{$\Gamma \vdash t : A$}
+    \AxiomC{$\Gamma \vdash u : A'$}
+    \TrinaryInfC{$\Gamma \vdash R(t,u)$ VProp}
+\end{prooftree}
+
+\subsubsection{Computation Propositions}
+
+.. why
+\begin{prooftree}
+    \AxiomC{}
+    \UnaryInfC{$\Gamma | \Delta \vdash \underline{\top} $ CProp}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma | \Delta \vdash \underline{\phi}$ CProp}
+    \AxiomC{$\Gamma | \Delta \vdash \underline{\psi}$ CProp}
+    \BinaryInfC{$\Gamma | \Delta \vdash \underline{\phi} \land \underline{\psi}$ CProp}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma | \Delta \vdash t : \underline{B}$}
+    \AxiomC{$\Gamma | \Delta \vdash u : \underline{B}$}
+    \BinaryInfC{$\Gamma | \Delta \vdash t =_{\underline{B}} u$ CProp}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash \phi$ VProp}
+    \AxiomC{$\Gamma | \Delta \vdash \underline{\psi}$ CProp}
+    \BinaryInfC{$\Gamma | \Delta \vdash \phi \implies \underline{\psi}$ CProp}
+\end{prooftree}
+hrm..no? Not sure how to formulate this..
+\begin{prooftree}
+    \AxiomC{$\Gamma | \underline{R} : \underline{B} \;\underline{\times}\; \underline{B'} \vdash \phi $ CProp}
+    \AxiomC{$\Gamma | $}
+    \AxiomC{}
+    \TrinaryInfC{$\Gamma | \Delta \vdash \underline{R}(t,u)$ CProp}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma, x : A | \Delta \vdash \underline{\phi}$ CProp}
+    \UnaryInfC{$\Gamma | \Delta \vdash \forall (x : A). \underline{\phi}$ CProp}
+\end{prooftree}
+
+Instances of this rule?: (Here $A$ is $VType_1$ ?)
+\begin{align*}
+    &x : A \textrm{ as } x : A \textrm { quantification over values}\\
+    &x : A \textrm{ as } X : Val \textrm { quantification over value Types}\\
+    &x : A \textrm{ as } \underline{X} : Comp \textrm { quantification over computation types}\\
+    &x : A \textrm{ as } P : Prop_v \textrm { quantification over value propositions}\\
+    &x : A \textrm{ as } \underline{P} : Prop_c \textrm { quantification over computation propositions}\\
+\end{align*}
+And also relations?
+
+\section{Introduction/Elimination Rules}
+\subsection{Types}
+
+\subsubsection{Value Types}
+\begin{prooftree}
+    \AxiomC{}
+    \RightLabel{Unit-I}
+    \UnaryInfC{$\Gamma \vdash tt : \textrm{Unit}$}
+\end{prooftree}
+
+
+Where $\Gamma \vdash A \; VType_0$
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash \sigma : \textrm{Case} A$}
+    \AxiomC{$\Gamma \vdash V : A$}
+    \RightLabel{OSum-I}
+    \BinaryInfC{$\Gamma \vdash \injj{\sigma}{V}: \textrm{OSum}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash V : \textrm{OSum}$}
+    \AxiomC{$\Gamma \vdash \sigma : \textrm{Case }A$}
+    \AxiomC{$\Gamma , x : A | \Delta \vdash M : \underline{B}$}
+    \AxiomC{$\Gamma | \Delta \vdash N : \underline{B}$}
+    \RightLabel{OSum-E}
+    \QuaternaryInfC{$\Gamma |\Delta \vdash \textrm{match } V \textrm{ with } \sigma \{ \textrm{ inj }x. M \| N\} : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash V : A$}
+    \AxiomC{$\Gamma \vdash V' : A'$}
+    \RightLabel{$\times$-I}
+    \BinaryInfC{$\Gamma \vdash (V,V') : A \times A'$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash p : A \times A'$}
+    \RightLabel{$\times$-E1}
+    \UnaryInfC{$\Gamma \vdash \pi_1 \;p : A$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash p : A \times A'$}
+    \RightLabel{$\times$-E2}
+    \UnaryInfC{$\Gamma \vdash \pi_2 \;p : A'$}
+\end{prooftree}
+
+Here I have questions/concerns on how this interacts with universes.
+\begin{prooftree}
+    \AxiomC{$\Gamma_1 \vdash V_1 : A_1$}
+    \AxiomC{$\Gamma_2 \vdash V_2 : A_2$}
+    \RightLabel{*-I}
+    \BinaryInfC{$\Gamma_1 * \Gamma_2 \vdash (V_1 * V_2) : A_1 * A_2$}
+\end{prooftree}
+
+check
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash V : A * A'$}
+    \AxiomC{$\Gamma , x : A * y : A' | \Delta \vdash M : \underline{B}$}
+    \RightLabel{*-E}
+    \BinaryInfC{$\Gamma | \Delta \vdash$ let $(x*y) = V; M : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma, x : A \vdash M : A'$}
+    \RightLabel{$\rightarrow$-I}
+    \UnaryInfC{$\Gamma \vdash (\lambda (x : A) . M) : A \rightarrow A' $}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash M : A \rightarrow A'$}
+    \AxiomC{$\Gamma \vdash N : A$}
+    \RightLabel{$\rightarrow$-E}
+    \BinaryInfC{$\Gamma \vdash M N : A'$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{\red{TODO}}
+    \RightLabel{$\exists$-I}
+    \UnaryInfC{$\Gamma \vdash \textrm{pack}(A',V) \textrm{ as } \exists X .A : \exists X .A$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{\red{TODO}}
+    \RightLabel{$\exists$-E}
+    \UnaryInfC{$\Gamma \vdash : \textrm {unpack} (X , x) = V ; M : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma | \Delta \vdash M : \underline{B} $}
+    \RightLabel{$U$-I}
+    \UnaryInfC{$\Gamma \vdash \textrm{thunk } M : U \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash A \textrm{ VType}_0$}
+    \RightLabel{$Val$-I}
+    \UnaryInfC{$\Gamma \vdash \lceil A \rceil : Val $}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash A : Val$}
+    \RightLabel{$Val$-E}
+    \UnaryInfC{$\Gamma \vdash \lfloor A \rfloor \textrm{ VType}_0$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash \underline{B} $ CType}
+    \RightLabel{$Comp$-I}
+    \UnaryInfC{$\Gamma \vdash \lceil \underline{B} \rceil : Comp$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash \underline{B} : Comp$}
+    \RightLabel{$Comp$-E}
+    \UnaryInfC{$\Gamma \vdash \lfloor \underline{B} \rfloor $ CType}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash \phi $ VProp}
+    \RightLabel{$Prop_v$-I}
+    \UnaryInfC{$\Gamma \vdash \lceil \phi \rceil : Prop_v$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash \phi : Prop_v$}
+    \RightLabel{$Prop_v$-E}
+    \UnaryInfC{$\Gamma \vdash \lfloor \phi \rfloor $ VProp}
+\end{prooftree}
+
+\red{no..}
+\begin{prooftree}
+    \AxiomC{$\Gamma | \Delta \vdash \underline{\phi}$ CProp}
+    \RightLabel{}
+    \UnaryInfC{$\Gamma \vdash \lceil \underline{\phi} \rceil : Prop_c$}
+\end{prooftree}
+\blue{$Prop_c$ as a computation type?}
+\begin{prooftree}
+    \AxiomC{$\Gamma | \Delta \vdash \phi$ CProp}
+    \RightLabel{}
+    \UnaryInfC{$\Gamma | \Delta \vdash \lceil \underline{\phi} \rceil : Prop_c$}
+\end{prooftree}
+\subsubsection{Computation Types}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma , x : A | \Delta \vdash M : \underline{B}$}
+    \RightLabel{$\rightarrow_c$-I}
+    \UnaryInfC{$\Gamma | \Delta \vdash  \lambda x : A . M : A \rightarrow \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma | \Delta \vdash M : A \rightarrow \underline{B}$}
+    \AxiomC{$\Gamma \vdash N : A$}
+    \RightLabel{$\rightarrow_c$-E}
+    \BinaryInfC{$\Gamma | \Delta \vdash M N : \underline{B}$}
+\end{prooftree}
+
+Again, some concern on how this interacts with universes
+\begin{prooftree}
+    \AxiomC{$\Gamma * x : A | \Delta \vdash M : \underline{B}$}
+    \RightLabel{$\sep$-I}
+    \UnaryInfC{$\Gamma | \Delta \vdash   \alpha x : A . M : A \sep \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Gamma | \Delta \vdash_ M : A \sep \underline{B}$}
+    \AxiomC{$\Gamma' \vdash N : A$}
+    \RightLabel{$\sep$-E}
+    \BinaryInfC{$\Gamma * \Gamma' | \Delta \vdash M @ N : \underline{B}$}
+\end{prooftree}
+All of the following $\forall$ rules supported by one formation rule?
+\begin{prooftree}
+    \AxiomC{$\Gamma \vdash M : \underline{B}$}
+    \RightLabel{}
+    \UnaryInfC{$\Xi ; \Gamma \vdash_c \Lambda X . M : \forall X . \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Xi ; \Gamma \vdash_c : M : \forall X . \underline{B}$}
+    \AxiomC{$\Xi \vdash A$}
+    \RightLabel{}
+    \BinaryInfC{$\Xi ; \Gamma \vdash_c M[A] : \underline{B}[A / X]$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Xi ; \Gamma \vdash_v V : A$}
+    \RightLabel{}
+    \UnaryInfC{$\Xi ; \Gamma \vdash _c \textrm{ret } V : F A$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Xi ; \Gamma \vdash_c M : F A $}
+    \AxiomC{$\Xi ; \Gamma , x : A \vdash_c N : \underline{B}$}
+    \BinaryInfC{$\Xi ; \Gamma \vdash_c x \leftarrow M ; N : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Xi ; \Gamma \vdash_v V : U \underline{B}$}
+    \RightLabel{}
+    \UnaryInfC{$\Xi ; \Gamma \vdash_c : \textrm{force } V : \underline{B}$}
+\end{prooftree}
+
+\begin{prooftree}
+    \AxiomC{$\Xi ; \Gamma * (\sigma : \textrm{Case}A ) \vdash_c M : \underline{B}$}
+    \AxiomC{$\Xi \vdash A$}
+    \RightLabel{}
+    \BinaryInfC{$\Xi ; \Gamma \vdash_c \textrm{newcase}_{A} x ; M : \underline{B}$}
+\end{prooftree}
+
+
+
+\begin{prooftree}
+    \AxiomC{$\Xi ; \Gamma \vdash_v V : A_1 \times A_2$}
+    \AxiomC{$\Xi ; \Gamma , x : A_1 , y : A_2 \vdash_c M : \underline{B}$}
+    \RightLabel{}
+    \BinaryInfC{$\Xi ; \Gamma \vdash_c$ let $(x,y) = V; M : \underline{B}$}
+\end{prooftree}
+
+
+\subsection{Propositions}
+\subsection{Relations}
+
+\end{comment}
+
+
+\end{document}

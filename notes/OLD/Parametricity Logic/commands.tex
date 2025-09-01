@@ -1,0 +1,40 @@
+%\usepackage{xcolor}
+
+\newcommand{\den}[1]{\llbracket #1 \rrbracket}
+\newcommand{\blue}[1]{\textcolor{blue}{#1}}
+\newcommand{\red}[1]{\textcolor{red}{#1}}
+\newcommand{\sep}{\mathrel{-\mkern-6mu*}}
+\newcommand{\thunk}[1]{\textrm{thunk }#1}
+\newcommand{\injj}[2]{\textrm{inj}_{#1}#2}
+\newcommand{\err}{\mho}
+\newcommand{\print}[1]{\textrm{print }#1}
+\newcommand{\force}[1]{\textrm{force }#1}
+\newcommand{\ret}[1]{\textrm{ret }#1}
+\newcommand{\bind}[3]{#1 \leftarrow #2 ; #3}
+\newcommand{\newcase}[3]{\textrm{newcase}_{#1} \; #2 ; #3}
+\newcommand{\match}[5]{\textrm{match }#1 \textrm{ with }#2 \;\{#3 . #4 | #5\}}
+\newcommand{\unpack}[4]{\textrm{unpack }(#1,#2) = #3 ; #4}
+\newcommand{\lett}[4]{\textrm{let }(#1,#2) = #3 ; #4}
+\newcommand{\lets}[4]{\textrm{let }(#1*#2) = #3 ; #4}
+\newcommand{\ite}[3]{\textrm{if }#1 \textrm{ then }#2 \textrm{ else }#3}
+\newcommand{\at}{\textrm{@}}
+\newcommand{\ttt}{\textrm{tt}}
+\newcommand{\tru}{\textrm{true}}
+\newcommand{\fsl}{\textrm{false}}
+\newcommand{\pworld}{\widehat{\mathbf{World}}}
+\newcommand{\world}{{\mathbf{World}}}
+\newcommand{\calculus}{\operatorname{-calculus}}
+\newcommand{\fresh}{\reflectbox{N}}
+
+% \usepackage[english]{babel}
+%\usepackage{amsthm}
+%\newtheorem{thm}{Theorem}
+%\newtheorem{deff}{Definition}
+
+%\newtheorem{lem}[thm]{Lemma}
+%\newtheorem{cor}[thm]{Corollary}
+%\newtheorem{rem}[thm]{Remark}
+%\newtheorem*{remark}{Remark}
+%\newtheorem{definition}[deff]{Definition}
+%\newtheorem*{construction}{Construction}
+%\newtheorem{conj}[thm]{Conjecture}
