@@ -1247,25 +1247,22 @@ We define obliviousness (\cref{fig:Oblivious}) as a \pl\;type-indexed \textit{lo
     & \mathcal{O}[\underline{X}]_{\rho}(V: \rho_{ty}(\underline{X})) := \rho_{rel}(\underline{X})(V)\\
     &\mathcal{O}[A\rightarrow \underline{B}]_{\rho}(M : \den{A \rightarrow \underline{B}}^L_{ty}[\rho]) := \forall\; V :\den{A}^L_{ty}[\rho]. \mathcal{O}[A]_{\rho}(V)\implies \mathcal{O}[\underline{B}]_{\rho}(MV) \\
     &\mathcal{O}[\forall X. \underline{B}]_{\rho}(M :\den{\forall X. \underline{B}}^L_{ty}[\rho]) := \\
-    &\quad \forall X,P:Pred[X].\\
-    &\quad \quad \colorbox{lightgray}{$\mathcal{O}[\underline{B}]_{{\rho},P}(\sigma_X\leftarrow new_X; M[X](\sigma_X))$} \\
-    &\quad \quad \land \colorbox{lightgray}{$\forall \sigma_X :Case\;X.M[X](\sigma_X) = (\sigma\leftarrow new_X; M[X](\sigma))$}\\
+    &\quad \forall X,P:Pred[X],\sigma_X:Case\:X.\\
+    &\quad \quad \colorbox{lightgray}{$\mathcal{O}[\underline{B}]_{{\rho},P}(M[X](\sigma_X))$} \\
+    &\quad \quad \land \colorbox{lightgray}{$M[X](\sigma_X) = (\sigma\leftarrow new_X; M[X](\sigma))$}\\
     &\mathcal{O}[\forall \underline{X}. \underline{B}]_{\rho}(M:\den{\forall \underline{X}. \underline{B}}^L_{ty}[\rho]) := \forall \underline{X},\underline{P}: Pred[\underline{X}].\mathcal{O}[\underline{B}]_{\rho,\underline{P}}(M[\underline{X}]) 
 \end{align*}
   \caption{Obliviousness Predicate}
   \label{fig:Oblivious}
 \end{figure}
 
+
+
 While wrapping \fpl\;terms enforces the freshness invariant, it complicates the proof translation by potentially introducing $\eta$ expansions and allocation of fresh cases which modify the terms in a proof. Obliviousness helps here as well by enabling a more compositional approach to proof translation, as we will see in section \cref{sec:ProofTranslation}. In order to justify our approach, we prove an \textit{adequacy} theorem in \cref{sec:Result} demonstrating that our usage of obliviousness is sound.
 
 \eric{placeholder. only introduce these if needed and where they are needed}
 \subsubsection{Properties of Obliviousness}
-\begin{theorem}
-  Obliviousness is a congruence w.r.t the typing rules of \pl.
-\end{theorem}
-\begin{proof}
-  highlight a case
-\end{proof}
+
 
 \begin{theorem} Wrapping of oblivious terms is identity.
  $\forall M : \den{A}^L. \mathcal{O}[A](M) \implies \mathcal{W}[A](M) = M$
@@ -1286,11 +1283,96 @@ While wrapping \fpl\;terms enforces the freshness invariant, it complicates the 
 
 
 \subsection{Proof Translation}\label{sec:ProofTranslation}
-As we saw in the last section, in order to preserve \pl\;proofs we needed terms to be \textit{oblivious} to case symbols. We introduce obliviousness via the proof translation from \pl\;to \fpl. 
-\eric{say something about how we translate proofs in obliviousness land, and then adequacy lets us remove obliviousness}
 
-\subsubsection{Translating Terms Revisited}
-Here we define a translation $\den{\_}^O$ which will introduce obliviousness in the 
+\eric{say something about how we translate proofs in obliviousness land, and then adequacy lets us remove obliviousness}
+As we saw in the last section, in order to preserve \pl\;proofs we needed terms to be \textit{oblivious} to case symbols. We introduce obliviousness via the proof translation from \pl\;to \fpl. 
+
+Here we define a translation $\den{\_}^O$ which enhances the term translation $\den{\_}^L$ by pairing a translated term with a proof of its obliviousness. 
+\begin{theorem}
+  Obliviousness is a congruence w.r.t the typing rules of \pl.
+\end{theorem}
+\begin{proof}
+  By induction on the typing rules of $\mathbf{PL}$. We consider a few cases here.
+  \paragraph{$Case: \Lambda X. M : \forall X. \underline{B}$}
+  \indent
+
+  \quad Given: $\den{\Gamma}^O,X\sigma_X;P_X \vdash \mathcal{O}[\underline{B}](\den{M}^L)$
+
+  \quad Prove: $\den{\Gamma}^O \vdash \mathcal{O}[\forall X. \underline{B}](\den{\Lambda X. M}^L)$
+
+  We have to show $\forall X,P_X,\sigma_X.\mathcal{O}[\underline{B}](\den{\Lambda X.M}^L[X]\sigma_X) \land \den{\Lambda X. M}^L[X]\sigma_X = \sigma \leftarrow new_X;\den{\Lambda X. M}^L[X]\sigma$.
+  Here we use the observation that the translation of a type lambda is oblivious, the body $\den{X \vdash M}^L$ does not use $\sigma_X.$ Thus, we have $\den{\Lambda X. M}^L[X]\sigma_X = (\Lambda X.\lambda \sigma_X.\den{X \vdash M}^L)[X]\sigma_X = \den{M}^L$. We have the first conjuct by assumption. The second conjunct simplifies to $\den{M}^L = \sigma \leftarrow new_X; \den{M}^L$, but we know that $\den{M}^L$ does not use $\sigma$. Therefore, the second conjunct is solved by the drop rule.
+
+  \paragraph{$Case: M[A]$}
+  \indent
+
+  \quad Given: $\den{\Gamma}^O \vdash \mathcal{O}[\forall X. \underline{B}](\den{M}^L)$
+  
+  \quad Prove: $\den{\Gamma}^O \vdash \mathcal{O}[\underline{B}](\den{M[A]}^L)$
+
+  We have to show $\mathcal{O}[\underline{B}](\sigma \leftarrow new_{\den{A}^L};\den{M}^L\den{A}^L\sigma)$. In order to use the hypothesis, we need a case symbol in scope. For this we look at the unary relational interpretation of $new_{\den{A}^L}$.
+
+  \begin{align*}
+    &\mathcal{C}[F(Case\;\den{A})] = \forall \underline{Y},\underline{P}_{\underline{Y}}.k : U(Case\; \den{A} \to \underline{Y}). \\
+    &\quad(\forall \sigma : Case\;\den{A}. \mathcal{V}[Case\;\den{A}](\sigma) \implies \underline{P}_{\underline{Y}}((force\;k)\sigma)) \implies \underline{P}_{\underline{Y}}(new_{\den{A}}[\underline{Y}]k) 
+  \end{align*}
+Picking $\underline{Y}:=\den{\underline{B}},\underline{P}_{\underline{Y}} := \mathcal{O}[\underline{B}],k:= thunk(\lambda \sigma. \den{M}\den{A}\sigma)$, we have
+
+\begin{align*}
+  &(\forall \sigma : Case\;\den{A}. \mathcal{V}[Case\;\den{A}](\sigma) \implies \mathcal{O}[\underline{B}](\den{M}\den{A}\sigma)) \implies\mathcal{O}[\underline{B}](\sigma \leftarrow new_{\den{A}^L};\den{M}^L\den{A}^L\sigma)
+\end{align*}
+In which case, it suffices to show
+\begin{align*}
+  &\forall \sigma : Case\;\den{A}. \mathcal{V}[Case\;\den{A}](\sigma) \implies \mathcal{O}[\underline{B}](\den{M}\den{A}\sigma)
+\end{align*}
+This, along with our hypothesis, is sufficient to prove the goal.
+
+\end{proof}
+
+
+Additionally, $\den{\_}^O$ adds data to the context required by the definition of obliviousness. Specifically, any term variable $x :A$ in the context has an associated obliviousness hypothesis $H_x : \mathcal{O}[A](x)$ in the proof context and type variables $X/\underline{X}$ are associated with predicates $P/\underline{P}$ so that type variables can be interpreted in the obliviousness predicate.
+
+
+\begin{figure}[H]
+  \centering
+  \scriptsize
+  \begin{align*} 
+    &\den{\Gamma,x:A}^O := \den{\Gamma}^O,x : \den{A}^L \;|\; H_x : \mathcal{O}[A](x)\\
+    &\den{\Gamma,X}^O := \den{\Gamma}^O,X,\sigma_X : Case\;X ; P : Pred[X]\\
+    &\den{\Gamma,\underline{X}}^O := \den{\Gamma}^O,\underline{X}; \underline{P} : Pred[\underline{X}]\\
+    \\
+    &\den{\Gamma \vdash_{PL} M : A}^O := \den{\Gamma \vdash_{PL} M : A}^L, \mathcal{O}[A](\den{M}) 
+  \end{align*}
+  \caption{Obliviousness Context and Term Translation}
+  \label{fig:d}
+\end{figure}
+\eric{to maintain this invariant, we need to adjust the translation of propositions}
+
+
+
+
+\begin{figure}
+  \centering
+  \scriptsize
+  \eric{highlight changes, fix notational consistencies}
+  \begin{align*}
+    \den{\Gamma;\Theta\vdash_A \bot}^P_{prop}  &=\; \bot \\
+    \den{\Gamma;\Theta\vdash_A V =_A W}^P_{prop} &=\; pi_1\den{\Gamma \vdash _AV}^L_{tm} =_{\den{\Gamma \vdash A}^L_{ty}} \pi_1 \den{\Gamma \vdash W}^L_{tm} \\
+    \den{\Gamma;\Theta\vdash_A M =_{\underline{B}} N}^P_{prop} &=\;    \pi_1 \den{\Gamma \vdash M}^L_{tm} =_{\den{\Gamma \vdash \underline{B}}^L_{ty}}  \pi_1 \den{\Gamma  \vdash N}^L_{tm} \\
+    \den{\Gamma;\Theta\vdash_A R(V,W)}^P_{prop} &=\;   \den{\Gamma ;\Theta\vdash _AR}^R_{rel_v}( \pi_1 \den{\Gamma \vdash V}^L_{tm},  \pi_1 \den{\Gamma \vdash W}^L_{tm}) \\
+    \den{\Gamma;\Theta\vdash_A \underline{R}(M,N)}^P_{prop} &=\;   \den{\Gamma ; \Theta\vdash_A\underline{R}}^R_{rel_c}( \pi_1 \den{\Gamma \vdash M}^L_{tm},  \pi_1 \den{\Gamma \vdash N}^L_{tm}) \\
+    \den{\Gamma;\Theta\vdash_A \phi \land \psi}^P_{prop} &=\;   \den{\Gamma;\Theta\vdash_A \phi}^P_{prop} \land \den{\Gamma;\Theta\vdash_A \psi}^P_{prop} \\
+    \den{\Gamma;\Theta\vdash_A \phi \lor \psi}^P_{prop} &=\;   \den{\Gamma;\Theta\vdash_A \phi}^P_{prop} \lor \den{\Gamma;\Theta\vdash_A \psi}^P_{prop} \\
+    \den{\Gamma;\Theta\vdash_A \phi \implies \psi}^P_{prop} &=\;   \den{\Gamma;\Theta\vdash_A \phi}^P_{prop} \implies \den{\Gamma;\Theta\vdash_A \psi}^P_{prop} \\
+    \den{\Gamma;\Theta\vdash_A \forall(x:A).\phi}^P_{prop} &=\;   \forall(x:\den{\Gamma  \vdash A}^L_{ty}).O[A]_{Rho(\Gamma)}(x)\implies\den{\Gamma,x : A\;\Theta\vdash_A \phi}^P_{prop} \\
+    \den{\Gamma;\Theta\vdash_A \forall X.\phi}^P_{prop} &=\;   \forall X,\sigma_X:Case\;X.\den{\Gamma,X;\Theta\vdash_A \phi}^P_{prop}\\
+    \den{\Gamma;\Theta\vdash_A \forall \underline{X}.\phi}^P_{prop} &=\;   \forall \underline{X},\underline{P}:\mathcal{O}Pred[\underline{X}'].\den{\Gamma,\underline{X};\Theta\vdash_A \phi}^P_{prop} \\
+    \den{\Gamma;\Theta\vdash_A \forall R:Rel_v[A,A'].\phi}^P_{prop} &=\;   \forall  R:Rel_v[\den{\Gamma \vdash A}^L_{ty},\den{\Gamma \vdash A'}^L_{ty}].\den{\Gamma;\Theta,R:Rel_v[A,A']\vdash_A \phi}^P_{prop}\\
+    \den{\Gamma;\Theta\vdash_A \forall \underline{R}:Rel_c[\underline{B},\underline{B}'].\phi}^P_{prop} &=\;   \forall \underline{R}:Rel_c[\den{\Gamma \vdash \underline{B}}^L_{ty},\den{\Gamma \vdash \underline{B}'}]^L_{ty}.\den{\Gamma;\Theta,\underline{R}:Rel_c[\underline{B},\underline{B}']\vdash_A \phi}^P_{prop}
+    \end{align*}
+    \caption{Proposition Translation Fragment}
+    \label{fig:PropTranslation}
+\end{figure}
 
 \begin{comment}
 - translated terms come with an obliviousness proof
