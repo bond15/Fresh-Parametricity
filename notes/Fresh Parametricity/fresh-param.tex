@@ -119,8 +119,8 @@
 
 
 \begin{abstract}
-  ABSTRACT 
-  $\Prop$
+Recent works combining parametric polymorphism with language features relying on intensional type analysis have lead to non-standard definitions of parametricity. The relative strength of traditional vs these type-world notions of parametricity remains an open question. We shed some light on this issue by framing this question as a matter of translation between logics. To this end, we define two logics for proving theorems about parametricity, one traditional and one based on fresh parametricity, and we demonstrate a translation which preserves logical equivalence. 
+
 \end{abstract}
 
 %%
@@ -176,7 +176,7 @@
 \eric{fresh param instead of non-standard?}
 \eric{consistency in inclusion/exclusion of stoup}
 \subsection{Parametricity}
-\eric{decide how you want to introduce parametrictiy, then work on flow}
+\eric{this is word vomit. decide how you want to introduce parametrictiy, then work on flow}
 Parametricity states \eric{wording}that any term of a universal or existential type must behave uniformly for any possible type instantiation.
 Existential types can be used to encode abstract data types like Queues or Graphs. 
 If we know our language enjoys parametric polymorphism, then we have a guarantee that any two instance of a Queue, as encoded by an existential type, are observationally equivalent.
@@ -203,7 +203,7 @@ $$t : \forall X. X \rightarrow \mathbb{B}:= (\Lambda X. \lambda (x : X). \downar
 \eric{$\mathbb{B}$ and Bool used here}
 If we assume that $t$ behaved uniformly for all possible type instantiations, then $t$ should either error
 or return a boolean that is not dependent on the argument of type $X$.
-But this is not the case \eric{grammar}
+But this is not the case
 when instantiated at type Bool, $t$ will return the given boolean value
 $t[\mathbb{B}](b : \mathbb{B}) \leadsto^* b$ for any other type $A$ it will error
 $t[A](x:A)\leadsto^* \Omega$
@@ -283,7 +283,7 @@ In this section we introduce \source, an effectful variant of CBV System F, two 
 
 \subsection{Source Language}\label{sec:SourceLang}
 \begin{itemize}
-  \item why "jumbo" connective (not jumbo, just greater airity)
+  \item why polymorphic multi-arg function type?
   \item why general recursion and error? (OSum can encode these)
 \end{itemize}
 \source is mostly a standard polymorphic, CBV language with general recursion and the ability to raise errors. One major difference being that we replace the universal quantification and function type with a polymorphic, multi-argument function type, similar to that of $\lambda^K$\cite{SysFtoTAL}. Notably, this type does not support partial application; a trade-off we accept for finer control over equational reasoning, as discussed in \cref{sec:SourceToPL}.
@@ -682,8 +682,8 @@ In this section we cover the translations between the languages introduced in th
   \item explain: $\den{\_}^B := \den{\_}^L \circ \den{\_}^A$
   %\item \eric{TODO: remove exists}
 \end{itemize}
-We embed \source in \pl\; using the standard CBV-to-CBPV translation\cite{CBPV} as a guide. One notable difference is the handling of our polymorphic, multi-argument function type. Rather than introducing intermediate thunks at every type and term abstraction, we only introduce one top level thunk. \eric{TODO: rethink motivation for the type and its translation}
-\eric{omit the full figure, provide just the cases for our different type}
+We embed \source in \pl\; using the standard CBV-to-CBPV translation\cite{CBPV} as a guide. One notable difference is the handling of our polymorphic, multi-argument function type. Rather than introducing intermediate thunks at every type and term abstraction, we only introduce one top level thunk. \eric{TODO: rethink motivation for the polymorphic multi-arg type and its translation}
+\eric{omit the full figure, provide a fragment}
 % i think the issue is that thunks were introduced between all type abstractions
 % then we'd have a hard time proving..
 
@@ -891,7 +891,8 @@ Niels et al.\cite{NonParam} solve this issue using a specialized deep $\eta$ exp
   \item explain: relational interpretation of types (including Case,OSum)
   \item explain: IEP axiom
 \end{itemize}
-Here we present the parametricity logics \pl\;and \fpl, introduce \textit{obliviousness predicates} as a solution to compositionaly issues that arise in proof translation, \eric{adequacy?}
+\eric{this section needs more exposition. Nothing fancy, just explain the parts of the logic and provide an example to conclude}
+Here we present the parametricity logics \pl\;and \fpl.
 
 \subsection{Core}
 \eric{cite PE, mention influence}
@@ -962,7 +963,7 @@ Thus far, we have set up a higher order programming logic. In order to reason ab
 %\subsubsection{Identity Extension Principle}
 % relational interpretation of F 
 % what about Case and OSum? we leave them opaque in the logic
-The relational interpretation of types is given in \cref{fig:RelInterp}. The relational interpretation of a type can be seen as a \textit{marco} which, given a value type $A$ unfolds to a value relation $\mathcal{V}[A]_{\rho,\underline{\rho}} : Rel_v[A',A'']$. Relation environments, $\rho,\underline{\rho}$, consists of a mapping $X\mapsto (Y,Z,R : Rel[Y,Z])$ from type variable $X$ to a tuple of two types $Y,Z$ and a relation $R : Rel[Y,Z]$. We use $A[\rho_L]$ to denote a type substitution which replaces every type variable $X$ in $A$ with the corresponding type given by the first element of tuple $\rho(X)$. \eric{more context, why introduce this, what are the interesting cases}
+The relational interpretation of types is given in \cref{fig:RelInterp}. The synatx "$\mathcal{V}[A]_{\rho,\underline{\rho}}$"  can be seen as a \textit{marco} which, given a value type $A$, unfolds to a value relation $Rel_v[A',A'']$. Relation environments, $\rho,\underline{\rho}$, consists of a mapping $X\mapsto (Y,Z,R : Rel[Y,Z])$ from type variable $X$ to a tuple of two types $Y,Z$ and a relation $R : Rel[Y,Z]$. We use $A[\rho_L]$ to denote a type substitution which replaces every type variable $X$ in $A$ with the corresponding type given by the first element of tuple $\rho(X)$. \eric{more context, why introduce this, what are the interesting cases}
 
 In order to make use of the relational interpretation of types, we employ an axiom schema for the \textit{Identity Extension Principle}.
 
@@ -979,13 +980,14 @@ To understand the utility of this principle, we can observe what it says for the
 \]
 
 
-\subsubsection{Swap Proof in \pl}
-
+\subsection{Parametricity Proof}
+\eric{rename section, demonstrate that this logic can actually prove parametricty theorems}
+Swap Proof in \pl
 
 \begin{figure}[h]
   \centering
   \eric{predicates}
-  \scriptsize
+
   \begin{align*}
     \phi :=&\; \bot\;|\;V=_{A}W \;|\; M=_{\underline{B}}N \;|\; R(V,W) \;|\; \underline{R}(M,N) \;|\; 
     \\
@@ -1492,17 +1494,16 @@ Noting that $\mathcal{W}[A](\den{M}^L)[\sigma] = \mathcal{W}_{\Gamma \vdash A}(\
   \end{proof}
 
 
-\section{Discussion/Related Work/Future Work}
+\section{Conclusion/Discussion/Related Work/Future Work}
 \begin{itemize}
   \item Holes in proof, friction with current definitions
   \item Model!
   \item Iris style primitives in the logic or directly to Iris?
 \end{itemize}
+\eric{rehash the abstract/intro}
 
 % mention how we have a model of this form of parametricity implemented in Iris for a CBV language?
 % mention early work on categorical models?
-\section{Conclusion}
-rehash the introduction
 
 \begin{acks}
 This material is based upon work supported by the National Science Foundation CISE Graduate Fellowships (CSGrad4US) under Grant No. 2313998. Any opinions, findings, and conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the National Science Foundation.
