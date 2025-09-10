@@ -223,11 +223,7 @@ While such techniques have demonstrated they can preserve the expected informati
 \subsection{Failure of Full Abstraction}
 This was partially answered in the affirmative by Nies et al\cite{NonParam}. The argument proceeds by introducing two languages: An effectful variant of CBV System F with a standard notion of parametricity, and System G, an extension of the former language with type casts and fresh type name allocation supporting a \textit{non-standard}, type world, formulation of parametricity.
 To compare the languages, they provide a type preserving embedding, $\den{\_}$, from System F to System G. 
-
-\begin{theorem}
-  Preservation of Typing.
   $$\vdash_F V : A \implies \vdash_G \den{V} : \den{A}$$
-\end{theorem}
 
 The embedding, $\den{\vdash_F V:A} = \mathcal{W}_{A} \circ \den{\vdash_F V:A}^L$, is decomposed into a lifting, $\den{\_}^L$, and a type directed wrapping function $\mathcal{W}_A$. The lifting preserves syntactic equality of terms and types, so $V \equiv \den{V}^L$ and $A \equiv \den{A}^L$. The wrapping function is a deep $\eta$ expansion which strategically inserts fresh type allocation in the elimination forms of the universal and existential types. The purpose of the wrapping is to ensure that lifted polymorphic terms of System F are simultaneously safe from non-parametric uses and forced to behave parametrically in the presence of System G's type cast operation. More details can be found in \cref{sec:Wrap}. 
 
@@ -241,12 +237,11 @@ To demonstrate the relative strengths of the different notions of parametricity,
 \subsection{Our Result}
 \eric{rename section, more connective tissue}
 \eric{TODO: more precision is needed here. Equivalence vs preservation of equivalence vs logical full abstraction which requires Reflection!}
-Our aim is to demonstrate that, while the transformation does not preserve contextual equivalence, it preserves a weaker notion we call \textit{Logical Equivalence}. By Logical Equivalence, we mean to say that any results proven in a \textit{Parametricity Logic}\cite{APL}\cite{LAPL}\cite{PE} for effectful System F can be transfered to a parametricity logic backed by the non-standard, type-world, notion of parametricity. By limiting our reasoning principles to a well-defined parametricity logic, we rule out metatheoretical reasoning which was used in prior work\cite{TwoParamVSThreeUniv} to demonstrate that the type $Univ$ is degenerate. We demonstrate that the lack of metatheoretical reasoning principles does not preclude our logic from proving useful properties about data abstraction and representation independence.
+Our aim is to demonstrate that, while the transformation does not preserve contextual equivalence, it preserves a weaker notion we call \textit{Logical Equivalence}. By Logical Equivalence, we mean to say that any results proven in a \textit{Parametricity Logic}\cite{APL}\cite{LAPL}\cite{PE} for effectful System F can be transfered to a parametricity logic backed by the non-standard, type-world, notion of parametricity. By limiting our reasoning principles to a well-defined parametricity logic, we rule out metatheoretical reasoning which was used in prior work\cite{TwoParamVSThreeUniv} to demonstrate that the type $Univ$ is degenerate. We demonstrate that the lack of metatheoretical reasoning principles does not preclude our logic from proving useful properties about data abstraction and representation independence. \eric{hrm.. but we don't include existentials here..}
 
 %y constructing two parametricity logics. One for a language without fresh type generation, another for a language with fresh type generation. We then show that any two provably equal terms of the first logic are provable equal, under translation, in the second logic.
-\eric{TODO: rename "Logic A" and "Logic B"(source/target?)}
 \begin{theorem}
-  Preservation of Logical Equivalence:
+  Preservation of Logical Equivalence (simplified):
   $$\Gamma \vdash_{PL} M = N \implies \den{\Gamma} \vdash_{FPL} \den{M} = \den{N}$$
 \end{theorem}
 
@@ -395,7 +390,7 @@ In this section we introduce \source, an effectful variant of CBV System F, two 
   \item remark: how $new$ is presented as an effect? (its church encoding)
   %\item remark: inclusion of Observation type (b/c church encoded F)
   \item remark: exclusion of $\underline{B} \multimap \underline{B}' $ 
-  type \eric{check details here}
+  type 
 
   %\item \eric{TODO: remove exists}
   \item \eric{TODO: rephrase "object language"}
@@ -599,49 +594,59 @@ Following prior work on parametricity logics with effects\cite{PE}, our calculi 
 \subsubsection{Equational Theory}\label{sec:EquationalTheory}
 By embedding \source into a CBPV term language, we gain access to a rich equational theory (\cref{fig:EquationalTheory}) which can be used by our parametricity logics. The reader may notice that, while we do not include $F$, $ret$ and $bind$ as primitives in the term language, we do list their equational rules. These rules are derivable \textit{within the logic}, as demonstrated in prior work \cite{PEModel}, using parametricity. An equation of critical importance to our result is \textit{Drop}, stating: $M = \sigma \leftarrow new_X;M$. As we will see in later sections, preservation of parametricity in our setting requires inserting case allocations at each type applicaition in our term language. The translation of proofs from \pl to \fpl\; relies heavily on removing unused allocations symbols. 
 \eric{bind rules proved internally to the logic, drop rule is critical, we also rely heavily on complex value equations}
+
+
 \begin{figure}[H]
-  \eric{todo, swap, fresh, error, complex value equations}
   \centering
   \scriptsize
-  \begin{align*}
-  \intertext{$\textbf{$\beta$ Laws}$}
-  force (thunk \; M) =&\; M\\
-  x \leftarrow ret \; V; M =&\; M[V/x]\\
-  rec_{\mathbb{B}} \; true \; \{M \;|\; N\} =&\; M \\
-  rec_{\mathbb{B}} \; false \; \{M \;|\; N\} =&\; N \\
-  \colorbox{lightgray}{$rec_{OSum}\; \sigma,(inj_{\sigma'}\;V)\;\{x.M \;|\; N\}$} =&\; \colorbox{lightgray}{$M[V/x] \text{ where } \sigma = \sigma'$}\\
-  \colorbox{lightgray}{$rec_{OSum}\; \sigma,(inj_{\sigma'}\;V)\;\{x.M \;|\; N\}$} =&\; \colorbox{lightgray}{$N \text{ where } \sigma \neq \sigma'$}\\
-  rec_\times (V,W)\;\{x,y.\;M\} =&\; M[V/x,W/y]\\
-  rec_{\mathbb{N}} \; z \; \{M \;|\;x. N\} =&\; M \\
-  rec_{\mathbb{N}} \; (s\;n) \; \{M \;|\;x. N\} =&\; N[thunk(rec_{\mathbb{N}} \; n \; \{M \;|\;x. N\})/x] \\
-  fix[\underline{B}](thunk(\lambda x : U\underline{B}. M)) =&\;M[thunk(fix[\underline{B}](thunk(\lambda x. M)))/x]\\
-  (\lambda x.M)V =&\; M[V/x]\\
-  (\Lambda X.M)[A] =&\; M[A/X] \\
-  (\Lambda \underline{X}.M)[\underline{B}] =&\; M[\underline{B}/\underline{X}]\\
-  \intertext{$\textbf{$\eta$ Laws}$} 
-    thunk(force \;V) =&\; V \\
-    \text{ where } V : U\underline{B}\\
-    x \leftarrow M; ret \; x =&\; M\\
-    \text{ where } M : FA \\
-    rec_{\mathbb{B}} \; V \; \{M[true/x] \;|\; M[false/x]\} =&\; M[V/x]\\
-    rec_\times V\;\{x,y.\;M[(x,y)/z]\}=&\;M[V/z] \\
-    \lambda (x :A) . Mx =&\; M  \\\text{ where } M : &A \rightarrow \underline{B}, x \notin fv(M)\\
-    \Lambda X. M[X] =&\; M\\
-    \text{ where }M : &\forall X. \underline{B}, X \notin ftv(M)\\
-    \Lambda \underline{X}. M[\underline{X}] =&\; M\\
-    \text{ where }M : &\forall \underline{X}. \underline{B}, \underline{X} \notin ftv(M)\\
-    \intertext{$\textbf{Sequencing Laws}$} 
-    y \leftarrow (x \leftarrow M;N); P =&\; x \leftarrow M; y \leftarrow N; P\\
-\text{ where } &x \notin fv(P)\\
-x \leftarrow M; (\lambda y . N) =&\; \lambda y. (x\leftarrow M; N)\\
-\text{ where }&y\notin fv(M)
-\intertext{$\textbf{Effect Laws}$} 
-\colorbox{lightgray}{$M$} =&\;\colorbox{lightgray}{$\sigma \leftarrow new_A; M$}\\
-\text{ where }&\sigma \notin fv(M)\\
-  \end{align*}
+  % Left column
+  \begin{minipage}[t]{0.48\textwidth}
+    \[
+    \begin{aligned}
+      \textbf{$\beta$ Laws}& \\
+      force (thunk \; M) &= M\\
+      x \leftarrow ret \; V; M &= M[V/x]\\
+      rec_{\mathbb{B}} \; true \; \{M \;|\; N\} &= M \\
+      rec_{\mathbb{B}} \; false \; \{M \;|\; N\} &= N \\
+      \colorbox{lightgray}{$rec_{OSum}\; \sigma,(inj_{\sigma'}\;V)\;\{x.M \;|\; N\}$} &= \colorbox{lightgray}{$M[V/x] \text{ where } \sigma = \sigma'$}\\
+      \colorbox{lightgray}{$rec_{OSum}\; \sigma,(inj_{\sigma'}\;V)\;\{x.M \;|\; N\}$} &= \colorbox{lightgray}{$N \text{ where } \sigma \neq \sigma'$}\\
+      rec_\times (V,W)\;\{x,y.\;M\} &= M[V/x,W/y]\\
+      rec_{\mathbb{N}} \; z \; \{M \;|\;x. N\} &= M \\
+      rec_{\mathbb{N}} \; (s\;n) \; \{M \;|\;x. N\} &= N[thunk(rec_{\mathbb{N}} \; n \; \{M \;|\;x. N\})/x] \\
+      fix[\underline{B}](thunk(\lambda x : U\underline{B}. M)) &= M[thunk(fix[\underline{B}](thunk(\lambda x. M)))/x]\\
+      (\lambda x.M)V &= M[V/x]\\
+      (\Lambda X.M)[A] &= M[A/X] \\
+      (\Lambda \underline{X}.M)[\underline{B}] &= M[\underline{B}/\underline{X}]
+    \end{aligned}
+    \]
+  \end{minipage}\hfill
+  % Right column
+  \begin{minipage}[t]{0.48\textwidth}
+    \[
+    \begin{aligned}
+      \textbf{$\eta$ Laws}& \\
+      thunk(force \;V) &= V  \text{ where } V : U\underline{B}\\
+      x \leftarrow M; ret \; x &= M  \text{ where } M : FA \\
+      rec_{\mathbb{B}} \; V \; \{M[true/x] \;|\; M[false/x]\} &= M[V/x]\\
+      rec_\times V\;\{x,y.\;M[(x,y)/z]\} &= M[V/z] \\
+      \lambda (x :A) . Mx &= M  \text{ where } M : A \rightarrow \underline{B}, x \notin fv(M)\\
+      \Lambda X. M[X] &= M  \text{ where } M : \forall X. \underline{B}, X \notin ftv(M)\\
+      \Lambda \underline{X}. M[\underline{X}] &= M  \text{ where } M : \forall \underline{X}. \underline{B}, \underline{X} \notin ftv(M)\\[1ex]
+      \textbf{Sequencing Laws}& \\
+      y \leftarrow (x \leftarrow M;N); P &= x \leftarrow M; y \leftarrow N; P  x \notin fv(P)\\
+      x \leftarrow M; (\lambda y . N) &= \lambda y. (x\leftarrow M; N)  y\notin fv(M)\\[1ex]
+      \textbf{Effect Laws}& \\
+      \colorbox{lightgray}{$M$} &= \colorbox{lightgray}{$\sigma \leftarrow new_A; M$}  \sigma \notin fv(M)
+    \end{aligned}
+    \]
+  \end{minipage}
   \caption{Equational Theory: \pl \; \& \colorbox{lightgray}{\fpl}}
   \label{fig:EquationalTheory}
 \end{figure}
+
+
+
+
     
 
 \section{Translations}
@@ -704,6 +709,7 @@ We embed \source in \pl\; using the standard CBV-to-CBPV translation\cite{CBPV} 
 \end{figure}
 
 
+
 \begin{figure}[H]
   \centering
   \scriptsize
@@ -758,92 +764,67 @@ The term $eq_{\sigma_{\mathbb{B}}}$ is a case equality test comparing any given 
 
 Via $\den{\_}^L$, any type application in \pl\;allocates a new case symbol, any type abstraction additionally abstracts over a case symbol, and any value type variable in the context has an associated case symbol. It is crucial to note that the case symbol introduced in the translation of type abstraction is not used in the body of the type lambda, a property we will use in our notion of \textit{obliviousness}. Computation type abstraction and application, which are used to church encode $F$ and are not modified. There is no need to do so as they are not within the codomain of $\den{\_}^{PL}$. As the next section will demonstrate, $\den{\_}^L$ alone is not sufficient to enforce the fresh case invariant. 
 
-\begin{figure}[H]
-  \centering
-  \scriptsize
-  \begin{align*}
-\den{\emptyset }^L_{ctx} =&\; \emptyset \\
-\den{\Gamma,X  }^L_{ctx} =&\; \den{\Gamma }^L_{ctx} \;, X,\colorbox{lightgray}{$\sigma_X: Case\:X$}\\
-\den{\Gamma,\underline{X}  }^L_{ctx} =&\; \den{\Gamma }^L_{ctx}\; , \underline{X}\\
-\den{\Gamma, x : A }^L_{ctx} =&\; \den{\Gamma }^L_{ctx}\; , x : \den{\Gamma \vdash A}^L_{ty}\\
-\end{align*}
-
-  \begin{align*}
-  \denLty{\Gamma \vdash \mathbb{B}} &= \mathbb{B} \\
-  \denLty{\Gamma \vdash \mathbb{N}} &= \mathbb{N} \\
-  \denLty{\Gamma \vdash X} &= X \\%\quad (X \in \Gamma) \\
-  \denLty{\Gamma \vdash U\underline{B}} &= U \denLty{\Gamma \vdash \underline{B}} \\
-  \denLty{\Gamma \vdash A \times A'} &= \denLty{\Gamma \vdash A} \times \denLty{\Gamma \vdash A'} \\
-  %\denLty{\Gamma \vdash \exists X.A} &= \exists X. U(Case\;X \rightarrow F \denLty{\Gamma,X \vdash A}) \\
-  %\denLty{\Gamma \vdash \exists \underline{X}.A} &= \exists \underline{X}. \denLty{\Gamma,\underline{X} \vdash A} \\
-  \\
-  \denLty{\Gamma \vdash \underline{X}} &= \underline{X} \\%\quad (\underline{X} \in \Gamma) \\
-  \denLty{\Gamma \vdash Obs} &= Obs \\
-  \denLty{\Gamma \vdash A \rightarrow \underline{B}} &= \denLty{\Gamma \vdash A} \rightarrow \denLty{\Gamma \vdash \underline{B}} \\
-  \colorbox{lightgray}{$\denLty{\Gamma \vdash \forall X . \underline{B}}$} &= \colorbox{lightgray}{$\forall X. Case \;X \rightarrow \denLty{\Gamma,X \vdash \underline{B}}$} \\
-  \denLty{\Gamma \vdash \forall \underline{X}. \underline{B}} &= \forall \underline{X}. \denLty{\Gamma,\underline{X} \vdash \underline{B}} \\
-  %\denLty{\Gamma \vdash FA} &= F \denLty{\Gamma \vdash A} 
-  \end{align*}
-  \caption{Context \& Type Translation: \pl to \fpl}
-  \label{fig:TypeTranslationPLFPL}
-  \end{figure}
-
-
-
 
 \begin{figure}[H]
   \centering
   \scriptsize
-  \begin{align*}
-  &\textbf{Values:}\\
-  \den{\Gamma \vdash x} &= x \\%\quad (x \in \den{\Gamma}^L_{ctx}) \\
-  \den{\Gamma \vdash true} &= true \\
-  \den{\Gamma \vdash false} &= false \\
-  \den{\Gamma \vdash z} &= z \\
-  \den{\Gamma \vdash s V} &= s \den{\Gamma \vdash V} \\
-  \den{\Gamma \vdash thunk\;M} &= thunk \; \den{\Gamma \;|\; \cdot \vdash M} \\
-  \den{\Gamma \vdash (V,W)} &= (\den{\Gamma \vdash V}, \den{\Gamma \vdash W}) \\
-  %\den{\Gamma \vdash pack\langle A,V \rangle} &= pack\langle \den{\Gamma \vdash A}, thunk(\lambda \sigma : Case\;\den{\Gamma \vdash A}.\; ret\; \den{\Gamma\vdash V}) \rangle \\
-  %\den{\Gamma \vdash pack\langle \underline{B},V \rangle} &= pack\langle \den{\Gamma \vdash \underline{B}}, \den{\Gamma \vdash V} \rangle \\
-  \\
-  &\textbf{Computations:} \\
-  \den{\Gamma \vdash rec_{\mathbb{B}}\;V \{M\;|\;N\}} &= rec_{\mathbb{B}}\;\den{\Gamma \vdash V} \;\{\den{\Gamma \vdash M}\;|\;\den{\Gamma \vdash N}\} \\
-  \den{\Gamma \vdash rec_{\mathbb{N}}\;V\;\{M \;|\; x. N\}} &= rec_{\mathbb{N}}\;\den{\Gamma \vdash V} \;\{\den{\Gamma \vdash M}\;|\;x. \den{\Gamma, x \vdash N}\} \\
-  \den{\Gamma \vdash fix} &= fix \\
-  \den{\Gamma \vdash force \;V} &= force\;\den{\Gamma \vdash V} \\
-  \den{\Gamma \vdash hault\;V} &= hault\;\den{\Gamma \vdash V} \\
-  \den{\Gamma \vdash \lambda x :A. M} &= \lambda x:\den{\Gamma \vdash A}. \den{\Gamma, x : A \vdash M} \\
-  \den{\Gamma \vdash MV} &= \den{\Gamma \vdash M}\den{\Gamma \vdash V} \\
-  \colorbox{lightgray}{$\den{\Gamma \vdash \Lambda X. M}$} &= \colorbox{lightgray}{$\Lambda X. \lambda \sigma : Case\;X. \den{\Gamma,X \;|\;\Delta \vdash M}$} \\
-  \colorbox{lightgray}{$\den{\Gamma \vdash M[A]}$} &= \colorbox{lightgray}{$\sigma \leftarrow new_{\den{\Gamma \vdash A}}; \den{\Gamma \;|\;\Delta \vdash M}[\den{\Gamma \vdash A}](\sigma)$} \\
-  \den{\Gamma \vdash \Lambda \underline{X}.M} &= \Lambda \underline{X}. \den{\Gamma , \underline{X} \vdash M} \\
-  \den{\Gamma \vdash M[\underline{B}]} &= \den{\Gamma \vdash M}[\den{\Gamma \vdash \underline{B}}] \\
-  \den{\Gamma \vdash rec_\times \;V \;\{x,y.\;M\}} &= rec_\times \;\den{\Gamma \vdash V}\;\{x,y.\; \den{\Gamma, x,y \vdash M}\} \\
-  %\den{\Gamma \vdash unpack\langle A,V\rangle = W; M} &= unpack\langle A,V\rangle= \den{\Gamma \vdash W}; \sigma \leftarrow new_A; v \leftarrow (force\;V)\sigma; \den{\Gamma,A,v\;|\; \cdot \vdash M} \\
-  %\den{\Gamma \vdash unpack\langle \underline{B}, V\rangle = W; M} &= unpack\langle \underline{B}',V'\rangle=\den{\Gamma \vdash W}; \den{\Gamma,\underline{B}',V' \vdash M}
-  \end{align*}
-  \caption{Term Translation: \pl to \fpl}
-  \label{fig:TermTranslationPLFPL}
-  \end{figure}
+  % Left column: Context + Type
+  \begin{minipage}[t]{0.48\textwidth}
+    \[
+    \begin{aligned}
+      &\textbf{Context:} \\
+      \den{\emptyset }^L_{ctx} &= \emptyset \\
+      \den{\Gamma,X  }^L_{ctx} &= \den{\Gamma }^L_{ctx} \;, X,\colorbox{lightgray}{$\sigma_X: Case\:X$} \\
+      \den{\Gamma,\underline{X}  }^L_{ctx} &= \den{\Gamma }^L_{ctx}\; , \underline{X} \\
+      \den{\Gamma, x : A }^L_{ctx} &= \den{\Gamma }^L_{ctx}\; , x : \den{\Gamma \vdash A}^L_{ty} \\[0.5em]
+      &\textbf{Types:} \\
+      \denLty{\Gamma \vdash \mathbb{B}} &= \mathbb{B} \\
+      \denLty{\Gamma \vdash \mathbb{N}} &= \mathbb{N} \\
+      \denLty{\Gamma \vdash X} &= X \\
+      \denLty{\Gamma \vdash U\underline{B}} &= U \denLty{\Gamma \vdash \underline{B}} \\
+      \denLty{\Gamma \vdash A \times A'} &= \denLty{\Gamma \vdash A} \times \denLty{\Gamma \vdash A'} \\
+      \denLty{\Gamma \vdash \underline{X}} &= \underline{X} \\
+      \denLty{\Gamma \vdash Obs} &= Obs \\
+      \denLty{\Gamma \vdash A \rightarrow \underline{B}} &= \denLty{\Gamma \vdash A} \rightarrow \denLty{\Gamma \vdash \underline{B}} \\
+      \colorbox{lightgray}{$\denLty{\Gamma \vdash \forall X . \underline{B}}$} &= \colorbox{lightgray}{$\forall X. Case \;X \rightarrow \denLty{\Gamma,X \vdash \underline{B}}$} \\
+      \denLty{\Gamma \vdash \forall \underline{X}. \underline{B}} &= \forall \underline{X}. \denLty{\Gamma,\underline{X} \vdash \underline{B}}
+    \end{aligned}
+    \]
+  \end{minipage}\hspace{2em}%
+  % Right column: Values + Computations
+  \begin{minipage}[t]{0.48\textwidth}
+    \[
+    \begin{aligned}
+      &\textbf{Values:} \\
+      \den{\Gamma \vdash x} &= x \\
+      \den{\Gamma \vdash true} &= true \\
+      \den{\Gamma \vdash false} &= false \\
+      \den{\Gamma \vdash z} &= z \\
+      \den{\Gamma \vdash s V} &= s \den{\Gamma \vdash V} \\
+      \den{\Gamma \vdash thunk\;M} &= thunk \; \den{\Gamma \;|\; \cdot \vdash M} \\
+      \den{\Gamma \vdash (V,W)} &= (\den{\Gamma \vdash V}, \den{\Gamma \vdash W}) \\[0.5em]
+      &\textbf{Computations:} \\
+      \den{\Gamma \vdash rec_{\mathbb{B}}\;V \{M\;|\;N\}} &= rec_{\mathbb{B}}\;\den{\Gamma \vdash V} \;\{\den{\Gamma \vdash M}\;|\;\den{\Gamma \vdash N}\} \\
+      \den{\Gamma \vdash rec_{\mathbb{N}}\;V\;\{M \;|\; x. N\}} &= rec_{\mathbb{N}}\;\den{\Gamma \vdash V} \;\{\den{\Gamma \vdash M}\;|\;x. \den{\Gamma, x \vdash N}\} \\
+      \den{\Gamma \vdash fix} &= fix \\
+      \den{\Gamma \vdash force \;V} &= force\;\den{\Gamma \vdash V} \\
+      \den{\Gamma \vdash hault\;V} &= hault\;\den{\Gamma \vdash V} \\
+      \den{\Gamma \vdash \lambda x :A. M} &= \lambda x:\den{\Gamma \vdash A}. \den{\Gamma, x : A \vdash M} \\
+      \den{\Gamma \vdash MV} &= \den{\Gamma \vdash M}\den{\Gamma \vdash V} \\
+      \colorbox{lightgray}{$\den{\Gamma \vdash \Lambda X. M}$} &= \colorbox{lightgray}{$\Lambda X. \lambda \sigma : Case\;X. \den{\Gamma,X \;|\;\Delta \vdash M}$} \\
+      \colorbox{lightgray}{$\den{\Gamma \vdash M[A]}$} &= \colorbox{lightgray}{$\sigma \leftarrow new_{\den{\Gamma \vdash A}}; \den{\Gamma \;|\;\Delta \vdash M}[\den{\Gamma \vdash A}](\sigma)$} \\
+      \den{\Gamma \vdash \Lambda \underline{X}.M} &= \Lambda \underline{X}. \den{\Gamma , \underline{X} \vdash M} \\
+      \den{\Gamma \vdash M[\underline{B}]} &= \den{\Gamma \vdash M}[\den{\Gamma \vdash \underline{B}}] \\
+      \den{\Gamma \vdash rec_\times \;V \;\{x,y.\;M\}} &= rec_\times \;\den{\Gamma \vdash V}\;\{x,y.\; \den{\Gamma, x,y \vdash M}\}
+    \end{aligned}
+    \]
+  \end{minipage}
+  \caption{Translation of Contexts, Types, Values, and Computations: \pl to \fpl}
+  \label{fig:TranslationPLFPL_merged}
+\end{figure}
 
-\begin{theorem} $\den{\_}^L$ Preserves well-formedness of Types.\\
-  $\forall A \;VType_{PL}. \den{A}^L \;VType_{FPL}$
-  \end{theorem}
-  
-  \begin{proof}
-    highlight a case
-  \end{proof}
 
 
-  \begin{theorem} $\den{\_}^L$ Preserves well-typedness of Terms.\\
-    $\forall \Gamma \vdash_{PL} M : A. \den{\Gamma}^L \vdash_{FPL} \den{M}^L : \den{A}^L$
-    \end{theorem}
-    
-    \begin{proof}
-      highlight a case
-    \end{proof}
-
-    same properties hold for $\den{\_}^{PL}$ and by "transitivity?" $\den{\_}^{FPL}$ 
 \subsection{Wrapping}\label{sec:Wrap}
 %\begin{itemize}
   %\item explain: interesting case, $\forall X.\underline{B}$
@@ -872,34 +853,36 @@ Niels et al.\cite{NonParam} solve this issue using a specialized deep $\eta$ exp
 \begin{figure}[H]
   \centering
   \scriptsize
-  \begin{align*}
-  &\mathcal{W} _X(t) := t\\
-  &\mathcal{W} _\mathbb{B}(t) := t\\
-  &\mathcal{W} _\mathbb{N}(t) := t\\
-  &\mathcal{W} _{Obs}(t) := t\\
-  &\mathcal{W} _{A \times A'}(t) := rec_\times \;t\;\{x,y.\; (\mathcal{W} _A(x),\mathcal{W} _{A'}(y))\}\\
-  %&\mathcal{W}_{\exists X.A}(t) :=  
-  %unpack\langle X,x \rangle = t; \\
-  %&\quad pack\langle X, thunk(\lambda.\sigma_X. \sigma_X' \leftarrow new_X;
-  %x \leftarrow (force\;x)(\sigma_X') ;ret\;\mathcal{W}_A(x))\rangle \\
-  &\mathcal{W}_{U\underline{B}}(t) := thunk(\mathcal{W} _{\underline{B}}(force\;t))\\
-  \\
-  &\mathcal{W}_{\underline{X}}(t) := t\\
-  &\mathcal{W} _{A \rightarrow \underline{B}}(t) := \lambda(x:A).\mathcal{W}_{\underline{B}}(t(\mathcal{W}_A(x)))\\
-  &\colorbox{lightgray}{$\mathcal{W}_{\forall X.\underline{B}}(t) := 
-  \Lambda X.\lambda \sigma_X.  \mathcal{W}_{\underline{B}}(\sigma_X'\leftarrow new_X;\;t[X](\sigma_X'))$}\\
-  &\mathcal{W}_{\forall \underline{X}.\underline{B}}(t) := 
-  \Lambda \underline{X}.\mathcal{W}_{\underline{B}}(t[\underline{X}])\\
-  %&W _{FA}(t) := x \leftarrow t;\;ret\;W _A(x)\\
-  \\
-  &\mathcal{W}_\Gamma(t) := t[\mathcal{W}_{A_1}(x_1)/x_1,\cdots,\mathcal{W}_{A_n}(x_n)/x_n] \\
-  &\quad \text{ where } x_1:A_1,\cdots,x_n:A_n \in \Gamma
-\end{align*}
-
-\caption{Wrapping}
-\label{fig:wrapping}
+  % Left column: Base types + product + U
+  \begin{minipage}[t]{0.48\textwidth}
+    \[
+    \begin{aligned}
+      &\mathcal{W} _X(t) := t \\
+      &\mathcal{W} _\mathbb{B}(t) := t \\
+      &\mathcal{W} _\mathbb{N}(t) := t \\
+      &\mathcal{W} _{Obs}(t) := t \\
+      &\mathcal{W} _{A \times A'}(t) := rec_\times \;t\;\{x,y.\; (\mathcal{W} _A(x),\mathcal{W} _{A'}(y))\} \\
+      &\mathcal{W}_{U\underline{B}}(t) := thunk(\mathcal{W} _{\underline{B}}(force\;t)) \\
+    \end{aligned}
+    \]
+  \end{minipage}\hspace{2em}%
+  % Right column: Functions + forall + contexts
+  \begin{minipage}[t]{0.48\textwidth}
+    \[
+    \begin{aligned}
+      &\mathcal{W}_{\underline{X}}(t) := t\\
+      &\mathcal{W} _{A \rightarrow \underline{B}}(t) := \lambda(x:A).\mathcal{W}_{\underline{B}}(t(\mathcal{W}_A(x))) \\
+      &\colorbox{lightgray}{$\mathcal{W}_{\forall X.\underline{B}}(t) := 
+      \Lambda X.\lambda \sigma_X.  \mathcal{W}_{\underline{B}}(\sigma_X'\leftarrow new_X;\;t[X](\sigma_X'))$} \\
+      &\mathcal{W}_{\forall \underline{X}.\underline{B}}(t) := \Lambda \underline{X}.\mathcal{W}_{\underline{B}}(t[\underline{X}]) \\\\
+      &\mathcal{W}_\Gamma(t) := t[\mathcal{W}_{A_1}(x_1)/x_1,\cdots,\mathcal{W}_{A_n}(x_n)/x_n] \\
+      &\quad \text{ where } x_1:A_1,\cdots,x_n:A_n \in \Gamma
+    \end{aligned}
+    \]
+  \end{minipage}
+  \caption{Wrapping}
+  \label{fig:wrapping}
 \end{figure}
-  
 
 
 \section{Logics}\label{sec:Logics}
@@ -915,17 +898,46 @@ Here we present the parametricity logics \pl\;and \fpl, introduce \textit{oblivi
 Both \pl\;and \fpl\;are based on a higher order logic, permitting quantification over predicates and relations(\cref{fig:Props}). The distinction between value and computations types is extended to our logics as well. Here we have separate classes of value and computation predicates and relations. Propositions (\cref{fig:PropFormation}) and relations (\cref{fig:RelFormation}) are judged to be well-formed with respect to a context, $\Gamma$, of types and terms and a context, $\Theta$, of value and computation relations.  Proof sequents are of the form $\Gamma ; \Theta \;|\; \Phi \vdash \phi$ where $\Phi$ is a context of well-formed propositions in context $\Gamma; \Theta$. A fragment of the derivation rules appear in \cref{fig:Derivation}. 
 
 In addition to the derivation rules, our logic provides a number of rules that are useful in proving parametricity theorems. First, many parametricy proofs boil down to creatively picking a relation. Frequently, these relations are based on the graph of some function. As an example, take the function $even : \mathbb{N} \to F \mathbb{B}$ used to establish a relation $\langle even \rangle : Rel_v[\mathbb{N},\mathbb{B}]$ between $\mathbb{N}$ and $\mathbb{B}$. This can be constructed using the graph rule. 
-
-
 \begin{figure}[H]
   \centering  
   \scriptsize
-    % Original f(x) derivation faithfully as a tree
+  % First proof tree
+  \begin{minipage}[b]{0.48\textwidth}
+    \centering
+    \begin{prooftree}
+      \AxiomC{}
+      \RightLabel{asm}
+      \UnaryInfC{$\Gamma\;|\; \cdot \vdash f : A \rightarrow F A'$}
+      \RightLabel{weaken}
+      \UnaryInfC{$\Gamma,x : A \;|\; \cdot \vdash f : A \rightarrow F A'$}
+      \AxiomC{}
+      \UnaryInfC{$\Gamma, x : A \vdash x : A$}
+      \BinaryInfC{$\Gamma,x : A \;|\; \cdot \vdash f(x) : F A'$}
+      \AxiomC{}
+      \UnaryInfC{$\Gamma,y : A' \vdash y : A'$}
+      \UnaryInfC{$\Gamma,y : A'  \;|\; \cdot \vdash ret \; y : FA'$}
+      \BinaryInfC{$\Gamma ; \Theta\vdash (x : A, y: A'). f(x) =_{FA} ret \; y : Rel_v[A,A']$}
+      \dashedLine
+      \UnaryInfC{$\Gamma ; \Theta \vdash \langle f \rangle : Rel_v[A,A']$}
+    \end{prooftree}
+    %\caption*{Detailed derivation}
+  \end{minipage}\hfill
+  $\leadsto$
+  % Second proof tree
+  \begin{minipage}[b]{0.3\textwidth}
+    \centering
+    \begin{prooftree}
+      \AxiomC{$\Gamma \;|\; \cdot \vdash f : A \rightarrow FA'$}
+      \RightLabel{graph$\lambda_c$}
+      \UnaryInfC{$\Gamma ; \Theta \vdash \langle f \rangle : Rel_v[A,A']$}
+    \end{prooftree}
+    %\caption*{Graph rule summary}
+  \end{minipage}
 
-    
   \caption{Graph Rule}
   \label{fig:Graph}
 \end{figure}
+
 
 
 We provide induction principles for $\mathbb{B}$ and $\mathbb{N}$ which are useful in proving propositions such as $\forall n : \mathbb{N}, b : \mathbb{B}. \langle even \rangle (n,b) \implies \langle even \rangle(2 + n,b)$. As \pl\;and \fpl\;are both programming logics, we include the equational theories (\cref{fig:EquationalTheory}) of the term languages, including congruence rules and derivable rules about function extensionality. 
@@ -1167,24 +1179,12 @@ To understand the utility of this principle, we can observe what it says for the
 
 
 \section{Preserving Logical Equivalence}\label{sec:LogicEquiv}
-\begin{itemize}
-  \item demonstrate: compositionality issues with proof translation (wrapping)
-  \item explain: obliviousness predicates and how they help the composition issues
-  \item demonstrate: logic translation
-  \item prove: adequacy
-  \item prove: preservation of logical equivalence
-\end{itemize}
+In this section
+Here we state our theorem in full detail. The remainder of this section will be dedicated to defining the proof translation and presenting lemmas we think are necessary to prove our result.
 
-Here we state our conjecture in full detail. The remainder of this section will be dedicated to defining the proof translation and presenting lemmas we think are necessary to prove our conjecture.
-\begin{conjecture} 
-Preservation of Logical Equivalence: $\forall\; \Gamma \vdash_{F_{\mu,\Omega}^{\forall \to}} M,N : A,$
-\[
-  \den{\Gamma}^{PL} ; \emptyset \;|\; \emptyset \vdash_{PL} \den{M}^{PL} = \den{N}^{PL} \implies \den{\Gamma}^{FPL}; \emptyset \;|\; \emptyset \vdash_{FPL} \mathcal{W}_{\Gamma \vdash A}(\den{M}^{FPL}) = \mathcal{W}_{\Gamma \vdash A}(\den{N}^{FPL})
-\]
-\end{conjecture}
 
-\subsection{Obliviousness}
-Without any adjustment to our interpretation of propositions, proofs which use $\eta$ expansion for value type abstraction break. Considering the following convoluted proof of $2=2$ in \pl\footnote{Note that $\mathcal{W}[\mathbb{B}]$ is the identity function, so wrapping does not play a role in the translated proof.}.
+\subsection{Obliviousness}\label{sec:Obliv}
+Modifying the terms in a proof has consequences. Without any adjustment to our interpretation of propositions, proofs which use $\eta$ expansion for value type abstraction break. Considering the following convoluted proof of $2=2$ in \pl\footnote{Note that $\mathcal{W}[\mathbb{B}]$ is the identity function, so wrapping does not play a role in the translated proof.}.
 
 
 \begin{figure}[H]
@@ -1207,7 +1207,7 @@ Without any adjustment to our interpretation of propositions, proofs which use $
 \end{figure}
 
 
-This proof could simply be solved using reflexivity, but our logical equivalence conjecture states that we should be able to handle any possible proof of $2=2$, even one which introduces superfluous derivations. Assuming the proposition and derivation translation from \pl\;to \fpl\; do not introduce extra hypotheses, we run into a problem. Specifically, we do not have enough information to prove the rule $\eta\forall$ under translation. Given $\den{\Gamma} \vdash \den{M}: \den{\forall X. \underline{B}}$, show $\den{\Gamma} ; \den{\Theta} \;|\; \den{\Phi} \vdash \den{M} = \den{\Lambda X. M[X]}$ in \fpl. Or, as in our concrete example above:
+The proof statement $2 = 2$ could simply be solved using reflexivity, but our logical equivalence theorem states that we should be able to handle any possible proof of $2=2$, even one which introduces superfluous derivations. Assuming the proposition and derivation translation from \pl\;to \fpl\; do not introduce extra hypotheses, we run into a problem. Specifically, we do not have enough information to prove the rule $\eta\forall$ under translation. Given $\den{\Gamma} \vdash \den{M}: \den{\forall X. \underline{B}}$, show $\den{\Gamma} ; \den{\Theta} \;|\; \den{\Phi} \vdash \den{M} = \den{\Lambda X. M[X]}$ in \fpl. Or, as in our concrete example above:
 \begin{figure}[H]
   \centering 
   \footnotesize
@@ -1224,7 +1224,7 @@ This proof could simply be solved using reflexivity, but our logical equivalence
 \end{figure}
 Using the rules of \fpl\;to $\eta$ expanding lambdas on the left-hand-side of the equation as well as congruence rules for lambdas yields: 
 \begin{equation}
-  \label{eqn:Obliv}
+  \label{eqn:Obliv1}
   f,X,\sigma_X \vdash (force\;f)[X]\sigma_X = \sigma \leftarrow new_X;(force\;f)[X]\sigma
 \end{equation}
 Note that if the variable $f$ was wrapped, then this equation would hold. But, as we saw in the example above, the wrapping \textit{did not cover} $f$. To patch over this issue, we introduce the concept of \textit{obliviousness}. 
@@ -1256,43 +1256,91 @@ We define obliviousness (\cref{fig:Oblivious}) as a \pl\;type-indexed \textit{lo
   \label{fig:Oblivious}
 \end{figure}
 
+To demonstrate how obliviousness solves our problem, we reconsider \cref{eqn:Obliv1} with an added hypothesis, $H_f$, about the obliviousnes of $f$ in \cref{eqn:Obliv2}. Our hypothesis $H_f$ applied to $X,P_X,\sigma_X$ gives us a proof of obliviousness $\mathcal{O}[\underline{B}]((force\;f)[X]\sigma_X)$ and the exact equation we are trying to prove.
+
+\begin{equation}
+  \label{eqn:Obliv2}
+  f,X,\sigma_X;\colorbox{lightgray}{$P_X \;|\; H_f : \mathcal{O}[U(\forall X. \underline{B})](f) $} \vdash (force\;f)[X]\sigma_X = \sigma \leftarrow new_X;(force\;f)[X]\sigma
+\end{equation}
+
+We define our proof translation making usage of obliviousness.
+In order to justify our approach, we prove an \textit{adequacy} theorem in \cref{sec:Adequacy} demonstrating that our usage of obliviousness is sound. While wrapping \fpl\;terms enforces the freshness invariant, it complicates the proof translation by potentially introducing $\eta$ expansions and allocation of fresh cases which modify the terms in a proof. Obliviousness helps here as well by enabling a more compositional approach to proof translation, as we will see in section \cref{sec:ProofTranslation}. 
 
 
-While wrapping \fpl\;terms enforces the freshness invariant, it complicates the proof translation by potentially introducing $\eta$ expansions and allocation of fresh cases which modify the terms in a proof. Obliviousness helps here as well by enabling a more compositional approach to proof translation, as we will see in section \cref{sec:ProofTranslation}. In order to justify our approach, we prove an \textit{adequacy} theorem in \cref{sec:Result} demonstrating that our usage of obliviousness is sound.
-
-\eric{placeholder. only introduce these if needed and where they are needed}
-\subsubsection{Properties of Obliviousness}
+\subsection{Proposition Translation}\label{sec:PropTranslation}
+As we saw in the last section, in order to preserve \pl\;proofs we needed terms to be \textit{oblivious} to case symbols. We introduce obliviousness via the proof translation from \pl\;to \fpl. Here we define a translation $\den{\_}^O$ which enhances the term translation $\den{\_}^L$ by pairing a translated term with a proof of its obliviousness. Additionally, $\den{\_}^O$ adds data to the context required by the definition of obliviousness. Specifically, any term variable $x :A$ in the context has an associated obliviousness hypothesis $H_x : \mathcal{O}[A](x)$ in the proof context and type variables $X/\underline{X}$ are associated with predicates $P/\underline{P}$ so that type variables can be interpreted in the obliviousness predicate. 
 
 
-\begin{theorem} Wrapping of oblivious terms is identity.
- $\forall M : \den{A}^L. \mathcal{O}[A](M) \implies \mathcal{W}[A](M) = M$
-\end{theorem}
+
+\begin{figure}[H]
+  \centering
+  \scriptsize
+  \begin{align*} 
+    &\den{\Gamma,x:A}^O := \den{\Gamma}^O,x : \den{A}^L \;|\; \colorbox{lightgray}{$H_x : \mathcal{O}[A](x)$}\\
+    &\den{\Gamma,X}^O := \den{\Gamma}^O,X,\sigma_X : Case\;X ; \colorbox{lightgray}{$P : Pred[X]$}\\
+    &\den{\Gamma,\underline{X}}^O := \den{\Gamma}^O,\underline{X};\colorbox{lightgray}{$\underline{P} : Pred[\underline{X}]$}\\
+    \\
+    &\den{\Gamma \vdash_{PL} M : A}^O := \den{\Gamma \vdash_{PL} M : A}^L, \colorbox{lightgray}{$\mathcal{O}[A](\den{M})$} 
+  \end{align*}
+  \caption{Obliviousness Context and Term Translation}
+  \label{fig:d}
+\end{figure}
+
+For the invariants on contexts to be preserved, we must adjust the translation of propositions. Quantification over a value $x : A$ introduces an obliviousness hypothesis $\mathcal{O}[A](x)$. Quantification over computation types $\underline{X}$ introduces a predicate $\underline{P}_{\underline{X}}$. Quantification over value types $X$ introduces a predicate $P$ as well as a case symbol $\sigma_X : Case\;X$.
+
+\begin{figure}[H]
+  \centering
+  \scriptsize
+  \begin{align*}
+    \den{\Gamma;\Theta\vdash_A \bot}^L_{prop}  &=\; \bot \\
+    \den{\Gamma;\Theta\vdash_A V =_A W}^L_{prop} &=\; \den{\Gamma \vdash _AV}^O =_{\den{\Gamma \vdash A}^L_{ty}}  \den{\Gamma \vdash W}^O \\
+    \den{\Gamma;\Theta\vdash_A M =_{\underline{B}} N}^L_{prop} &=\;     \den{\Gamma \vdash M}^O =_{\den{\Gamma \vdash \underline{B}}^L_{ty}}   \den{\Gamma  \vdash N}^O \\
+    \den{\Gamma;\Theta\vdash_A R(V,W)}^L_{prop} &=\;   \den{\Gamma ;\Theta\vdash _AR}^L_{rel_v}(  \den{\Gamma \vdash V}^O,   \den{\Gamma \vdash W}^O) \\
+    %\den{\Gamma;\Theta\vdash_A \underline{R}(M,N)}^L_{prop} &=\;   \den{\Gamma ; \Theta\vdash_A\underline{R}}^L_{rel_c}(  \den{\Gamma \vdash M}^O,   \den{\Gamma \vdash N}^O) \\
+    \den{\Gamma;\Theta\vdash_A \phi \land \psi}^L_{prop} &=\;   \den{\Gamma;\Theta\vdash_A \phi}^L_{prop} \land \den{\Gamma;\Theta\vdash_A \psi}^L_{prop} \\
+    %\den{\Gamma;\Theta\vdash_A \phi \lor \psi}^L_{prop} &=\;   \den{\Gamma;\Theta\vdash_A \phi}^L_{prop} \lor \den{\Gamma;\Theta\vdash_A \psi}^L_{prop} \\
+    %\den{\Gamma;\Theta\vdash_A \phi \implies \psi}^L_{prop} &=\;   \den{\Gamma;\Theta\vdash_A \phi}^L_{prop} \implies \den{\Gamma;\Theta\vdash_A \psi}^L_{prop} \\
+    \den{\Gamma;\Theta\vdash_A \forall(x:A).\phi}^L_{prop} &=\;   \forall(x:\den{\Gamma  \vdash A}^L_{ty}).\colorbox{lightgray}{$\mathcal{O}[A](x)\implies$}\den{\Gamma,x : A\;\Theta\vdash_A \phi}^L_{prop} \\
+    \den{\Gamma;\Theta\vdash_A \forall X.\phi}^L_{prop} &=\;   \forall X,\colorbox{lightgray}{$P : Pred[X],\sigma_X:Case\;X$}.\den{\Gamma,X;\Theta\vdash_A \phi}^L_{prop}\\
+    \den{\Gamma;\Theta\vdash_A \forall \underline{X}.\phi}^L_{prop} &=\;   \forall \underline{X},\colorbox{lightgray}{$\underline{P}:Pred[\underline{X}]$}.\den{\Gamma,\underline{X};\Theta\vdash_A \phi}^L_{prop} \\
+    \den{\Gamma;\Theta\vdash_A \forall R:Rel_v[A,A'].\phi}^L_{prop} &=\;   \forall  R:Rel_v[\den{\Gamma \vdash A}^L_{ty},\den{\Gamma \vdash A'}^L_{ty}].\den{\Gamma;\Theta,R:Rel_v[A,A']\vdash_A \phi}^L_{prop}\\
+    %\den{\Gamma;\Theta\vdash_A \forall \underlineL_{tm}{R}:Rel_c[\underline{B},\underline{B}'].\phi}^L_{prop} &=\;   \forall \underline{R}:Rel_c[\den{\Gamma \vdash \underline{B}}^L_{ty},\den{\Gamma \vdash \underline{B}'}]^L_{ty}.\den{\Gamma;\Theta,\underline{R}:Rel_c[\underline{B},\underline{B}']\vdash_A \phi}^L_{prop}
+    \end{align*}
+    \caption{Proposition Translation Fragment}
+    \label{fig:PropTranslation}
+\end{figure}
+
+
+
+
+  
+\subsection{Oblivious Proof Translation}\label{sec:ProofTranslation}
+Here we demonstrate the first key theorem (\cref{thm:OblivTranslation}) in our preservation of logical equivalence. This theorem relies on auxiliary lemmas demonstrating that our term and type translations are sound, such as the preservation of typing.
+
+\begin{lemma} $\den{\_}^L$ Preserves well-formedness of types and well-typedness of terms
+ % $\forall A \;VType_{PL}. \den{A}^L \;VType_{FPL}$
+  \end{lemma}
 
 \begin{proof}
-  highlight a case
+  This is mostly routine. The case for type application is slightly complicated by the need to use typing rules for church encoded bind.
 \end{proof}
 
+%\begin{theorem} $\den{\_}^{PL}$ Preserves well-formedness of types and well-typedness of terms
+% $\forall A \;VType_{PL}. \den{A}^L \;VType_{FPL}$
+%\end{theorem}
 
-\begin{theorem} Wrapped terms are Oblivious.
-  $\forall M : \den{A}^L. \mathcal{O}[A](\mathcal{W}[A](M))$
- \end{theorem}
- 
- \begin{proof}
-   highlight a case
- \end{proof}
-
-
-\subsection{Proof Translation}\label{sec:ProofTranslation}
-
-\eric{say something about how we translate proofs in obliviousness land, and then adequacy lets us remove obliviousness}
-As we saw in the last section, in order to preserve \pl\;proofs we needed terms to be \textit{oblivious} to case symbols. We introduce obliviousness via the proof translation from \pl\;to \fpl. 
-
-Here we define a translation $\den{\_}^O$ which enhances the term translation $\den{\_}^L$ by pairing a translated term with a proof of its obliviousness. 
-\begin{theorem}
-  Obliviousness is a congruence w.r.t the typing rules of \pl.
-\end{theorem}
+%\begin{theorem} $\den{\_}^{FPL}$ Preserves well-formedness of types and well-typedness of terms
+  % $\forall A \;VType_{PL}. \den{A}^L \;VType_{FPL}$
+%\end{theorem}
+  
+Here we demonstrate that for any $\Gamma \vdash_{PL} V : A$ we can provide a proof $\den{\Gamma}^O \vdash_{FPL} \mathcal{O}[A](\den{V}^L)$ as demanded by our updated term translation. In other words, obliviousness is a congruence with respect to the typing rules of \pl.
+\eric{TODO: this typesetting looks like shit}
+\begin{lemma}
+  \label{lem:OblivTerm}
+  $\Gamma \vdash_{PL} V : A \implies \den{\Gamma}^O \vdash_{FPL} \mathcal{O}[A](\den{V})$
+\end{lemma}
 \begin{proof}
-  By induction on the typing rules of $\mathbf{PL}$. We consider a few cases here.
+  By induction on the typing rules of $\mathbf{PL}$. We consider the interesting cases here.
   \paragraph{$Case: \Lambda X. M : \forall X. \underline{B}$}
   \indent
 
@@ -1313,7 +1361,7 @@ Here we define a translation $\den{\_}^O$ which enhances the term translation $\
   We have to show $\mathcal{O}[\underline{B}](\sigma \leftarrow new_{\den{A}^L};\den{M}^L\den{A}^L\sigma)$. In order to use the hypothesis, we need a case symbol in scope. For this we look at the unary relational interpretation of $new_{\den{A}^L}$.
 
   \begin{align*}
-    &\mathcal{C}[F(Case\;\den{A})] = \forall \underline{Y},\underline{P}_{\underline{Y}}.k : U(Case\; \den{A} \to \underline{Y}). \\
+    &\mathcal{C}[F(Case\;\den{A})](new_{\den{A}}) = \forall \underline{Y},\underline{P}_{\underline{Y}}.k : U(Case\; \den{A} \to \underline{Y}). \\
     &\quad(\forall \sigma : Case\;\den{A}. \mathcal{V}[Case\;\den{A}](\sigma) \implies \underline{P}_{\underline{Y}}((force\;k)\sigma)) \implies \underline{P}_{\underline{Y}}(new_{\den{A}}[\underline{Y}]k) 
   \end{align*}
 Picking $\underline{Y}:=\den{\underline{B}},\underline{P}_{\underline{Y}} := \mathcal{O}[\underline{B}],k:= thunk(\lambda \sigma. \den{M}\den{A}\sigma)$, we have
@@ -1329,60 +1377,80 @@ This, along with our hypothesis, is sufficient to prove the goal.
 
 \end{proof}
 
+\eric{TODO: this typesetting looks like shit, use lists?}
+\begin{theorem}
+  \label{thm:OblivTranslation} (\textbf{INCOMPLETE})
+$\Gamma \vdash_{PL} M = N \implies \den{\Gamma}^{O}\vdash_{FPL} \den{M}^{O} = \den{N}^{O} $
+%$\forall \; \Gamma \vdash_{F_{\mu,\Omega}^{\forall\to}} M,N : A.\; \den{\Gamma}^{PL} \vdash_{PL} \den{M}^{PL} = \den{N}^{PL} \implies \den{\Gamma}^{O}\vdash_{FPL} \den{M}^{O} = \den{N}^{O} $
+\end{theorem}
+\begin{proof}
+ Proceed by induction on the proof rules and axioms of \pl. 
 
-Additionally, $\den{\_}^O$ adds data to the context required by the definition of obliviousness. Specifically, any term variable $x :A$ in the context has an associated obliviousness hypothesis $H_x : \mathcal{O}[A](x)$ in the proof context and type variables $X/\underline{X}$ are associated with predicates $P/\underline{P}$ so that type variables can be interpreted in the obliviousness predicate.
+ \textbf{Derivation Rules}
+ \paragraph{Case: $\eta\forall$} This case, which motivated our definition of obliviousness, was demonstrated in \cref{sec:Obliv}
+ 
+ \paragraph{Case: $E\forall_{vtm}$}
+ \indent
+
+ Given: $\den{\Gamma}^O \vdash_{FPL} \den{\forall x:A. \phi}^L_{prop}$ and $\den{\Gamma}^L \vdash_{FPL} \den{V}^L : \den{A}^L$
+
+ Prove: $\den{\Gamma}^O \vdash_{FPL} \den{\phi[V/x]}^L_{prop}$
+
+ We are given $\forall x : \den{A}.\mathcal{O}[A](x) \implies \den{x \vdash \phi}^L_{prop}$ and, via substitution lemmas, our goal is $\den{\phi}^L_{prop}[\den{V}^L/x]$. We instantiate our hypothesis with $x \mapsto \den{V}$.By \cref{lem:OblivTerm} we have $\mathcal{O}[A](\den{V})$ and so our goal is solved.
+
+ \paragraph{Case: $cong_\forall$} \eric{broken}
+
+ \textbf{Axioms}\\
+\eric{IEP, demonstrate a case?}
 
 
-\begin{figure}[H]
-  \centering
-  \scriptsize
-  \begin{align*} 
-    &\den{\Gamma,x:A}^O := \den{\Gamma}^O,x : \den{A}^L \;|\; H_x : \mathcal{O}[A](x)\\
-    &\den{\Gamma,X}^O := \den{\Gamma}^O,X,\sigma_X : Case\;X ; P : Pred[X]\\
-    &\den{\Gamma,\underline{X}}^O := \den{\Gamma}^O,\underline{X}; \underline{P} : Pred[\underline{X}]\\
-    \\
-    &\den{\Gamma \vdash_{PL} M : A}^O := \den{\Gamma \vdash_{PL} M : A}^L, \mathcal{O}[A](\den{M}) 
-  \end{align*}
-  \caption{Obliviousness Context and Term Translation}
-  \label{fig:d}
-\end{figure}
-\eric{to maintain this invariant, we need to adjust the translation of propositions}
+\end{proof}
+Additionally, we need some lemmas about substitution which we omit.
 
 
 
 
-\begin{figure}
-  \centering
-  \scriptsize
-  \eric{highlight changes, fix notational consistencies}
-  \begin{align*}
-    \den{\Gamma;\Theta\vdash_A \bot}^P_{prop}  &=\; \bot \\
-    \den{\Gamma;\Theta\vdash_A V =_A W}^P_{prop} &=\; pi_1\den{\Gamma \vdash _AV}^L_{tm} =_{\den{\Gamma \vdash A}^L_{ty}} \pi_1 \den{\Gamma \vdash W}^L_{tm} \\
-    \den{\Gamma;\Theta\vdash_A M =_{\underline{B}} N}^P_{prop} &=\;    \pi_1 \den{\Gamma \vdash M}^L_{tm} =_{\den{\Gamma \vdash \underline{B}}^L_{ty}}  \pi_1 \den{\Gamma  \vdash N}^L_{tm} \\
-    \den{\Gamma;\Theta\vdash_A R(V,W)}^P_{prop} &=\;   \den{\Gamma ;\Theta\vdash _AR}^R_{rel_v}( \pi_1 \den{\Gamma \vdash V}^L_{tm},  \pi_1 \den{\Gamma \vdash W}^L_{tm}) \\
-    \den{\Gamma;\Theta\vdash_A \underline{R}(M,N)}^P_{prop} &=\;   \den{\Gamma ; \Theta\vdash_A\underline{R}}^R_{rel_c}( \pi_1 \den{\Gamma \vdash M}^L_{tm},  \pi_1 \den{\Gamma \vdash N}^L_{tm}) \\
-    \den{\Gamma;\Theta\vdash_A \phi \land \psi}^P_{prop} &=\;   \den{\Gamma;\Theta\vdash_A \phi}^P_{prop} \land \den{\Gamma;\Theta\vdash_A \psi}^P_{prop} \\
-    \den{\Gamma;\Theta\vdash_A \phi \lor \psi}^P_{prop} &=\;   \den{\Gamma;\Theta\vdash_A \phi}^P_{prop} \lor \den{\Gamma;\Theta\vdash_A \psi}^P_{prop} \\
-    \den{\Gamma;\Theta\vdash_A \phi \implies \psi}^P_{prop} &=\;   \den{\Gamma;\Theta\vdash_A \phi}^P_{prop} \implies \den{\Gamma;\Theta\vdash_A \psi}^P_{prop} \\
-    \den{\Gamma;\Theta\vdash_A \forall(x:A).\phi}^P_{prop} &=\;   \forall(x:\den{\Gamma  \vdash A}^L_{ty}).O[A]_{Rho(\Gamma)}(x)\implies\den{\Gamma,x : A\;\Theta\vdash_A \phi}^P_{prop} \\
-    \den{\Gamma;\Theta\vdash_A \forall X.\phi}^P_{prop} &=\;   \forall X,\sigma_X:Case\;X.\den{\Gamma,X;\Theta\vdash_A \phi}^P_{prop}\\
-    \den{\Gamma;\Theta\vdash_A \forall \underline{X}.\phi}^P_{prop} &=\;   \forall \underline{X},\underline{P}:\mathcal{O}Pred[\underline{X}'].\den{\Gamma,\underline{X};\Theta\vdash_A \phi}^P_{prop} \\
-    \den{\Gamma;\Theta\vdash_A \forall R:Rel_v[A,A'].\phi}^P_{prop} &=\;   \forall  R:Rel_v[\den{\Gamma \vdash A}^L_{ty},\den{\Gamma \vdash A'}^L_{ty}].\den{\Gamma;\Theta,R:Rel_v[A,A']\vdash_A \phi}^P_{prop}\\
-    \den{\Gamma;\Theta\vdash_A \forall \underline{R}:Rel_c[\underline{B},\underline{B}'].\phi}^P_{prop} &=\;   \forall \underline{R}:Rel_c[\den{\Gamma \vdash \underline{B}}^L_{ty},\den{\Gamma \vdash \underline{B}'}]^L_{ty}.\den{\Gamma;\Theta,\underline{R}:Rel_c[\underline{B},\underline{B}']\vdash_A \phi}^P_{prop}
-    \end{align*}
-    \caption{Proposition Translation Fragment}
-    \label{fig:PropTranslation}
-\end{figure}
 
-\begin{comment}
-- translated terms come with an obliviousness proof
-sketch proof of this? congruence rules
-- 
-\end{comment}
+
+\subsection{Adequacy}
+Here we demonstrate that our usage of obliviousness is sound.
+
+\begin{lemma} Wrapping of oblivious terms is identity.
+  \label{lem:wrapid}
+  $\forall M : \den{A}^L. \mathcal{O}[A](M) \implies \mathcal{W}[A](M) = M$
+ \end{lemma}
+ 
+ \begin{proof}
+   By induction on the type formation rules of \pl. The base cases where wrapping is identity are trivially true. The only case that is not simply an application of an $\eta$ rule is $\forall X. \underline{B}$ where we use the equation baked into the obliviousness predicate.
+ \end{proof}
+ 
+ 
+ \begin{lemma}(\textbf{INCOMPLETE}) Wrapped terms are Oblivious.
+  \label{lem:oblivwrap}
+   $\forall M : \den{A}^L. \mathcal{O}[A](\mathcal{W}[A](M))$
+  \end{lemma}
   
-\subsection{"Result"}\label{sec:Result}
+  \begin{proof}
+    \eric{}
+    \textcolor{red}{this one is sus. type variables are the problematic case.
+      Consider $f : \forall \underline{X}.U\underline{X}\to\underline{X}$. How would we prove..}
 
-\begin{definition}
+    \begin{align*}
+      &\mathcal{O}[\forall \underline{X}.U\underline{X} \to \underline{X}](\mathcal{W}[\forall \underline{X}.U\underline{X} \to \underline{X}](f))\\
+&=\\
+&\mathcal{O}[\forall \underline{X}.U\underline{X} \to \underline{X}](\Lambda \underline{X}.\lambda x : U\underline{X}.f[\underline{X}](force\;x))\\
+&=\\
+&\forall \underline{X},P_{\underline{X}},x:U\underline{X}.\mathcal{O}[U\underline{X}](x) \implies \mathcal{O}[\underline{X}]((\Lambda \underline{X}.\lambda x : U\underline{X}.f[\underline{X}](force\;x))[\underline{X}]x)\\
+&=\\
+&\forall \underline{X},P_{\underline{X}},x:U\underline{X}.P_{\underline{X}}(force\;x) \implies P_{\underline{X}}(f[\underline{X}](force\;x))
+    \end{align*}
+    
+
+
+  \end{proof}
+ 
+\begin{theorem}
+  \label{thm:adequacy}
   Adequacy:
   \begin{mathpar}
     \inferrule
@@ -1392,19 +1460,52 @@ sketch proof of this? congruence rules
       \den{\Gamma}^{L}; \emptyset \;|\; \emptyset \vdash_{FPL} \mathcal{W}_{\Gamma \vdash A}(\den{M}^{L}) = \mathcal{W}_{\Gamma \vdash A}(\den{N}^{L})
     }
   \end{mathpar}
-  \end{definition}
-%\section{Example Proofs}\label{sec:ExampleProofs}
+  \end{theorem}
+\begin{proof} \eric{sketchy proof sketch}
+  By assumption, we have the obliviousness of $\den{M}^L,\den{N}^L$. Combine these with \cref{lem:wrapid} to get $\mathcal{W}[A](\den{M}^L) = \den{M}^L$ and use this fact with our hypothesis. Next, we define a substitution $\den{\Gamma}^L \xrightarrow{\sigma} \den{\Gamma}^O$ by:
+  \begin{align*}
+    &X\mapsto X,
+    \underline{X} \mapsto\underline{X},
+    x : \den{A} \mapsto \mathcal{W}[A](x),
+    P_X := (x:X).\top,
+    \underline{P}_{\underline{X}}  := (x : \underline{X}).\top
+  \end{align*}
+Then, using substitutivity:
+\begin{prooftree}
+  \AxiomC{$\den{\Gamma}^L \xrightarrow{\sigma} \den{\Gamma}^O$}
+  \AxiomC{$\den{\Gamma}^{O}\vdash_{FPL} \mathcal{W}[A]{\den{M}^L}= \mathcal{W}[A]{\den{N}^L}$}
+  \BinaryInfC{$\den{\Gamma}^L \;|\; H_{x_1} : \mathcal{O}[A_1](x_1)[\sigma], \cdots H_{x_n} : \mathcal{O}[A_n](x_n)[\sigma] \vdash \mathcal{W}_{\Gamma \vdash A}(\den{M}^{L}) = \mathcal{W}_{\Gamma \vdash A}(\den{N}^{L})$}
+\end{prooftree}
+Noting that $\mathcal{W}[A](\den{M}^L)[\sigma] = \mathcal{W}_{\Gamma \vdash A}(\den{M}^L)$. The remaining obligation is to prove all the obliviousness hypotheses $H_x$ using \cref{lem:oblivwrap}.
+\end{proof}
+
+\subsection{Grand Finale}
+\eric{rename section, add exposition}
+\begin{theorem} 
+  Preservation of Logical Equivalence: $\forall\; \Gamma \vdash_{F_{\mu,\Omega}^{\forall \to}} M,N : A.$
+  \[
+    \den{\Gamma}^{PL} ; \emptyset \;|\; \emptyset \vdash_{PL} \den{M}^{PL} = \den{N}^{PL} \implies \den{\Gamma}^{FPL}; \emptyset \;|\; \emptyset \vdash_{FPL} \mathcal{W}_{\Gamma \vdash A}(\den{M}^{FPL}) = \mathcal{W}_{\Gamma \vdash A}(\den{N}^{FPL})
+  \]
+  \end{theorem}
+  \begin{proof}
+    \eric{sketch - combine theorem \cref{thm:OblivTranslation} and \cref{thm:adequacy}}
+  \end{proof}
+
 
 \section{Discussion/Related Work/Future Work}
-Models. Iris style primitives in logic? or work directly with Iris?
-issues with adequacy
+\begin{itemize}
+  \item Holes in proof, friction with current definitions
+  \item Model!
+  \item Iris style primitives in the logic or directly to Iris?
+\end{itemize}
+
 % mention how we have a model of this form of parametricity implemented in Iris for a CBV language?
 % mention early work on categorical models?
 \section{Conclusion}
 rehash the introduction
 
 \begin{acks}
-  \eric{Fellowship}
+This material is based upon work supported by the National Science Foundation CISE Graduate Fellowships (CSGrad4US) under Grant No. 2313998. Any opinions, findings, and conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the National Science Foundation.
 \end{acks}
 
 \bibliographystyle{ACM-Reference-Format}
