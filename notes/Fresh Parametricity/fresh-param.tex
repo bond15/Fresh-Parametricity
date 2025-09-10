@@ -748,7 +748,7 @@ We embed \source in \pl\; using the standard CBV-to-CBPV translation\cite{CBPV} 
 \subsection{Term Language Translation: \pl\;to \fpl}
 
 \eric{only present fragment of translaiton, full translation in appendix}
-Here we introduce the backbone of our proof translation which is the term language translation (\cref{fig:TypeTranslationPLFPL},\cref{fig:TermTranslationPLFPL}) between \pl\; and \fpl. 
+Here we introduce the backbone of our proof translation which is the term language translation (\cref{fig:TranslationPLFPL}) between \pl\; and \fpl. 
 \subsubsection{Translating $\forall X. \underline{B}$}\label{sec:TranslateForall}
 At the core of this translation, as alluded to in \cref{sec:OSum}, is interpretation of $\forall X. \underline{B}$ as \textit{fresh universal quantification} $\forall X. Case\:X \to \underline{B}$. By freshness, we mean to enforce an invariant that all case symbols passed into a universal type are freshly allocated. To demonstrate how this invariant enforces parametric behavior in the presence of $OSum$ and $Case$, consider the following:
 \begin{align*}
@@ -820,7 +820,7 @@ Via $\den{\_}^L$, any type application in \pl\;allocates a new case symbol, any 
     \]
   \end{minipage}
   \caption{Translation of Contexts, Types, Values, and Computations: \pl to \fpl}
-  \label{fig:TranslationPLFPL_merged}
+  \label{fig:TranslationPLFPL}
 \end{figure}
 
 
@@ -848,7 +848,7 @@ However, in \fpl, if we try to use $\eta\forall$, $\eta\lambda$, and congruence 
 Note that variable $f$ is not limited to ranging over terms in the codomain of $\den{\_}^{FPL}$. If we consider the environment an adversary, it can provide values which do not behave parametrically. In this case, take $X\mapsto \mathbb{B}, \sigma_X \mapsto \sigma_\mathbb{B}, f \mapsto thunk(eq_{\sigma_{\mathbb{B}}})$ which, as we saw in \cref{sec:TranslateForall}, results in inequal terms.
 Generally, unguarded type applications, or failures of our fresh case invariant, can result in inequalities and broken proofs.
 
-Niels et al.\cite{NonParam} solve this issue using a specialized deep $\eta$ expansion, which they call \textit{wrapping}, to surface and guard all type applications. We adapt a simplified version(\cref{fig:wrapping}) of their wrapping strategy to preserve equalities in our proof translation. However, wrapping introduces complications in our proof translation as we demonstrate in \cref{d}.
+Niels et al.\cite{NonParam} solve this issue using a specialized deep $\eta$ expansion, which they call \textit{wrapping}, to surface and guard all type applications. We adapt a simplified version(\cref{fig:wrapping}) of their wrapping strategy to preserve equalities in our proof translation. However, wrapping introduces complications in our proof translation as we demonstrate in \cref{sec:Obliv}.
 
 \begin{figure}[H]
   \centering
@@ -974,15 +974,62 @@ In order to make use of the relational interpretation of types, we employ an axi
   \end{align*}
 \end{definition}
 
+\begin{comment}
 To understand the utility of this principle, we can observe what it says for the universal type. For any $M,N : \forall X.\underline{B}$:
 \[
   \forall Y,Z,R:Rel_v[Y,Z].\mathcal{C}[\underline{B}]_R(M[Y],N[Z]) \iff M =_{\forall X. \underline{B}} N
 \]
-
+\end{comment}
 
 \subsection{Parametricity Proof}
 \eric{rename section, demonstrate that this logic can actually prove parametricty theorems}
-Swap Proof in \pl
+To demonstrate the utility of \pl\; we demonstrate a simple parametricity proof. Consider the \source term:
+\[
+  M : \forall [X,Y].(X \times Y) \to (Y\times X)
+\]
+By informal parametricity reasoning, we would expect $M$ to either, swap the given values, error, or diverge. That is to say, given 
+\[
+  swap : \forall[X,Y].(X \times Y) \to (Y \times X) := \Lambda [X,Y](p).rec_\times\;p\;\{x,y.\; (y,x)\}  
+\]
+we should expect 
+\[
+  swap[A',A](M[A,A'](a,a')) =_{A\times A'} M[A',A](a',a)
+\]
+We state this claim formally in \pl:
+\begin{theorem}
+\begin{align*} 
+&\vdash_{PL}\forall M : U(\forall X.\forall Y. (X\times Y) \to F(Y \times X)),a:\den{A},a':\den{A'}.   \\
+& \quad r \leftarrow (force\;M)\den{A}\den{A'}(a,a');swap\den{A'}\den{A}(r) = r \leftarrow (force\;M)\den{A'}\den{A}(a',a);ret\;r
+\end{align*}
+\end{theorem}
+
+\begin{proof}
+  We begin by introducing $M,a,a'$ to the context. Then, we use congruence for bind which is derivable within the logic given that bind is church encoded. We then have two goals.
+  \begin{itemize}
+    \item $M,a,a' \vdash_{PL} \mathcal{C}[F(Y\times X)]_{?,?}((force\;M)\den{A}\den{A'}(a,a'),(force\;M)\den{A'}\den{A}(a',a))$
+    \item $M,a,a' \vdash_{PL} \mathcal{C}[(Y \times X) \to \underline{X}]_{?,?,EQ_{F(\den{A}\times \den{A'})}}(\lambda x. swap\den{A'}\den{A}x , \lambda x. ret\;x)$
+  \end{itemize}
+These goals are not fuly specified. We need to determine what relations we want to assign to type variables $X$ and $Y$. Here we make use of the IEP axiom for type $U(\forall X. \forall Y. (X \times Y) \to F(Y \times X))$.
+%$U(\forall X.\forall Y. (X\times Y) \to F(Y \times X))$.
+\begin{align*} 
+&M,a,a' \vdash_{PL} \forall X',Y',R:Rel_v[X',Y'],Z,W,R':Rel_v[Z,W],(p_1 : X' \times Z),(p_2 : Y' \times W).\\
+&\quad\mathcal{V}[X\times Y]_{R,R'}(p_1,p_2) \implies \mathcal{C}[F(Y\times X)]_{R,R'}((force\;M)[X'][Z](p_1),(force\;M)[Y'][W](p_2))
+\end{align*}
+From our first goal, it is clear that we should pick
+\[
+  X' \mapsto \den{A}, Y; \mapsto \den{A'},Z \mapsto \den{A'}, W \mapsto \den{A}, p_1 \mapsto (a,a'), p_2 \mapsto (a',a)
+\]
+We still need to pick relations $R : Rel_v[\den{A},\den{A'}],R' : Rel_v[\den{A'},\den{A}]$ such that our proof goes through. It suffices to say that the easiest relations to pick for this proof are:
+\begin{itemize}
+  \item $R := (x : \den{A},y : \den{A'}). x = a \land y = a'$
+  \item $R' := (x : \den{A'},y : \den{A'}). x = a' \land y = a$
+\end{itemize}
+Then, it suffices to show $R(a,a') \land R'(a',a)$ in order to prove our first goal. This trivially holds given our choice of relations.
+The second goal boils down to showing $swap\den{A'}\den{A}(a',a)=ret(a,a')$
+\end{proof}
+
+
+
 
 \begin{figure}[h]
   \centering
@@ -1415,6 +1462,7 @@ Additionally, we need some lemmas about substitution which we omit.
 
 
 \subsection{Adequacy}
+\label{sec:Adequacy}
 Here we demonstrate that our usage of obliviousness is sound.
 
 \begin{lemma} Wrapping of oblivious terms is identity.
