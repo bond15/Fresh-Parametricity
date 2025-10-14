@@ -1,4 +1,4 @@
-{-# OPTIONS --cubical --safe #-}
+{-# OPTIONS --cubical --safe --overlapping-instances #-}
 open import Cubical.Data.Bool
 open import Cubical.Data.Unit
 open import Cubical.Foundations.Prelude
@@ -80,10 +80,10 @@ module src.Data.InhabitedPropSolver where
         sumLInhabited : { P Q : Set} → {{ _ : Inhabited P}} → Inhabited ( P ⊎ Q )
         sumLInhabited = record { default = _⊎_.inl default }
         
-        -- {-# OVERLAPS sumRInhabited  #-}
+        --{-# OVERLAPS sumRInhabited  #-}
         -- need to use something like this to guide resolution search, overlapping at sum
-        -- sumRInhabited : { P Q : Set} → {{ _ : Inhabited Q}} → Inhabited ( P ⊎ Q )
-        -- sumRInhabited = record { default = _⊎_.inr default }
+        sumRInhabited : { P Q : Set} → {{ _ : Inhabited Q}} → Inhabited ( P ⊎ Q )
+        sumRInhabited = record { default = _⊎_.inr default }
 
         forallInhabited : {P : Set}{Q : P → Set}{{ _ : InhabitedFam P Q}} → Inhabited (∀ (x : P) → Q x)
         forallInhabited {P}{Q}{{r}} = inhab (λ x → def{P}{Q}{{r}}{x} .default)
@@ -100,7 +100,8 @@ module src.Data.InhabitedPropSolver where
 
 
 
-
+    --module _ {{overlap x : Inhabited ⊤}} where 
+ 
     module _ where
         open import Cubical.Data.Nat 
         _ : Inhabited (∀ (n : ℕ)→ Σ[ b ∈ Bool ] {! b  !} )

@@ -1,0 +1,434 @@
+\documentclass[12pt]{article}
+
+%AMS-TeX packages
+\usepackage{amssymb,amsmath,amsthm}
+%geometry (sets margin) and other useful packages
+\usepackage[margin=1.25in]{geometry}
+\usepackage{tikz}
+\usepackage{tikz-cd}
+\usepackage{graphicx,ctable,booktabs}
+\usepackage{mathpartir}
+
+\usepackage[sort&compress,square,comma,authoryear]{natbib}
+\bibliographystyle{plainnat}
+
+%
+%Redefining sections as problems
+%
+\makeatletter
+
+\theoremstyle{definition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{checklaw}{Check}[section]
+
+\newenvironment{problem}{\@startsection
+       {section}
+       {1}
+       {-.2em}
+       {-3.5ex plus -1ex minus -.2ex}
+       {2.3ex plus .2ex}
+       {\pagebreak[3]%forces pagebreak when space is small; use \eject for better results
+       \large\bf\noindent{Problem }
+       }
+       }
+       {%\vspace{1ex}\begin{center} \rule{0.3\linewidth}{.3pt}\end{center}}
+       \begin{center}\large\bf \ldots\ldots\ldots\end{center}}
+\makeatother
+
+
+%
+%Fancy-header package to modify header/page numbering
+%
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+%\addtolength{\headwidth}{\marginparsep} %these change header-rule width
+%\addtolength{\headwidth}{\marginparwidth}
+%% \lhead{Problem \thesection}
+\chead{}
+\rhead{\thepage}
+\lfoot{\small\scshape EECS 598: Category Theory}
+\cfoot{}
+\rfoot{\footnotesize PS 1}
+\renewcommand{\headrulewidth}{.3pt}
+\renewcommand{\footrulewidth}{.3pt}
+\setlength\voffset{-0.25in}
+\setlength\textheight{648pt}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%
+%Contents of problem set
+%
+
+\newcommand{\meet}{\wedge}
+\newcommand{\join}{\vee}
+\newcommand{\iplmeets}{\textrm{IPL}(\top,\meet)}
+\newcommand{\iplneg}{\textrm{IPL}(\top,\meet,\supset)}
+\newcommand{\downset}{\mathcal P_{\downarrow}}
+\newcommand{\down}{{\downarrow}}
+
+\newcommand{\Set}{\textrm{Set}}
+\newcommand{\casePlus}[5]{\textrm{case}_{+}\,{#1}\{\sigma_1{#2}\to {#3}|\sigma_2{#4}\to {#5}\}}
+\newcommand{\caseZero}[1]{\textrm{case}_0\,{#1}\{\}}
+\newcommand{\id}{\textrm{id}}
+\newcommand{\lfpt}{\Sigma_{\textrm{lfpt}}}
+
+\newcommand{\cat}{\mathcal}
+
+\begin{document}
+
+\title{Problem Set 3: Functoriality and Naturality}
+
+\author{Eric Bond}
+\maketitle
+
+
+\begin{problem}{Bifunctors}
+
+    \subsection{}
+    It s.t.s. an isomorphism $\textbf{Joint} \cong \textbf{Sep}$ in Set. Note that equality of functors is determined by equality of the action on objects and morphisms.
+    \subsubsection*{Sep $\to$ Joint}
+    Given separate $F : \cat C,\cat D \to \cat E$, define joint $G : \cat C, \cat D, \to \cat E$.
+    
+    \begin{align*}
+        &G_0 := F_0 \\
+        &G_1 (f : \cat C[c,c'],g : \cat D[d,d']) := F_l(f) \circ F_r(g)
+    \end{align*}
+
+    check
+    \begin{align*}
+        G(id_c,id_d) &= F_l(id_c) \circ F_r(id_d)\\
+        &= id_{F(c,d) \circ id_{F(c,d)}}\\
+        &= id_{F(c,d)}
+    \end{align*}
+    \begin{align*}
+        G(f' \circ f,g' \circ g) &= F_l(f' \circ f) \circ F_r (g' \circ g)\\
+        &=F_l(f') \circ F_l(f) \circ F_r(g') \circ F_r(g) \\
+        &=F_l(f') \circ F_r(g') \circ F_l(f) \circ F_r(g) \\
+        &=G(f',g') \circ G(f,g)
+    \end{align*}
+
+
+    \subsubsection*{Joint $\to$ Sep}
+Given joint $F : \cat C,\cat D \to \cat E$, define sep $G : \cat C, \cat D, \to \cat E$.
+
+    \begin{align*}
+        &G_0 := F_0 \\
+        &G_l (f : \cat C[c,c']) := F_1(f,id_d)\\
+        &G_r (g : \cat D[c,d']) := F_1(id_c,g)
+    \end{align*}
+
+check
+
+\begin{align*}
+    G_l(id_c) &= F(id_c,id_d) = id_{F(c,d)}\\
+    G_l(f' \circ f) &= F(f' \circ f,id_d)\\
+    &= F(f' \circ f,id_d \circ id_d)\\
+    &= F(f',id_d) \circ F(f,id_d)\\
+    &= G_l (f') \circ G_l(f)
+\end{align*}
+
+same for $G_r$ by symmetry.
+
+\begin{align*}
+    G_l(f) \circ G_r(g) &= F(f,id_{d'}) \circ F(id_c,g)\\
+    &=F(f \circ id_c, id_{d'} \circ g)\\
+    &=F(f,g)\\
+    &=F(id_{c'}\circ f, g \circ id_d)\\
+    &=F(id_{c'},g) \circ F(f,id_d)\\
+    &=G_r(g) \circ G_l(f)
+\end{align*}
+
+\subsubsection*{Iso}
+
+Given joint $F : \cat C, \cat D \to \cat E$, we have $F_0 \mapsto F_0$. For the action on morphisms, we have 
+\[
+  F(f,g) \mapsto F(f,id_d) \circ F(id_c,g) = F(f,g)
+\]
+Given sep $F : \cat C, \cat D \to \cat E$, we have $F_0 \mapsto F_0$. For the separate action on morphisms, we have
+\begin{align*}
+    F_l(f),F_r(g)  &\mapsto F_l(f) \circ F_r(id_d), F_l(id_c) \circ F_r(g) \\
+    &= F_l(f) \circ id_{F(c,d)},  id_{F(c,d')} \circ F_r(g)\\
+    &= F_l(f), F_r(g)
+\end{align*}
+
+
+\subsection{}
+It s.t.s. an isomorphism $\textbf{Joint} \cong \textbf{Prod}$ in Set. Note that equality of functors is determined by equality of the action on objects and morphisms.
+\subsubsection*{Joint $\to$ Prod}
+Given joint $F : \cat C,\cat D \to \cat E$, define $G : \cat C \times \cat D \to \cat E$.
+\begin{align*}
+    G_0((c,d)) &:= F_0(c,d)\\
+    G_1((f : \cat C[c,c'],g : \cat D[d,d'])) & := F_1(f,g)
+\end{align*}
+
+check 
+
+\begin{align*}
+    G((id_c,id_d)) &= F(id_c,id_d) = id_{F(c,d)} = id_{G((c,d))}\\
+    G((f' ,g') \circ (f, g)) &= G((f' \circ f,g' \circ g))\\
+    &=F(f' \circ f, g' \circ g)\\
+    &=F(f',g') \circ F(f,g)\\
+    &=G((f',g')) \circ G((f,g))
+\end{align*}
+
+\subsubsection*{Prod $\to$ Joint}
+Given $F : \cat C \times \cat D \to \cat E$, define $G : \cat C ,\cat D \to \cat E$.
+\begin{align*}
+    G_0(c,d) &:= F_0((c,d))\\
+    G_1(f,g) &:= F_1((f,g)) 
+\end{align*}
+Check
+\begin{align*}
+ G(id_c,id_d) &= F((id_c,id_d)) = id_{F((c,d))} = id_{G(c,d)} \\
+ G(f' \circ f, g' \circ g) &= F((f' \circ f,g' \circ g))\\
+ &=F((f',g')) \circ F((f,g)) \\
+ &=G(f',g') \circ G(f,g)
+\end{align*}
+
+\subsubsection*{Iso}
+Given $F : \cat C, \cat D \to \cat E$,
+\[
+    F_0(c,d) \mapsto F_0(c,d)
+\]
+and 
+\[
+    F_1(f,g) \mapsto F_1(f,g)   
+\]
+Given $F : \cat C \times \cat D \to \cat E$,
+\[
+    F_0(c,d) \mapsto F_0(c,d)    
+\]
+and 
+\[
+    F_1(f,g) \mapsto F_1(f,g)    
+\]
+
+\subsection{}
+It s.t.s. an isomorphism $\textbf{Sep} \cong \textbf{Fun}$ in Set. Note that equality of functors is determined by equality of the action on objects and morphisms.
+
+\subsubsection*{Sep $\to$ Fun}
+Given $F : \cat C , \cat D \to \cat E$, define $G : \cat C \to \cat E^{\cat D}$.
+\begin{align*} 
+    &G_0(c) := H\\
+    &\quad \text{where}\\
+    &\quad \quad H : \cat D \to \cat E\\
+    &\quad \quad H_0(d) := F_0(c,d)\\
+    &\quad \quad H_1(g : \cat D[d,d']) := F_r(g)\\
+    &G_1(f : \cat C[c,c']) := \alpha\\
+    &\quad \text{where}\\
+    &\quad \quad \alpha : G_0(c) \Rightarrow G_0(c')\\
+    &\quad \quad \alpha(d) : \cat E[F_0(c,d),F_0(c',d)]\\
+    &\quad \quad \alpha(d) := F_l(f)
+\end{align*}
+First, check that any $G_0(c)= H$ obeys the functor laws.
+\begin{align*} 
+    H(id_d) &= F_r(id_d) = id_{F(c,d)} = id_{H(d)}\\
+    H(g' \circ g) &= F_r(g' \circ g)\\
+    &=F_r(g') \circ F_r(g)\\
+    &=H(g') \circ H(g)
+\end{align*}
+Second, check that any $G_1(f : \cat C[c,c']) = \alpha$ is natural. Let $F^c := G_0(c)$ and $F^{c'} := G_0(c')$.
+Given any $g : \cat D[d,d']$,
+\[
+\begin{tikzcd}
+F^c(d) \arrow[r, "F^c(g)"] \arrow[d, "\alpha_d"'] & F^c(d') \arrow[d, "\alpha_{d'}"] \\
+F^{c'}(d) \arrow[r, "F^{c'}(g)"'] & F^{c'}(d')
+\end{tikzcd}
+\]
+If we unfold all the definitions, this square is just the commutativity condition for $F$
+\[
+\begin{tikzcd}
+F(c,d) \arrow[r, "F_r(g)"] \arrow[d, "F_l(f)"'] & F(c,d') \arrow[d, "F_l(f)"] \\
+F(c',d) \arrow[r, "F_r(g)"'] & F(c',d')
+\end{tikzcd}
+\]
+Now we need to check that $G$ is actually a functor. $G(id_c)= \alpha : F(c,\_) \Rightarrow F(c,\_)$ is a natural transformation where the component maps are $\alpha(d):= F_l(id_c) = id_{F(c,d)}$, which is the identity natural transformation. $G(f' \circ f)= \alpha$ is a natural transformation with component maps $\alpha(d) := F_l(f' \circ f)$. This is equal to vertical composition $\alpha' \circ \alpha$ of natural transformations with components $\alpha(d) := F_l(f)$ and $\alpha'(d) := F_l(f')$. So $G(f' \circ f) = G(f') \circ G(f)$.
+
+
+\subsubsection*{Fun $\to$ Sep}
+Given $F :\cat C \to \cat E^{\cat D} $, define $G :\cat C , \cat D \to \cat E $.
+\begin{align*}
+    &G_0(c,d) := (F_0(c))_0(d)\\
+    &G_l(d)(f: \cat C[c,c']) : \cat E[G_0(c,d),G_0(c',d)]\\
+    &G_l(d)(f)  := F_1(f).\alpha(d)\\
+    &G_r(c)(g : \cat D[d,d'] : \cat E[G_0(c,d),G_0(c,d')])\\
+    &G_r(c)(g) := (F_0(c))_1(g)
+\end{align*}
+Now check the laws.\\
+\[
+    G_l(d)(id_c) = F_1(id_c).\alpha(d)= id_{F_0(c)}.\alpha(d) = id_{(F_0(c))_0(d)} = id_{G_0(c,d)}
+\]
+\begin{align*} 
+    G_l(d)(f' \circ f) &= F_1(f' \circ f).\alpha(d) \\
+    &= (F_1(f') \circ F_1(f)).\alpha(d)\\
+    &= F_1(f').\alpha(d) \circ F_1(f).\alpha(d)\\
+    &= G_l(d)(f') \circ G_l(d)(f)
+\end{align*}
+
+\begin{align*} 
+    G_l(d')(f) \circ G_r(c)(g) &= F_1(f).\alpha(d) \circ (F_0(c))_1(g)\\
+    &\text{wiskering something something}
+\end{align*}
+
+\end{problem}
+
+
+
+\begin{problem}{Product Functor}
+    \subsection{}
+    \begin{align*}
+        &\times : \cat C \times \cat C \to \cat C\\
+        &\times_0(c,c') := c \times c'\\
+        &\times_1(f,g) : \cat C[c_1 \times c_2, c_3 \times c_4]\\
+        &\times_1(f,g) := (f \circ \pi_1,g \circ \pi_2)
+    \end{align*}
+The action on morphisms is given by the universal "mapping in" property of the product in the codomain.
+We have to show $\times(id_c,id_{c'})=id_{c\times c'}$ but this holds by uniqueness of maps into the product. Similarly $\times(f'\circ f, g' \circ g)=\times(f',g') \circ \times(f,g)$ holds by uniqueness of maps into the product.
+
+\subsection{}
+We have 
+\begin{align*}
+    &(\Pi_1)_0(c,c') := c\\
+    &(\Pi_1)_1(f,g) := f
+\end{align*}
+Construct $\alpha : \times \Rightarrow \Pi_1$ as,
+\begin{align*}
+    &\alpha((c, c')) : \cat C[c \times c', c ]\\
+    &\alpha((c,c')) := \pi_1 
+\end{align*}
+$\forall (f,g) : \cat C\times \cat C[(c_1,c_2),(c_3,c_4)],$ naturality is exactly the commuting requirement of the unique morphism into the product $c_3,c_4$.
+\[
+\begin{tikzcd}
+    c_1 \times c_2 \arrow[r, "{(f\circ \pi_1,g \circ \pi_2)}"] \arrow[d, "\pi_1"'] & c_3 \times c_4 \arrow[d, "\pi_1"] \\
+    c_1 \arrow[r, "f"'] & c_3
+    \end{tikzcd}
+\]
+
+
+
+\end{problem}
+
+
+\begin{problem}{Theorems for Free, Naturally}
+
+\subsection{}
+A natural transformation $\alpha : Id \Rightarrow Id$ consists of family of component maps $\forall X \in \textbf{Set}_0, \alpha(X):\textbf{Set}[X,X]$ such that $\forall f : \textbf{Set}[X,Y]$,
+\[
+    \begin{tikzcd}
+        X \arrow[r, "f"] \arrow[d, "\alpha(X)"'] & Y \arrow[d, "\alpha(Y)"] \\
+        X \arrow[r, "f"'] & Y
+        \end{tikzcd}
+\]
+Consider the case where $f : \textbf{Set}[1,X]$.
+\[
+    \begin{tikzcd}
+        1 \arrow[r, "f"] \arrow[d,dashed, "!"'] & X \arrow[d, "\alpha(X)"] \\
+        1 \arrow[r, "f"'] & X
+        \end{tikzcd}
+\]
+The map $\alpha(1)$ is uniquely determined. The map $f$ amounts to picking an element $x : X$. In order for this diagram to commute, it must be the case that $\alpha(X) := id_X$ as we can vary $f$ to choose any element in $X$. This situation applies to any other choice of set $A$ in place of $X$. Therefore, the component maps must be defined uniformly in choice of $X$ and the only choice is the identity map.
+
+\subsection{}
+A natural transformation $\alpha : \times \Rightarrow \times'$ consists of family of component maps $\forall (A,A') \in (\textbf{Set} \times \textbf{Set})_0, \alpha((A,A')):\textbf{Set} \times \textbf{Set}[A \times A', A' \times A]$ such that $\forall (f,g) : \textbf{Set} \times \textbf{Set}[A \times A',B \times B']$,
+\[
+    \begin{tikzcd}
+        A\times A' \arrow[r, "{f,g}"] \arrow[d, "{\alpha(A,A')}"'] & B\times B' \arrow[d, "{\alpha(B,B')}"] \\
+        A' \times A \arrow[r, "{g,f}"'] & B'\times B
+        \end{tikzcd}
+\]
+Consider the case where $f : \textbf{Set}[\{\bullet\},B],g : \textbf{Set}[\{\circ\},B']$
+\[
+    \begin{tikzcd}
+        \{\bullet\} \times \{\circ\} \arrow[r, "{f,g}"] \arrow[d,dashed, "!=id"'] & B\times B' \arrow[d, "{\alpha(B,B')}"] \\
+        \{\circ\} \times \{\bullet\} \arrow[r, "{g,f}"'] & B'\times B
+        \end{tikzcd}
+\]
+Pointwise, naturality states that $\alpha(B,B')(b,b')=(b',b)$, forcing the definition of $\alpha$ to be swap.
+
+\subsection{}
+A natural transformation $\alpha : Id_{\textbf{Set*}} \Rightarrow Id_{\textbf{Set*}}$ consists of family of component maps $\forall A^* \in \textbf{Set*}_0, \alpha(A^*):\textbf{Set*}[A^*,A^*]$ such that $\forall f : \textbf{Set*}[A^*,B^*]$,
+
+\[
+    \begin{tikzcd}
+        A^* \arrow[r, "f"] \arrow[d, "\alpha(A*)"'] & B^* \arrow[d, "\alpha(B^*)"] \\
+        A^* \arrow[r, "f"'] & B^*
+        \end{tikzcd}
+\]
+One possible natural transformation maps every element of a pointed set to the base point.
+\[
+  \alpha(A^*)(\_):=  a_0  
+\]
+Naturality can be demonstrated pointwise. 
+\[
+    a \mapsto a_0 \mapsto (f(a_0)=b_0) = a \mapsto f(a) \mapsto b_0
+\]
+Another possibility is a natural transformation with the identity function as the component map.
+\[
+\alpha(A*)(a) := a    
+\]
+Pointwise..
+\[
+    a \mapsto a \mapsto f(a) = a \mapsto f(a) \mapsto f(a)
+\]
+Consider
+\[
+    \begin{tikzcd}
+        \{a_0,a_1\} \arrow[r, "f"] \arrow[d, "{\alpha(\{a_0,a_1\})}"'] & B^* \arrow[d, "\alpha(B^*)"] \\
+        \{a_0,a_1\} \arrow[r, "f"'] & B^*
+        \end{tikzcd}
+\]
+All morphisms in this category must preserve the base point. The only choice in defining $f$ and $\alpha(\{a_0,a_1\})$ is where to map $a_1$. Assume $\alpha(a_1) := a_1$. The naturality condition is 
+\[
+  \alpha(B^*)(f(a_1))= f(a_1)  
+\] 
+which forces $\alpha(B^*)$ to behave like the identity function. Assume $\alpha(a_1):= a_0$. The naturality condition is 
+\[
+    \alpha(B^*)(f(a_1)) = b_0
+\]
+which forces $\alpha(B^*)$ to map any $b : B^*$ to $b_0$. These are our two choices of natural transformations above.
+\newpage
+  The naturality property of a natural transformation is such a strong
+  condition that sometimes we can characterize all natural
+  transformations between two fixed functors, and in many examples
+  there are only finitely many.
+  
+  This has direct applications to programming. The reason is that in a
+  pure polymorphic functional language, given type constructors $F$
+  and $G$ that are functorial, all functions $F(X) \to G(X)$ that are
+  polymorphic in $X$ denote natural transformations! Phil Wadler,
+  building on John Reynold's theory of parametricity called these
+  ``theorems for free'': just from the type of a polymorphic function,
+  the naturality property gives you properties that hold for every
+  function of that type (\cite{wadler,reynolds}).
+  \begin{enumerate}
+  \item Define a natural transformation from $\id_{\Set}$ to
+    $\id_{\Set}$ and prove that it is the only such natural
+    transformation.
+
+  \item Let $\times : \Set \times \Set \to \Set$ be the functor you
+    deifned in the previous problem and let $\times' : \Set \times
+    \Set \to \Set$ be the functor with the arguments swapped $A
+    \times' B = B \times A$.
+
+    Define a natural transformation from $\times$ to $\times'$ and
+    show that it is the only such natural transformation.
+
+  \item Recall the category of pointed sets $\Set_*$ is defined as follows:
+    \begin{itemize}
+    \item Objects are pairs of a set $X$ and a ``basepoint'' $x_0 \in X$.
+    \item A morphism from $(X,x_0)$ to $(Y, y_0)$ is a
+      \emph{base-point-preserving} function, i.e., a function $f : X
+      \to Y$ such that $f(x_0) = y_0$. Identity and composition are
+      simply identity and composition of functions.
+    \end{itemize}
+
+    Define two different natural transformations from
+    $\id_{\Set_*}$ to $\id_{\Set_*}$ and prove that these
+    are the only two such natural transformations.
+  \end{enumerate}
+\end{problem}
+\newpage
+\bibliography{cats}
+
+\end{document}

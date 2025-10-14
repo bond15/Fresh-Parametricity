@@ -107,7 +107,6 @@ module src.Data.HyperDoctrine where
 
     record FirstOrderHyperDoc (𝓒 : Category _ _ )(bp : BinProducts 𝓒) : Set where 
         open bpOps 𝓒 bp
-        
         field 
             𝓟 : Functor (𝓒 ^op) (POSET _ _)
             𝓟_isSet : (X : ob 𝓒) → isSet (𝓟 .F-ob X .fst .fst) 

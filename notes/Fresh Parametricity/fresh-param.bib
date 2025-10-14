@@ -1,4 +1,23 @@
 
+@article{AbstractExistentials,
+author = {Mitchell, John C. and Plotkin, Gordon D.},
+title = {Abstract types have existential type},
+year = {1988},
+issue_date = {July 1988},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {10},
+number = {3},
+issn = {0164-0925},
+url = {https://doi.org/10.1145/44501.45065},
+doi = {10.1145/44501.45065},
+abstract = {Abstract data type declarations appear in typed programming languages like Ada, Alphard, CLU and ML. This form of declaration binds a list of identifiers to a type with associated operations, a composite “value” we call a data algebra. We use a second-order typed lambda calculus SOL to show how data algebras may be given types, passed as parameters, and returned as results of function calls. In the process, we discuss the semantics of abstract data type declarations and review a connection between typed programming languages and constructive logic.},
+journal = {ACM Trans. Program. Lang. Syst.},
+month = jul,
+pages = {470–502},
+numpages = {33}
+}
+
 @inproceedings{APL,
 author = {Plotkin, Gordon D. and Abadi, Mart\'{\i}n},
 title = {A Logic for Parametric Polymorphism},
@@ -21,6 +40,25 @@ publisher = {Kluwer Academic Publishers},
 address = {USA}
 }
 
+@article{EEC,
+    author = {Egger, Jeff and Møgelberg, Rasmus Ejlers and Simpson, Alex},
+    title = {The enriched effect calculus: syntax and semantics},
+    journal = {Journal of Logic and Computation},
+    volume = {24},
+    number = {3},
+    pages = {615-654},
+    year = {2012},
+    month = {06},
+    abstract = {This article introduces the enriched effect calculus, which extends established type theories for computational effects with primitives from linear logic. The new calculus provides a formalism for expressing linear aspects of computational effects; e.g. the linear usage of imperative features such as state and/or continuations.The enriched effect calculus is implemented as an extension of a basic effect calculus without linear primitives, which is closely related to Moggi's computational metalanguage, Filinski's effect PCF and Levy's call-by-push-value. We present syntactic results showing: the fidelity of the behaviour of the linear connectives of the enriched effect calculus; the conservativity of the enriched effect calculus over its non-linear core (the effect calculus); and the non-conservativity of intuitionistic linear logic when considered as an extension of the enriched effect calculus.The second half of the article investigates models for the enriched effect calculus, based on enriched category theory. We give several examples of such models, relating them to models of standard effect calculi (such as those based on monads), and to models of intuitionistic linear logic. We also prove soundness and completeness.},
+    issn = {0955-792X},
+    doi = {10.1093/logcom/exs025},
+    url = {https://doi.org/10.1093/logcom/exs025},
+    eprint = {https://academic.oup.com/logcom/article-pdf/24/3/615/2785623/exs025.pdf},
+}
+
+
+
+
 @article{ForFreeForFree,
 author = {Ahmed, Amal and Jamner, Dustin and Siek, Jeremy G. and Wadler, Philip},
 title = {Theorems for free for free: parametricity, with and without types},
@@ -38,6 +76,21 @@ month = aug,
 articleno = {39},
 numpages = {28},
 keywords = {parametricity, logical relation, gradual typing, dynamic typing}
+}
+
+@article{HERMIDA2014149,
+title = {Logical Relations and Parametricity – A Reynolds Programme for Category Theory and Programming Languages},
+journal = {Electronic Notes in Theoretical Computer Science},
+volume = {303},
+pages = {149-180},
+year = {2014},
+note = {Proceedings of the Workshop on Algebra, Coalgebra and Topology (WACT 2013)},
+issn = {1571-0661},
+doi = {https://doi.org/10.1016/j.entcs.2014.02.008},
+url = {https://www.sciencedirect.com/science/article/pii/S1571066114000346},
+author = {Claudio Hermida and Uday S. Reddy and Edmund P. Robinson},
+keywords = {Universal algebra, Category Theory, Homomorphisms, Logical Relations, Natural Transformations, Parametric polymorphism, Relational Parametricity, Data abstraction, Information hiding, Definability, Reflexive Graphs, Fibrations, Relation lifting},
+abstract = {In his seminal paper on “Types, Abstraction and Parametric Polymorphism,” John Reynolds called for homomorphisms to be generalized from functions to relations. He reasoned that such a generalization would allow type-based “abstraction” (representation independence, information hiding, naturality or parametricity) to be captured in a mathematical theory, while accounting for higher-order types. However, after 30 years of research, we do not yet know fully how to do such a generalization. In this article, we explain the problems in doing so, summarize the work carried out so far, and call for a renewed attempt at addressing the problem.}
 }
 
 @inproceedings{IntTypeAnalysis,
@@ -210,4 +263,27 @@ month = sep,
 articleno = {23},
 numpages = {43},
 keywords = {Fully abstract compilation, System F, sealing, parametricity, universal type}
+}
+@inproceedings{Reynolds1983TypesAA,
+  title={Types, Abstraction and Parametric Polymorphism},
+  author={John C. Reynolds},
+  booktitle={IFIP Congress},
+  year={1983},
+  url={https://api.semanticscholar.org/CorpusID:19681636}
+}
+
+@inproceedings{Wadler,
+author = {Wadler, Philip},
+title = {Theorems for free!},
+year = {1989},
+isbn = {0897913280},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/99370.99404},
+doi = {10.1145/99370.99404},
+booktitle = {Proceedings of the Fourth International Conference on Functional Programming Languages and Computer Architecture},
+pages = {347–359},
+numpages = {13},
+location = {Imperial College, London, United Kingdom},
+series = {FPCA '89}
 }
