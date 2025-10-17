@@ -1,11 +1,14 @@
+{-# OPTIONS --allow-unsolved-metas #-}
+
 module src.gsos where
     open import Cubical.Data.Unit
-    open import Cubical.Data.Bool renaming (not to neg ; _and_ to _&&_; _or_ to _||_)
+    open import Cubical.Data.Bool renaming (not to neg ; _and_ to _&&_; _or_ to _||_) hiding (_≤_)
     open import Cubical.Data.Sigma
     open import Cubical.Data.Empty
-    open import Cubical.Data.Sum
+    open import Cubical.Data.Sum renaming (rec to rec⊎)
     open import Cubical.Foundations.Prelude hiding(_∧_;_∨_;subst)
     open import Cubical.Foundations.Isomorphism
+    open Iso
 
     record Functor : Set₁ where  
         field 
@@ -72,7 +75,6 @@ module src.gsos where
 
     un : {F : Functor} → μ F → (F₀ F) (μ F)
     un ⟨ x ⟩ = x
-    
 
     record FreeSigAlg (F : Functor)(X : Set): Set₁ where 
         field 
@@ -84,27 +86,10 @@ module src.gsos where
 
     -- Free Sigma algebra on an object X
     -- The object X is a set of metavariables
-    FreeOn : Functor → Set → Functor 
-    FreeOn F X = 
-        record { 
-            F₀ = λ Y → (F .F₀) Y ⊎ X ; 
-            F₁ = λ{f (inl x) → inl ((F .F₁) f x)
-                 ; f (inr x) → inr x} }
-
-    Free : Functor → Set → Set 
-    Free F X = μ (FreeOn F X)
-
-    var : {F : Functor}{X : Set} → X → Free F X 
-    var x = ⟨ inr x ⟩
-
-    op : {F : Functor}{X : Set} → ((F₀ F) (Free F X)) → Free F X  
-    op e = ⟨ inl e ⟩
-
-    pattern Var x =  ⟨ inr x ⟩ 
-    pattern Op o =  ⟨ inl o ⟩  
-
-    pattern Var' x =  inr x
-    pattern Op' o =  inl o 
+    {-# NO_POSITIVITY_CHECK #-}
+    data Free (F : Functor) (X : Set) : Set where 
+        var : X → Free F X 
+        op : (F₀ F) (Free F X) → Free F X
 
     module _ {F : Functor}{X : Set} where 
 
@@ -121,8 +106,8 @@ module src.gsos where
             η' x = var x
 
             h* : Free F X → car A 
-            h* (Var x) = h x -- renaming
-            h* (Op e) = (alg A) ((F₁ F) h* e) -- recursion
+            h* (var x) = h x -- renaming
+            h* (op e) = (alg A) ((F₁ F) h* e) -- recursion
 
         freeHom {A} .comm = refl
         
@@ -146,8 +131,8 @@ module src.gsos where
     FreeM .η = var
     FreeM {F} .join {X} = joinfree where 
         joinfree : Free F (Free F X) → Free F X
-        joinfree (Var x) = x -- 
-        joinfree (Op e) = op ((F₁ F) joinfree e)
+        joinfree (var x) = x -- 
+        joinfree (op e) = op ((F₁ F) joinfree e)
 
 
     initial : {F : Functor} → Alg F
@@ -162,8 +147,13 @@ module src.gsos where
 
     -- a "closed" program is the same as just taking the fixpoint of the functor
     -- closed here is represented by the fact that the set used for variables ⊥ is empty
-    -- fact : {F : Functor} → Iso (μ F) (Free F ⊥)  
-    --fact = {!   !}
+    fact : {F : Functor} → Iso (μ F) (Free F ⊥)  
+    fact {F} = 
+        iso 
+            (! {F} {freeF {F}} .algmap)
+            (freeHom {F}{⊥}{initial{F}}{λ()} .algmap) 
+            (λ b → {! refl  !}) 
+            λ a  → {!  refl !}
 
     _×F_ : Functor → Functor → Functor 
     _×F_ F G .F₀ X = F₀ F X × F₀ G X
@@ -204,12 +194,12 @@ module src.gsos where
 
         open import Cubical.Data.Nat 
 
-        -- F X := ℕ ⊎ (X × X)
+        -- F X := ℕ + (X × X)
         data NatEx (X : Set) : Set where 
             const : ℕ → NatEx X 
             plus : X → X → NatEx X 
 
-        -- F X := ℕ ⊎ X
+        -- F X := ℕ + X
         data NatBeh (X : Set) : Set where 
             done : ℕ → NatBeh X 
             step : X → NatBeh X
@@ -232,9 +222,11 @@ module src.gsos where
         NatQ .α X = s where 
             s : NatEx (X × NatBeh X) → NatBeh (Free NatF X)
             s (const x)                             = done x
-            s (plus (x , step x') (y , _))          = step ⟨ (inl (plus (var x') (var y))) ⟩ -- reduce left
-            s (plus (x , done n) (y , step y'))     = step ⟨ (inl (plus (var x) (var y'))) ⟩ -- reduce right
-            s (plus (x , done n) (y , done m))      = done (n + m)                           -- Not step ⟨ inl (const (n + m)) ⟩
+            s (plus (x , step x') (y , _))          = step (op (plus (var x') (var y))) -- reduce left
+            s (plus (x , done n) (y , step y'))     = step (op (plus (var x) (var y'))) -- reduce right
+            s (plus (x , done n) (y , done m))      = done (n + m)                      -- Not step ⟨ inl (const (n + m)) ⟩
+        
+    
         NatQ .square f = funExt λ{ (const x) → refl
                                  ; (plus (x , done n) (y , done m)) → refl
                                  ; (plus (x , done n) (y , step y')) → refl
@@ -243,6 +235,7 @@ module src.gsos where
 
 
         open generalRun NatF Natℬ NatQ 
+        -- Next, do the denotaitonal model, the dual
         
         
         num : ℕ → Nat 
@@ -295,18 +288,19 @@ module src.gsos where
         BF .F₁ f (done x) = done x
         BF .F₁ f (step x) = step (f x)
 
+
         BQ : NatTrans (SigF ∘F (IdF ×F BF)) (BF ∘F FreeF SigF) 
         BQ .α X = s where 
             s : Sig (X × B X) → B (Free SigF X) 
             s (const b)                         = done b
             s (and (x , done b) (y , done b'))  = done (b && b')
-            s (and (x , done b) (y , step y'))  = step ⟨ (inl (and (var x) (var y'))) ⟩
-            s (and (x , step x') (y , _))       = step ⟨ (inl (and (var x')  (var y))) ⟩
+            s (and (x , done b) (y , step y'))  = step (op (and (var x) (var y')))
+            s (and (x , step x') (y , _))       = step (op (and (var x')  (var y)))
             s (or (x , done b) (y , done b'))   = done (b || b')
-            s (or (x , done b) (y , step y'))   = step ⟨ (inl (or (var x) (var y'))) ⟩
-            s (or (x , step x') (y , _))        = step ⟨ (inl (or (var x')  (var y))) ⟩
+            s (or (x , done b) (y , step y'))   = step (op (or (var x) (var y'))) 
+            s (or (x , step x') (y , _))        = step (op (or (var x')  (var y))) 
             s (not (x , done b))                = done (neg b)
-            s (not (x , step x'))               = step ⟨ (inl (not (var x'))) ⟩
+            s (not (x , step x'))               = step (op (not (var x'))) 
         BQ .square = {!   !} 
 
         open generalRun SigF BF BQ 
@@ -351,186 +345,11 @@ module src.gsos where
         subst : {X Y : Set} → BExpᵒ X → (X → BExpᵒ Y) → BExpᵒ Y 
         subst {X} {Y} e γ = freeHom {SigF} {X} {freeF {SigF} {Y}} {γ} .algmap  e
 
+
+        cast : BExpᵒ ⊥ → BExp 
+        cast = fact {SigF} .inv
+
+        _ : run (cast (subst openTerm γ₃)) ≡ done false
+        _ = refl
+
         
-
-
-
---- CRUFT 
-    -- basic distributive law 
-   {-} Q' : NatTrans (Sig ∘F ℬ) (ℬ ∘F Sig) 
-    Q' .α X (inl Tru') = Tru'
-    Q' .α X (inl Fls' ) = Fls'
-    Q' .α X (inl (And' x y)) = {!   !}
-    Q' .α X (inl d) = {!   !}
-    Q' .α X (inr false) = Fls'
-    Q' .α X (inr true) = Tru'
-    Q' .square = {!   !} -}
-
-{-
-    -- can't reduce And Tru Tru ?
-    Q' : {X : Set} → (F₀ Sig)(X × Maybe X) → Maybe (Free Sig X)
-    Q' Tru' = nothing
-    Q' Fls'  = nothing 
-    Q' (And' (x , nothing) (y , nothing))   = nothing
-    Q' (And' (x , nothing) (y , just y'))   = just (op (And' (var x) (var y')))
-    Q' (And' (x , just x') (y , _))         = just (op (And' (var x') (var y)))
-
-    Q' (Or' (x , nothing) (y , nothing))    = nothing
-    Q' (Or' (x , nothing) (y , just y'))    = just (op (Or' (var x) (var y')))
-    Q' (Or' (x , just x') (y , _))          = just (op (Or' (var x') (var y)))
-    
-    Q' (Not' (x , nothing))                 = nothing
-    Q' (Not' (x , just x'))                 = just (op (Not' (var x')))
-
-
-    Q : {X : Set} → (F₀ Sig)(Free Sig X × Maybe X) → Maybe (Free Sig X)
-    Q Tru'                                              = nothing                       -- terminal
-    Q Fls'                                              = nothing                       -- terminal
-
-    Q (And' (Op Fls' , nothing) (Op Tru' , nothing))    = just (op Fls')                -- reduce value
-    Q (And' (Op Fls' , nothing) (Op Fls' , nothing))    = just (op Fls')                -- reduce value
-    Q (And' (Op Tru' , nothing) (Op Fls' , nothing))    = just (op Fls')                -- reduce value
-    Q (And' (Op Tru' , nothing) (Op Tru' , nothing))    = just (op Tru')                -- reduce value
-    Q (And' (x , just x') (y , _))                      = just (op (And' (var x') y))   -- reduce left
-    Q (And' (x , nothing) (y , just y'))                = just (op (And' x (var y')))   -- reduce right
-    Q (And' (x , nothing) (y , nothing))                = nothing                       -- stuck
-
-
-    Q (Or' (Op Tru' , nothing) (Op Tru' , nothing))     = just (op Tru')                -- reduce value
-    Q (Or' (Op Tru' , nothing) (Op Fls' , nothing))     = just (op Tru')                -- reduce value
-    Q (Or' (Op Fls' , nothing) (Op Tru' , nothing))     = just (op Tru')                -- reduce value
-    Q (Or' (Op Fls' , nothing) (Op Fls' , nothing))     = just (op Fls')                -- reduce value
-    Q (Or' (x , just x') (y , _))                       = just (op (And' (var x') y))   -- reduce left
-    Q (Or' (x , nothing) (y , just y'))                 = just (op (And' x (var y')))   -- reduce right
-    Q (Or' (x , nothing) (y , nothing))                 = nothing                       -- stuck
-
-
-    Q (Not' (Op Tru' , just x'))                        = just (op Fls')                -- reduce value
-    Q (Not' (Op Fls' , just x'))                        = just (op Tru')                -- reduce value
-    Q (Not' (x  , just x'))                             = just (op (Not' (var x')))     -- reduce 
-    Q (Not' (x , nothing))                              = nothing                       -- stuck
-
-    Qtrans : NatTrans (Sig ∘F ((FreeF Sig ×F ℬ))) (ℬ ∘F FreeF Sig) 
-    Qtrans .α X = Q {X} 
-    Qtrans .square f = funExt λ{(Op' x) → {!   !}
-                              ; (Var' x) → {! refl  !}}
-
-
-
-    SigI : Alg Sig 
-    SigI = initial {Sig}
--}
-
-
-{-
-    -- Concrete Signature
-    pattern Tru' =  inl tt 
-    pattern Fls' =  (inr (inl tt)) 
-    pattern And' x y =  (inr (inr (inl (x , y)))) 
-    pattern Or' x y =  (inr (inr (inr (inl (x , y))))) 
-    pattern Not' x =  (inr (inr (inr (inr x)))) 
-
-    pattern Tru =  ⟨ inl tt ⟩ 
-    pattern Fls =  ⟨ (inr (inl tt)) ⟩ 
-    pattern And x y =  ⟨ (inr (inr (inl (x , y)))) ⟩ 
-    pattern Or x y = ⟨ (inr (inr (inr (inl (x , y))))) ⟩ 
-    pattern Not x = ⟨ (inr (inr (inr (inr x)))) ⟩ 
-
-    Sig : Functor
-    Sig .F₀ X = Unit ⊎ (Unit ⊎ ((X × X) ⊎ ((X × X) ⊎ X)))
-    Sig .F₁ f Tru' = Tru'
-    Sig .F₁ f Fls' = Fls'
-    Sig .F₁ f (And' x y) = And' (f x) (f y)
-    Sig .F₁ f (Or' x y) = Or' (f x) (f y)
-    Sig .F₁ f (Not' x) = Not' (f x)
- 
-
-    Bexp : Set 
-    Bexp = μ Sig
-
-    t : Bexp 
-    t = Tru
-
-    f : Bexp 
-    f = Fls
-
-    and : Bexp → Bexp → Bexp 
-    and x y = And x y 
-
-    or  : Bexp → Bexp → Bexp 
-    or x y = Or x y  
-
-    not : Bexp → Bexp 
-    not x = Not x 
-
-    val : Bexp → Set₀ 
-    val Tru = Unit
-    val Fls = Unit 
-    val _ = ⊥
-
-    val' : Bexp → Bool 
-    val' Tru = true
-    val' Fls = true
-    val' _ = false
-{-
-    sand : Bexp → Bexp → Bexp 
-    sand Tru Tru = Tru 
-    sand _ _ = Fls
-
-    sor : Bexp → Bexp → Bexp 
-    sor Fls Fls = Fls 
-    sor _ _ = Tru
-
-    snot : Bexp → Bexp 
-    snot Tru = Fls 
-    snot Fls = Tru 
-    snot _ = Fls -}
-
-    data _↓ : Bexp →  Set where 
-        Vtrue : Tru ↓
-        Vfalse : Fls ↓ 
---        VAnd : {e₁ e₂ : Bexp}{b₁ b₂ : Bool} → e₁ ↓ b₁ → e₂ ↓ b₂ → (And e₁ e₂) ↓ (b₁ && b₂) 
-
-    data _↦_ : Bexp → Bexp → Set where 
-        andL : {e₁ e₁' e₂ : Bexp} → e₁ ↦ e₁' → and e₁ e₂ ↦ and e₁' e₂ 
-        andR : {v₁ e₂ e₂' : Bexp} → val v₁ → e₂ ↦ e₂' → and v₁ e₂ ↦ and v₁ e₂' 
-       -- andV : {v₁ v₂ : Bexp} → val v₁ → val v₂ → and v₁ v₂ ↦ sand v₁ v₂
-        andV₁ : and Tru Tru ↦ Tru
-        andV₂ : and Tru Fls ↦ Fls
-        andV₃ : and Fls Tru ↦ Fls
-        andV₄ : and Fls Fls ↦ Fls
-
-        orL : {e₁ e₁' e₂ : Bexp} → e₁ ↦ e₁' → or e₁ e₂ ↦ or e₁' e₂ 
-        orR : {v₁ e₂ e₂' : Bexp} → val v₁ → e₂ ↦ e₂' → or v₁ e₂ ↦ or v₁ e₂' 
-        orV₁ : or Tru Tru ↦ Tru 
-        orV₂ : or Tru Fls ↦ Tru 
-        orV₃ : or Fls Tru ↦ Tru 
-        orV₄ : or Fls Fls ↦ Fls 
-
-        notL : {e e' : Bexp} → e ↦ e' → not e ↦ not e' 
-        notV₁ : not Tru ↦ Fls 
-        notV₂ : not Fls ↦ Tru
-
-
-
-    -- directly encode free monad
-    -- var is metavariables. not binder in the syntax of the given functor singnature
-    module foo where
-        {-# NO_POSITIVITY_CHECK #-}
-        data FreeM (F : Functor)(X : Set) : Set where 
-            var : X → FreeM F X 
-            op : (F₀ F) (FreeM F X) → FreeM F X
-
-
-        data Var₃ : Set where 
-            a b c : Var₃
-        
-        exF : Functor 
-        exF .F₀ X = Unit ⊎ ((X × X) ⊎ (X × X))
-        exF .F₁ f (inl x) = inl x
-        exF .F₁ f (inr (inl (x , x'))) = inr (inl ((f x) , (f x')))
-        exF .F₁ f (inr (inr (x , x'))) = inr (inr ((f x) , (f x')))
-
-        _ : FreeM exF Var₃ 
-        _ = op (inr (inl ((var a) , op (inl tt))))
--} 
