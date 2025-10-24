@@ -88,6 +88,11 @@ module src.Data.STLC where
 
     update' : Ctx → U → Ctx 
     update' (n , f) u = (suc n) , (update f u)
+
+    peel : {n : ℕ} → (Fin (suc n) → U) → U × (Fin n → U)
+    peel {n} f = f (toFin n) , λ x → f (suc x)
+    
+    
     
     ctxFromList : List U → Ctx 
     ctxFromList [] = 1 , λ _ → unit
@@ -117,6 +122,7 @@ module src.Data.STLC where
     -}
     
     -- include eliminators?
+    -- hit or quotient
     data _⊢_ : Ctx → U → Set where 
         u : {Γ : Ctx} → El unit → Γ ⊢ unit
         b : {Γ : Ctx} → El bool → Γ ⊢ bool 
@@ -125,6 +131,8 @@ module src.Data.STLC where
         app :  {Γ : Ctx}{t1 t2 : U} → Γ ⊢ (arr t1 t2) → Γ ⊢ t1 → Γ ⊢ t2
         var : {(n , Γ) : Ctx} → (i : Fin n) → (n , Γ) ⊢ (Γ i)
 
+    
+
     isSetTerm : {Γ : Ctx}{A : U} → isSet (Γ ⊢ A)
     isSetTerm {Γ}{A} = {!   !}
         
@@ -132,6 +140,15 @@ module src.Data.STLC where
         field 
             terms : (i : Fin (Δ .fst)) → Γ ⊢ (Δ .snd i)
     open CtxMap 
+
+    projC : {Γ Δ : Ctx}{A : U} → CtxMap Δ (update' Γ A) → CtxMap Δ Γ × (Δ ⊢ A) 
+    projC {Γ}{Δ}{A} γ = record { terms = λ i → γ .terms (suc i) } , γ .terms zero
+
+    pairC : {Γ Δ : Ctx}{A : U} → CtxMap Δ Γ × (Δ ⊢ A) → CtxMap Δ (update' Γ A) 
+    pairC {Γ}{Δ}{A} (γ , a) = record { terms = goal } where
+        goal : (i : FinF (Fin (fst Γ))) → Δ ⊢ update' Γ A .snd i
+        goal zero = a
+        goal (suc x) = γ .terms x
 
     isSetCtxMap : {Γ Δ : Ctx} → isSet (CtxMap Γ Δ)
     isSetCtxMap =  {!   !}
@@ -208,6 +225,11 @@ module src.Data.STLC where
         inspect : (f : ∀ x → B x) (x : A) → Graph f x (f x)
         inspect _ _ = ingraph refl
 
+    close : {Γ : Ctx}{A : U} → (M : Γ ⊢ A) → CtxMap ⊘ Γ → ⊘ ⊢ A 
+    close {Γ}{A} m γ = sub γ m
+
+    -- then what am i doing here...
+    -- this is unnecessary
     closedTerm : {Γ : Ctx}{t : U} → (M : Γ ⊢ t) → elCtx Γ → ⊘ ⊢ t
     closedTerm {n , Γ} {.unit} (u x) γ = u x
     closedTerm {n , Γ} {.bool} (b x) γ = b x
@@ -290,6 +312,18 @@ module src.Data.STLC where
 
         -- wtf.. it works
         _ : (closedTerm {c4} term1 t9) ≡ fun (λ x → pair (fun λ b → _⊢_.b (not b)) (fun (λ x₁ → b false))) 
+        _ = refl
+
+        not' : Bool → ⊘ ⊢ bool 
+        not' false = b true
+        not' true = b false
+
+        γ : CtxMap ⊘ c4 
+        γ = record { terms = λ{ zero → b true
+                              ; (suc zero) → pair (u tt) (u tt)
+                              ; (suc (suc zero)) → fun λ _ → b false
+                              ; (suc (suc (suc zero))) → fun not'} }
+        _ : close {c4} term1 γ ≡ fun λ x → pair (fun not' ) (fun λ _ → b false)
         _ = refl
 
 

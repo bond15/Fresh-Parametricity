@@ -1,4 +1,4 @@
-{-# OPTIONS --allow-unsolved-metas #-}
+{-# OPTIONS --allow-unsolved-metas --guardedness #-}
 
 module src.gsos where
     open import Cubical.Data.Unit
@@ -168,16 +168,16 @@ module src.gsos where
     _∘F_ G F .F₁ f GFX = F₁ G (F₁ F f) GFX
 
 
-
+    -- figure 8 bialgebr stateful 
     module generalRun 
         (Sig : Functor) 
         (B : Functor) 
         (Q : NatTrans (Sig ∘F (IdF ×F B)) (B ∘F FreeF Sig) ) where 
 
 
-        module B = Functor B
-        module Sig = Functor Sig
-        module Q = NatTrans Q
+        private module B = Functor B
+        private module Sig = Functor Sig
+        private module Q = NatTrans Q
 
         {-# TERMINATING #-}
         γ : Coalg B 
@@ -236,8 +236,91 @@ module src.gsos where
 
         open generalRun NatF Natℬ NatQ 
         -- Next, do the denotaitonal model, the dual
+        -- see page 2 of Towards HOMOS
+
+        {-# NO_POSITIVITY_CHECK #-}
+        record ν (F : Functor) : Set where 
+            coinductive 
+            constructor ⟪_⟫
+            field 
+                 out : (F₀ F) (ν F)
+        open ν 
+
+        _ : {F : Functor} → ν F → F₀ F (ν F)
+        _ = out
+
+        _ : {F : Functor} → F₀ F (ν F) → ν F 
+        _ = ⟪_⟫
+
+        module generalDen
+            (Sig : Functor) 
+            (B : Functor) 
+            (Q : NatTrans (Sig ∘F (IdF ×F B)) (B ∘F FreeF Sig) ) where 
+
+
+            private module B = Functor B
+            private module Sig = Functor Sig
+            private module Q = NatTrans Q
+
+            ρ : Alg Sig
+            ρ .car = ν B
+            ρ .alg = corun where 
+                corun : Sig .F₀ (ν B) → ν B 
+                corun = {!   !}
+                    --({! ? ∘ Q .α (ν B)   !} ∘ Sig .F₁ (λ x → (x , x))) ∘ Sig .F₁ out
+{-}
+            {-# TERMINATING #-}
+            et : Coalg B 
+            γ .car = μ Sig
+            γ .coalg = run  where 
+                run : μ Sig → B.F₀ (μ Sig) 
+                run = ((B.F₁ (freeHom {Sig}{μ Sig}{initial {Sig}}{λ x → x} .algmap) ∘ Q.α (μ Sig)) ∘ Sig.F₁ (λ x → (x , run x))) ∘ un       
+-}
+            -- closed terms, no metavars
+      --      run : μ Sig → B.F₀ (μ Sig) 
+      --      run = γ .coalg 
+
+
+        
+        record StreamF (X : Set) : Set where 
+            constructor S
+            field 
+                str : Bool × X  
+        open StreamF
+
+        StF : Functor
+        StF .F₀ = StreamF 
+        StF .F₁ f (S (b , s)) = S (b , f s)
+            
+        Stream : Set 
+        Stream = ν StF
+
+        head : Stream → Bool 
+        head s = s .out .str .fst
+
+        tail : Stream → Stream 
+        tail s = s .out .str .snd
+
+        hrm : Stream 
+        hrm .out .str = true , ⟪ S (false , hrm) ⟫
+        
+        _ : head (tail (tail hrm)) ≡ true
+        _ = refl
+
+        hm : ν Natℬ
+        hm = ⟪ (step ⟪ (step ⟪ (done 7) ⟫) ⟫) ⟫
+
         
         
+        module _ {F : Functor} where 
+            
+            final : Coalg F 
+            final .car = ν F
+            final .coalg = out
+
+
+
+
         num : ℕ → Nat 
         num n = ⟨ (const n) ⟩
 
