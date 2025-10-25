@@ -64,7 +64,7 @@ module src.Data.STLC where
 
     -- \o/ 
     ⊘ : Ctx 
-    ⊘ = 1 , λ _ → unit
+    ⊘ = 0 , λ ()
 
     gen : {n : ℕ} → (Fin n → U) → U
     gen {zero} f = unit -- won't happen
@@ -127,6 +127,7 @@ module src.Data.STLC where
         u : {Γ : Ctx} → El unit → Γ ⊢ unit
         b : {Γ : Ctx} → El bool → Γ ⊢ bool 
         pair : {Γ : Ctx}{t1 t2 : U} → Γ ⊢ t1 → Γ ⊢ t2 → Γ ⊢ (prod t1 t2)
+        -- 
         fun : {Γ : Ctx}{t1 t2 : U} → (El t1 → Γ ⊢ t2) → Γ ⊢ (arr t1 t2)
         app :  {Γ : Ctx}{t1 t2 : U} → Γ ⊢ (arr t1 t2) → Γ ⊢ t1 → Γ ⊢ t2
         var : {(n , Γ) : Ctx} → (i : Fin n) → (n , Γ) ⊢ (Γ i)

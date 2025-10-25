@@ -72,14 +72,14 @@ module _ {C : Category ℓ ℓ'} {ℓS : Level} where
                     funExt λ{ _ → 
                         cong (M .N-ob Z) (≡-× (cong lift (sym (C .⋆Assoc _ _ _ ))) refl)})
 
-    private 
-        -- inlining this definition results in termination issues.. 
-        eval : (A B : ob 𝓟) → PshProd ⟅ ExpOb B A , B ⟆b ⇒ A
-        eval A B = natTrans
-                (λ{x (B→A , Bx) → B→A .N-ob x (lift (C .id) , Bx)}) 
-                (λ f → funExt λ{(B→A , Bx) → 
-                        cong₂ (B→A .N-ob) refl (≡-× (cong lift ((C .⋆IdL f) ∙(sym (C .⋆IdR f)))) refl) 
-                        ∙ funExt⁻ (B→A .N-hom f) (lift (C .id) , Bx)})
+ 
+    -- inlining this definition results in termination issues.. 
+    eval : (A B : ob 𝓟) → PshProd ⟅ ExpOb B A , B ⟆b ⇒ A
+    eval A B = natTrans
+            (λ{x (B→A , Bx) → B→A .N-ob x (lift (C .id) , Bx)}) 
+            (λ f → funExt λ{(B→A , Bx) → 
+                    cong₂ (B→A .N-ob) refl (≡-× (cong lift ((C .⋆IdL f) ∙(sym (C .⋆IdR f)))) refl) 
+                    ∙ funExt⁻ (B→A .N-hom f) (lift (C .id) , Bx)})
 
     ⇒𝓟 : Exponentials 𝓟 ×𝓟
     ⇒𝓟 (A , B) .vertex = ExpOb B A
