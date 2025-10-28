@@ -26,7 +26,7 @@ module src.cbpvopsem where
 
         or 
             define the structure of the category generically
-            and expliclty give an small step as a functor...?
+            and expliclty give a small step operational semantics as a functor...?
     -}
     open Categoryᴰ
 
@@ -67,9 +67,19 @@ module src.cbpvopsem where
     dyn : CTy → Graph _ _ 
     dyn B = record { Node = clcTy B ; Edge = _E↦_ }
 
+    lemma : {B₁ B₂ B₃ : CTy}{k : ⊘ ◂ B₁ ⊢k B₂}{k' : ⊘ ◂ B₂ ⊢k B₃} → 
+        plug (scomp k k') ≡ (plug k ∘s plug k')
+    lemma {k' = varc} = refl
+    lemma {B₁}{B₂}{B₃}{k}{∙V x k'} = funExt λ m → cong₂ app (funExt⁻ (lemma{k = k}{k'}) m) refl
+    lemma {B₁}{B₂}{B₃}{k}{k' = x←∙:M k' x} = funExt λ m → cong₂ bind (funExt⁻ (lemma{k = k}{k'}) m) refl
+    
     prf : {B B' : CTy}{k : ⊘ ◂ B ⊢k B'}{m n : clcTy B} → m E↦ n → plug k m E↦ plug k n 
-    prf {B₁} {B₂} {k} (e-cong {B₃}{B₁}{k'} x) = {! subst  !}
-       -- plug k (plug k' m) E↦ plug k (plug k' n)
+    prf {B₁} {B₂} {k} (e-cong {B₃}{B₁}{k'}{m}{n} x) = goal where 
+        goal' : plug (scomp k' k) m E↦ plug (scomp k' k) n
+        goal' = e-cong {k = scomp k' k} x
+
+        goal : plug k (plug k' m) E↦ plug k (plug k' n) 
+        goal = subst2 (_E↦_) (funExt⁻ (lemma {k = k'}{k}) m) ((funExt⁻ (lemma {k = k'}{k}) n)) goal' 
     
 
     com : (B B' : CTy)( k : ⊘ ◂ B ⊢k B') → GraphHom (dyn B) (dyn B') 
@@ -85,16 +95,10 @@ module src.cbpvopsem where
     C .Hom[_,_] (γ , γ• )(δ , δ•) = {!   !}
     C .id = {!   !}
     C ._⋆_ = {!   !}
-    C .⋆IdL γ = {!   !} -- compsub idsub f ≡ f
-    C .⋆IdR γ = {!   !} -- compsub f idsub ≡ f
-    C .⋆Assoc = {!   !} -- compsub (compsub γ δ) ρ ≡ compsub γ (compsub δ ρ)
+    C .⋆IdL γ = {!   !} 
+    C .⋆IdR γ = {!   !} 
+    C .⋆Assoc = {!   !} 
     C .isSetHom = {!   !}
-
-    Ehom : Graph _ _ → Graph _ _ → Functor (C ^op) (SET ℓ-zero) 
-    Ehom G H .F-ob (Γ , Γ•)= GraphHom G H , {!   !}
-    Ehom G H .F-hom = {!   !}
-    Ehom G H .F-id = {!   !}
-    Ehom G H .F-seq = {!   !}
 
     const : {C D : Category _ _ } → (X : ob D) → Functor C D 
     const X .F-ob _ = X
@@ -113,77 +117,14 @@ module src.cbpvopsem where
     E .⋆IdR G H = makeNatTransPath refl
     E .⋆Assoc G H I J = makeNatTransPath refl
 
-    
     opsem : CBPVModel 
-    opsem .𝓒 = C -- SET ℓ-zero
-    opsem .𝓔 = {! E  !} --E
-    opsem .vTy = {!   !} --Set
+    opsem .𝓒 = {!   !} -- C 
+    opsem .𝓔 = {!   !} --E 
+    opsem .vTy = {!   !} 
     opsem .vTm = {!   !}
     opsem .TmB = {!   !}
     opsem .emp = {!   !}
     opsem ._×c_ = {!   !}
     opsem .up×c = {!   !}
  
-
-    {-
-
-
-    --dyn : CTy → Graph _ _ 
-   -- dyn (fun x x₁) = record { Node = {!   !} ; Edge = {!   !} }
-   -- dyn (F x) = {!   !}
-    
-    mutual 
-        elvty : VTy → Set 
-        elvty one = Unit
-        elvty (prod A A') = elvty A × elvty A'
-        elvty (U B) = {!   !} 
-        -- need syntax to be able to define reductions
-        elcty : CTy → Graph _ _
-        elcty (fun A B) = record { Node = {!   !} ; Edge = {!   !} }
-        elcty (F A) = {!   !}
-
-    𝓒+ : Categoryᴰ 𝓒 ℓ-zero ℓ-zero
-    𝓒+ .ob[_] Γ = {!   !}
-    𝓒+ .Hom[_][_,_] = {!   !}
-    𝓒+ .idᴰ = {!   !}
-    𝓒+ ._⋆ᴰ_ = {!   !}
-    𝓒+ .⋆IdLᴰ  = {!   !}
-    𝓒+ .⋆IdRᴰ = {!   !}
-    𝓒+ .⋆Assocᴰ = {!   !}
-    𝓒+ .isSetHomᴰ  = {!   !}
-   -- C = SET ℓ-zero 
-
--}
-
-{-}    open model C
-
-
-    open CBPVModel
-    open Functor
-
-    huh : Functor (C ^op) C
-    huh .F-ob = {!   !}
-    huh .F-hom = {!   !}
-    huh .F-id = {!   !}
-    huh .F-seq = {!   !}
-
-    E : EnrichedCategory (model.𝓟Mon C) ℓ-zero 
-    E  .ob = Graph _ _
-    E .Hom[_,_] G H = huh
-    E .id = {!   !}
-    E .seq = {!   !}
-    E .⋆IdL = {!   !}
-    E .⋆IdR = {!   !}
-    E .⋆Assoc = {!   !}
-    
-    opsem : CBPVModel 
-    opsem .𝓒 = C
-    opsem .𝓔 = {!   !}
-    opsem .vTy = {!   !}
-    opsem .vTm = {!   !}
-    opsem .TmB = {!   !}
-    opsem .emp = {!   !}
-    opsem ._×c_ = {!   !}
-    opsem .up×c = {!   !}
-    -}
-
+ 
