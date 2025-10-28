@@ -1,4 +1,4 @@
--- for enriched functor def
+{-# OPTIONS --allow-unsolved-metas #-}
 module src.cbpvmodel where 
     open import Cubical.Categories.Category
     open import Cubical.Foundations.Prelude
@@ -8,6 +8,7 @@ module src.cbpvmodel where
     open import Cubical.Categories.Presheaf
     open import Cubical.Categories.Presheaf.Constructions
     open import src.Data.PresheafCCC
+    open import Cubical.Categories.Limits.Terminal
     open import Cubical.Categories.NaturalTransformation
     open import Cubical.Categories.Functor
     open import Cubical.Categories.Instances.Sets
@@ -32,15 +33,41 @@ module src.cbpvmodel where
     open EnrichedCategory
     open BinProduct
 
+    yo : {C : Category ℓ-zero ℓ-zero} → ob C → Presheaf C ℓ-zero 
+    yo {C} X = C [-, X ] 
+
+    record CBPVModel : Set₂ where 
+        field 
+            𝓒 : Category ℓ-zero ℓ-zero 
+        open model 𝓒 {ℓ-zero}
+        field
+            𝓔 : EnrichedCategory 𝓟Mon ℓ-zero
+            vTy : Set 
+            vTm : vTy → Presheaf 𝓒 ℓ-zero
+            TmB : EnrichedFunctor 𝓟Mon ℓ-zero (ℓ-suc ℓ-zero) 𝓔 self
+
+            emp : Terminal 𝓒
+            _×c_ : ob 𝓒 → vTy → ob 𝓒
+            up×c : (Γ : ob 𝓒)(A : vTy) → yo {𝓒} (Γ ×c A) ≅ᶜ (yo {𝓒} Γ ×p vTm A)
+
+    record CBPVModelHom (M N : CBPVModel) : Set where 
+        private module M = CBPVModel M 
+        private module N = CBPVModel N
+        field 
+            ctx : Functor M.𝓒 N.𝓒
+            ty : M.vTy → N.vTy
+            tm : (A : M.vTy) → NatTrans (M.vTm A) (N.vTm (ty A) ∘F (ctx ^opF)) 
+           -- stk : EnrichedFunctor 
+
 
     𝓒 : Category ℓ-zero ℓ-zero 
     𝓒 .ob = Ctx
     𝓒 .Hom[_,_] = Sub[_,_]
     𝓒 .id = idsub
     𝓒 ._⋆_ = compsub
-    𝓒 .⋆IdL f = {! csubid  !} -- compsub idsub f ≡ f
-    𝓒 .⋆IdR f = {!   !} -- compsub f idsub ≡ f
-    𝓒 .⋆Assoc γ δ ρ = {!   !} -- compsub (compsub γ δ) ρ ≡ compsub γ (compsub δ ρ)
+    𝓒 .⋆IdL γ = compsubid -- compsub idsub f ≡ f
+    𝓒 .⋆IdR γ = refl -- compsub f idsub ≡ f
+    𝓒 .⋆Assoc = compsubseq -- compsub (compsub γ δ) ρ ≡ compsub γ (compsub δ ρ)
     𝓒 .isSetHom = {!   !}
 
     open model 𝓒 {ℓ-zero}
@@ -48,8 +75,8 @@ module src.cbpvmodel where
     stacks : CTy → CTy → ob 𝓟 
     stacks B B' .F-ob Γ = (Γ ◂ B ⊢k B') , {!   !}
     stacks B B' .F-hom {Γ}{Δ}= ksubCtx
-    stacks B B' .F-id = {!   !} -- ksubCtx idsub ≡ (λ x → x)
-    stacks B B' .F-seq {Γ}{Δ}{Θ} γ δ = {!   !}
+    stacks B B' .F-id = funExt λ x → ksubid -- ksubCtx idsub ≡ (λ x → x)
+    stacks B B' .F-seq {Γ}{Δ}{Θ} γ δ = funExt λ _ → sym ksubseq
         -- ksubCtx (δ ∘ γ) ≡  ksubCtx δ ∘ ksubCtx γ
 
     -- uhm... why Agda..?
@@ -65,7 +92,7 @@ module src.cbpvmodel where
         -- stack composition commutes with value context substitution
         goal : ((k , k') : (Γ ◂ B₁ ⊢k B₂) × (Γ ◂ B₂ ⊢k B₃)) →
                 scomp (ksubCtx γ k) (ksubCtx γ k') ≡ ksubCtx γ (scomp k k')
-        goal = {!   !} 
+        goal (k , k') = {!   !} 
 
     𝓔 : EnrichedCategory 𝓟Mon ℓ-zero
     𝓔 .ob = CTy
@@ -74,7 +101,7 @@ module src.cbpvmodel where
     𝓔 .seq _ _ _ = stackcomp
     𝓔 .⋆IdL B B' = makeNatTransPath (funExt λ Γ → funExt λ {(tt* , Γ◂B⊢kB') → scompid}) -- Γ◂B⊢kB' ≡ scomp varc Γ◂B⊢kB' 
     𝓔 .⋆IdR B B' = makeNatTransPath (funExt λ Γ → funExt λ{(Γ◂B⊢kB' , tt*) → refl}) -- Γ◂B⊢kB' ≡ scomp Γ◂B⊢kB' varc
-    𝓔 .⋆Assoc _ _ _ _ = makeNatTransPath (funExt λ Γ → funExt λ {(k₁ , (k₂ , k₃)) → {!   !}}) -- scomp (scomp k₁ k₂) k₃ ≡ scomp k₁ (scomp k₂ k₃)
+    𝓔 .⋆Assoc B₁ B₂ B₃ B₄ = makeNatTransPath (funExt λ Γ → funExt λ {(k₁ , (k₂ , k₃)) → scompseq {Γ}{B₁}{B₂}{B₃}{B₄}{k₁}{k₂}{k₃}}) -- scomp (scomp k₁ k₂) k₃ ≡ scomp k₁ (scomp k₂ k₃)
 
 
     -- now for computation judgements Γ ⊢ M : B  
@@ -84,7 +111,7 @@ module src.cbpvmodel where
     TmB' B .F-ob Γ = (Γ ⊢c B) , {!   !}
     TmB' B .F-hom = csub
     TmB' B .F-id = funExt λ _ → csubid
-    TmB' B .F-seq {Γ}{Δ}{θ} γ δ = funExt λ Γ⊢cB → {!   !}
+    TmB' B .F-seq {Γ}{Δ}{θ} γ δ = funExt λ Γ⊢cB → sym csubseq
         -- csub (δ ∘ γ) Γ⊢cB ≡ csub δ (csub γ Γ⊢cB)
 
     open EnrichedFunctor
@@ -97,11 +124,10 @@ module src.cbpvmodel where
         -- csub δ (plug (ksubCtx γ Γ◂B⊢kB') Δ⊢cB)
     huh B B' .N-hom {Γ}{Δ} γ = 
         funExt λ Γ◂B⊢kB' → makeNatTransPath (funExt λ θ → funExt λ{ (lift δ , θ⊢cB) → 
-            {!   !} })
-        -- plug (ksubCtx δ (ksubCtx γ Γ◂B⊢kB')) θ⊢cB 
-        --  ≡
-        -- plug (ksubCtx (δ ∘ γ) Γ◂B⊢kB') θ⊢cB
+            cong (λ h → plug h θ⊢cB ) ksubseq })
 
+           --  ksubCtx δ (ksubCtx γ Γ◂B⊢kB') ≡ ksubCtx (δ ∘ γ) Γ◂B⊢kB'
+            
 
     TmB : EnrichedFunctor 𝓟Mon ℓ-zero (ℓ-suc ℓ-zero) 𝓔 self 
     TmB .F₀ = TmB'
@@ -111,8 +137,29 @@ module src.cbpvmodel where
             makeNatTransPath (funExt λ Δ → funExt λ{(lift γ , Δ⊢cB ) → refl })})
     TmB .Fseq {B₁}{B₂}{B₃} = 
         makeNatTransPath (funExt λ Γ → funExt λ{(k , k') → 
-            makeNatTransPath (funExt λ Δ  → funExt λ{(lift γ , Δ⊢cB₁)→ {!   !}})})
-    --  plug (ksubCtx (λ i → vsub var (γ i)) k')
-    --    (plug (ksubCtx (λ i → vsub var (γ i)) k) Δ⊢cB₁)
+            makeNatTransPath (funExt λ Δ  → funExt λ{(lift γ , Δ⊢cB₁)→ {! funExt⁻ ?  Δ⊢cB₁  !}})})
+    --  plug (ksubCtx γ k')
+    --    (plug (ksubCtx γ k) Δ⊢cB₁)
     -- ≡ 
     --  plug (ksubCtx γ (scomp k k')) Δ⊢cB₁
+    open import Cubical.Data.Fin.Recursive
+    cbpv : CBPVModel 
+    cbpv = record{ 
+        𝓒 = 𝓒; 
+        𝓔 = 𝓔; 
+        vTy = VTy; 
+        vTm = λ A → 
+            record { 
+                F-ob = λ Γ → (Γ ⊢v A) , {!   !} ; 
+                F-hom = vsub; 
+                F-id = funExt λ _ → vsubid ; 
+                F-seq = λ f g  → funExt λ x → sym (vsubseq {γ = g}{f}{x}) }; 
+        TmB = TmB; 
+        emp = ⊘ , λ y → (λ () ), λ{x → {! x  !}} ; 
+        _×c_ = _,,_; 
+        up×c = λ Γ A → 
+            record { 
+                trans = natTrans (λ Δ → projC) λ f → refl ; 
+                nIso = λ Δ → isiso pairC refl (funExt λ {γ → funExt λ {zero → refl
+                                                                     ; (suc x) → refl}}) }}
+
