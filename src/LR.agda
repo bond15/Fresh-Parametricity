@@ -256,14 +256,10 @@ module src.LR where
     ⊘isTerminal Γ = ! , uniq where 
         open CtxMap
         ! : S [ Γ , ⊘ ]
-        ! .terms zero = u tt
+        ! .terms ()
 
         uniq : (γ : S [ Γ , ⊘ ]) → ! ≡ γ 
-        uniq γ = ≡CtxMap (funExt λ {zero → ηunit}) where 
-            -- this we'd need from a quotient or Hit
-            -- this equality is part of the syntax
-            ηunit : {M : Γ ⊢ unit} → u tt ≡ M 
-            ηunit = {!   !}
+        uniq γ = ≡CtxMap (funExt λ ())
 
     open CtxMap
     STLC : scwf 
@@ -285,6 +281,67 @@ module src.LR where
                                                                           ; (suc x) → refl})}  
         goal : yo {S} (update' Γ A) ≅ᶜ (yo {S} Γ ×p tm A)
         goal = record { trans = nt ; nIso = isont } 
+
+    module hmm where 
+        open scwfHom 
+        open import Cubical.Data.Sigma
+        open import Cubical.Data.Bool
+
+
+        what : Type → Presheaf (SET ℓ-zero) ℓ-zero 
+        what A .F-ob (Γ , Γset) = (Γ → A) , isSet→ {!   !}
+        what A .F-hom γ = γ ∘s_
+        what A .F-id = refl
+        what A .F-seq γ δ = refl
+
+        sem : scwf 
+        sem .C = SET ℓ-zero
+        sem .emp = (Unit , isSetUnit) , {!   !}
+        sem .Ty = Set
+        sem .Tm = what
+        sem ._×c_ (Γ , _) A = (Γ × A) , {!   !}
+        sem .up×c Γ A = {!   !}
+            --record { trans = natTrans (λ x x₁ → {!   !}) {!   !} ; nIso = {!   !} }
+
+
+        denty : Ty STLC → Type 
+        denty unit = Unit
+        denty bool = Bool
+        denty (prod x y) = denty x × denty y
+        denty (arr x y) = denty x → denty y
+
+        {-# TERMINATING #-}
+        denctx' : Ctx → hSet ℓ-zero 
+        denctx' (zero , Γ) = Unit , isSetUnit
+        denctx' (suc n , Γ) = (denty (Γ (toFin n)) × denctx' (n , (peel Γ .snd)) .fst) , {!   !}
+
+        denctx : Functor (C STLC) (SET ℓ-zero) 
+        denctx .F-ob  = denctx'
+        denctx .F-hom {Δ} {(zero , Γ)} γ _ = tt
+        denctx .F-hom {Δ} {(suc n , Γ)} γ d = {!   !} , {! d  !}
+        denctx .F-id = {!   !}
+        denctx .F-seq = {!   !}
+
+        dentm : {Γ : Ctx}{A : U} → Γ ⊢ A → denctx' Γ .fst → denty A 
+        dentm (u x) _ = x
+        dentm (b x) _ = x
+        dentm (pair x y) Γ = (dentm x Γ) , (dentm y Γ)
+        dentm (fun x) Γ a = dentm (x {! a  !}) Γ
+        dentm (app x y) Γ = dentm x Γ (dentm y Γ)
+        dentm (var i) Γ = {!   !}
+
+        tmnat : (A : Ty STLC) → NatTrans (Tm STLC A) (what (denty A) ∘F (denctx ^opF)) 
+        tmnat A .N-ob Γ = dentm
+        tmnat A .N-hom = {!   !}
+
+        setmodel : scwfHom STLC sem
+        setmodel .Fc = denctx
+        setmodel .Fty  = denty
+        setmodel .Ftm = tmnat
+        setmodel .presTerm = {!   !}
+        setmodel .presExt = {!   !}
+        setmodel .presSub = {!   !}
+          
 
     open types STLC
     STLC-×Types : prodTypes
@@ -392,5 +449,5 @@ module src.LR where
     FL .presExt = {!   !}
     FL .presSub = {!   !}
           
-    
+      
            

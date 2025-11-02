@@ -50,14 +50,17 @@ module src.cbpvmodel where
             _×c_ : ob 𝓒 → vTy → ob 𝓒
             up×c : (Γ : ob 𝓒)(A : vTy) → yo {𝓒} (Γ ×c A) ≅ᶜ (yo {𝓒} Γ ×p vTm A)
 
-    record CBPVModelHom (M N : CBPVModel) : Set where 
+    record CBPVModelHom (M N : CBPVModel) : Set₂ where 
         private module M = CBPVModel M 
         private module N = CBPVModel N
         field 
             ctx : Functor M.𝓒 N.𝓒
             ty : M.vTy → N.vTy
             tm : (A : M.vTy) → NatTrans (M.vTm A) (N.vTm (ty A) ∘F (ctx ^opF)) 
-           -- stk : EnrichedFunctor 
+        open model M.𝓒 {ℓ-zero}
+        field
+            stk : EnrichedFunctor 𝓟Mon ℓ-zero ℓ-zero  M.𝓔  (BaseChange ctx N.𝓔 )
+            --cmp : 
 
 
     𝓒 : Category ℓ-zero ℓ-zero 
@@ -163,3 +166,4 @@ module src.cbpvmodel where
                 nIso = λ Δ → isiso pairC refl (funExt λ {γ → funExt λ {zero → refl
                                                                      ; (suc x) → refl}}) }}
 
+ 

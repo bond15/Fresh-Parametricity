@@ -158,13 +158,17 @@ module PshMonoidal where
                                 f .N-ob c' (e , Pc')))) (cong lift (cong (𝓒 ⋆ id 𝓒)  (𝓒 .⋆IdL _))) 
                    })})  
 
-    module _ (𝓒 𝓓 : Category ℓ ℓ')(F : Functor 𝓒 𝓓) {ℓS : Level} where 
-        open model 𝓒 renaming (𝓟Mon to 𝓒Mon)
-        BaseChange : EnrichedCategory 𝓒Mon ℓS → EnrichedCategory {!   !} {!   !} 
+    
+    module _ {𝓒 𝓓 : Category ℓ ℓ'}(F : Functor 𝓓 𝓒) {ℓS : Level} where 
+        open model 𝓒 {ℓ-zero} renaming (𝓟Mon to 𝓒Mon)
+        open model 𝓓 {ℓ-zero} renaming (𝓟Mon to 𝓓Mon)
+
+        BaseChange : EnrichedCategory 𝓒Mon ℓS → EnrichedCategory 𝓓Mon ℓS 
         BaseChange C .ob = ob C
-        BaseChange C .Hom[_,_] X Y = {!  Hom[_,_] C X Y !} ∘F Hom[_,_] C X Y
-        BaseChange C .id = {!   !}
-        BaseChange C .seq = {!   !}
+        BaseChange C .Hom[_,_] X Y = Hom[_,_] C X Y ∘F (F ^opF) 
+        BaseChange C .id {x} = {!   !}
+        BaseChange C .seq x y z = {!   !}
         BaseChange C .⋆IdL = {!   !}
         BaseChange C .⋆IdR = {!   !}
         BaseChange C .⋆Assoc = {!   !}
+        
