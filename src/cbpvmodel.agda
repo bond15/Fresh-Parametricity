@@ -1,5 +1,6 @@
 {-# OPTIONS --allow-unsolved-metas #-}
 {-# OPTIONS --lossy-unification #-}
+{-# OPTIONS --type-in-type #-}
 module src.cbpvmodel where 
     open import Cubical.Categories.Category
     open import Cubical.Foundations.Prelude
@@ -45,11 +46,24 @@ module src.cbpvmodel where
             𝓔 : EnrichedCategory 𝓟Mon ℓ-zero
             vTy : Set 
             vTm : vTy → Presheaf 𝓒 ℓ-zero
-            TmB : EnrichedFunctor 𝓟Mon ℓ-zero (ℓ-suc ℓ-zero) 𝓔 self
+            TmB : EnrichedFunctor 𝓟Mon  𝓔 self
 
             emp : Terminal 𝓒
             _×c_ : ob 𝓒 → vTy → ob 𝓒
             up×c : (Γ : ob 𝓒)(A : vTy) → yo {𝓒} (Γ ×c A) ≅ᶜ (yo {𝓒} Γ ×p vTm A)
+
+    
+    module _ {M N : CBPVModel} where 
+        private module M = CBPVModel M 
+        private module N = CBPVModel N
+        open model M.𝓒 {ℓ-zero}
+
+        open EnrichedFunctor
+        foo : (ctx : Functor M.𝓒 N.𝓒) → EnrichedFunctor 𝓟Mon (BaseChange ctx (model.self N.𝓒))(model.self M.𝓒)
+        foo ctx .F₀ = _∘F (ctx ^opF)
+        foo ctx .F₁ = natTrans (λ{m f → natTrans (λ{ m' (g , h) → {! h m !}} ) {!   !}}) {!   !}
+        foo ctx .Fid = {!   !}
+        foo ctx .Fseq = {!   !}
 
     record CBPVModelHom (M N : CBPVModel) : Set₂ where 
         private module M = CBPVModel M 
@@ -60,9 +74,28 @@ module src.cbpvmodel where
             tm : (A : M.vTy) → NatTrans (M.vTm A) (N.vTm (ty A) ∘F (ctx ^opF)) 
         open model M.𝓒 {ℓ-zero}
         field
-            stk : EnrichedFunctor 𝓟Mon ℓ-zero ℓ-zero  M.𝓔  (BaseChange ctx N.𝓔 )
-            cmp : EnrichedNatTrans M.TmB {! BaseChangeF ? ?  !}
-                --EnrichedNatTrans M.TmB (BaseChangeF ctx N.TmB)
+            stk : EnrichedFunctor 𝓟Mon M.𝓔 (BaseChange ctx N.𝓔 )
+            cmp : EnrichedNatTrans M.TmB (ecomp 𝓟Mon stk (ecomp 𝓟Mon (BaseChangeF ctx N.TmB) (foo {M}{N} ctx)))
+            -- goal EnrichedFunctor (model.𝓟Mon M.𝓒) ℓ-zero ℓ-zero         M.𝓔 (model.self M.𝓒)
+            -- have EnrichedFunctor (model.𝓟Mon N.𝓒) ℓ-zero (ℓ-suc ℓ-zero) N.𝓔 (model.self N.𝓒)
+            --      EnrichedFunctor 𝓟Mon             ℓ-zero ℓ-zero        (BaseChange ctx N.𝓔) (BaseChange ctx (model.self N.𝓒))
+            -- BaseChangeF ctx N.TmB not quite
+
+            {-
+                composition of enriched functors ..?
+                    ctx : Functor M.𝓒 N.𝓒 
+                Can we derive enriched functors
+                    L : EFunctor M M.𝓔 (BaseChange ctx N.𝓔)
+                        this is stk
+
+                    R : EFunctor M (BaseChange ctx (model.self N.𝓒)) (model.self M.𝓒)
+
+                    C : EFunctor M (BaseChange ctx N.𝓔) (BaseChange ctx (model.self N.𝓒))
+                        this is (BaseChangeF ctx N.TmB)
+
+                    then goal is 
+                        L ∙ C ∙ R 
+            -}
 
 
     𝓒 : Category ℓ-zero ℓ-zero 
@@ -131,10 +164,10 @@ module src.cbpvmodel where
         funExt λ Γ◂B⊢kB' → makeNatTransPath (funExt λ θ → funExt λ{ (lift δ , θ⊢cB) → 
             cong (λ h → plug h θ⊢cB ) ksubseq })
 
-           --  ksubCtx δ (ksubCtx γ Γ◂B⊢kB') ≡ ksubCtx (δ ∘ γ) Γ◂B⊢kB'
+           --  ksubCtx δ (ksubCtx γ Γ◂B⊢kB') ≡ ksuCtx (δ ∘ γ) Γ◂B⊢kB'
             
 
-    TmB : EnrichedFunctor 𝓟Mon ℓ-zero (ℓ-suc ℓ-zero) 𝓔 self 
+    TmB : EnrichedFunctor 𝓟Mon  𝓔 self 
     TmB .F₀ = TmB'
     TmB .F₁ {B} {B'} = huh B B' 
     TmB .Fid {B} = 

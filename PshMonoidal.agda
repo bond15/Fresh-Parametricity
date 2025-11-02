@@ -1,5 +1,5 @@
 {-# OPTIONS --allow-unsolved-metas #-}
-
+{-# OPTIONS --lossy-unification #-}
 module PshMonoidal where
 
     open import Cubical.Categories.Category
@@ -173,6 +173,7 @@ module PshMonoidal where
         BaseChange C .⋆IdR x y = makeNatTransPath (funExt λ d → {! C .⋆IdL x y   !})
         BaseChange C .⋆Assoc = {!   !}
 
+
     module _ 
         {𝓒 𝓓 : Category ℓ ℓ'}
         (F : Functor 𝓓 𝓒) 
@@ -182,11 +183,11 @@ module PshMonoidal where
 
         module _ 
             {C C' : EnrichedCategory 𝓒Mon ℓ-zero}
-            (𝓖 : EnrichedFunctor 𝓒Mon ℓ-zero ℓ-zero C C' ) where 
+            (𝓖 : EnrichedFunctor 𝓒Mon C C' ) where 
 
             open EnrichedFunctor
             
-            BaseChangeF : EnrichedFunctor 𝓓Mon ℓ-zero ℓ-zero (BaseChange F C) (BaseChange F C') 
+            BaseChangeF : EnrichedFunctor 𝓓Mon (BaseChange F C) (BaseChange F C') 
             BaseChangeF .F₀ = F₀ 𝓖
             BaseChangeF .F₁ {X} {Y} = natTrans (λ d → 𝓖 .F₁ {X} {Y} .N-ob (F .F-ob d)) λ f → 𝓖 .F₁ {X}{Y} .N-hom (F .F-hom f)
             BaseChangeF .Fid = makeNatTransPath {!   !}

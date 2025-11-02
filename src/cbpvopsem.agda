@@ -1,4 +1,6 @@
 {-# OPTIONS --type-in-type #-}
+{-# OPTIONS --lossy-unification #-}
+
 -- being lazy
 module src.cbpvopsem where 
     open import Cubical.Categories.Instances.Sets
@@ -132,7 +134,7 @@ module src.cbpvopsem where
     hrm .N-hom f = funExt λ x → makeNatTransPath refl
 
 
-    semctm : EnrichedFunctor (model.𝓟Mon (SET ℓ-zero)) ℓ-zero (ℓ-suc ℓ-zero) E (model.self (SET ℓ-zero))
+    semctm : EnrichedFunctor (model.𝓟Mon (SET ℓ-zero))  E (model.self (SET ℓ-zero))
     semctm .F₀ = semctm'
     semctm .F₁ = hrm
     semctm .Fid = makeNatTransPath refl
@@ -140,10 +142,10 @@ module src.cbpvopsem where
 
     sem : CBPVModel 
     sem .𝓒 = SET ℓ-zero
-    sem .𝓔 = {!   !} --E
+    sem .𝓔 = E 
     sem .vTy = Set
     sem .vTm = semtm
-    sem .TmB = {!   !} --semctm
+    sem .TmB = semctm 
     sem .emp = {!   !}
     sem ._×c_ = {!   !}
     sem .up×c = {!   !}
@@ -161,18 +163,21 @@ module src.cbpvopsem where
     dentm A .N-ob Γ Γ⊢vA Γ∙ = vsub Γ∙ Γ⊢vA
     dentm A .N-hom γ = {!   !}
 
-{-}
-    denstk : EnrichedFunctor (model.𝓟Mon (𝓒 cbpv)) ℓ-zero ℓ-zero (𝓔 cbpv) (BaseChange denctx E)
-    --(𝓔 sem))
+    denstk : EnrichedFunctor (model.𝓟Mon (𝓒 cbpv))  (𝓔 cbpv) (BaseChange denctx E)
     denstk .F₀ = dyn
     denstk .F₁ {B}{B'} = natTrans (com B B') λ f → {! refl  !}
     denstk .Fid = {!   !}
     denstk .Fseq = {!   !} 
-    -}
-
     
     opsem : CBPVModelHom cbpv sem
     opsem .ctx = denctx
     opsem .ty = denty
     opsem .tm = dentm
-    opsem .stk = {!   !} -- denstk
+    opsem .stk = denstk -- denstk
+    opsem .cmp = 
+        record { -- not using γ ..?
+            E-N-ob = λ B → natTrans (λ{Γ tt* → natTrans (λ{ Δ (γ , m) Δ∙ → csub Δ∙ m}) {!   !}}) {!   !} ; 
+            E-N-hom = λ B B' → 
+                makeNatTransPath (funExt λ Γ → funExt λ Γ◂B⊢kB' → 
+                    makeNatTransPath (funExt λ Δ → funExt λ{(γ , Δ⊢cB) → funExt λ Δ∙ → {!   !}}))}
+ 
