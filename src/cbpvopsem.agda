@@ -82,8 +82,8 @@ module src.cbpvopsem where
         goal = subst2 (_E↦_) (funExt⁻ (lemma {k = k'}{k}) m) ((funExt⁻ (lemma {k = k'}{k}) n)) goal' 
     
 
-    com : (B B' : CTy)( k : ⊘ ◂ B ⊢k B') → GraphHom (dyn B) (dyn B') 
-    com B B' k = record { _$g_ = plug k ; _<$g>_ = prf }
+    com : (B B' : CTy)(Γ : Ctx)( k : Γ ◂ B ⊢k B')(Γ∙ : clCtx Γ) → GraphHom (dyn B) (dyn B') 
+    com B B' Γ k γ = record { _$g_ = plug (ksubCtx γ k) ; _<$g>_ = prf }
 
     open CBPVModel
     open Category
@@ -122,8 +122,15 @@ module src.cbpvopsem where
     open import src.Data.PresheafCCC
 
     hrm : {G H : Graph ℓ-zero ℓ-zero} → NatTrans (semstk G H) (ExpOb (semctm' G) (semctm' H)) 
-    hrm .N-ob (X , _) f = natTrans (λ {(Y , _) (g , h) x₂ → f (lower g x₂) $g h x₂}) λ _ → refl
+    hrm .N-ob (X , _) f = natTrans (λ {(Y , _) (g , h) y → f (lower g y) $g h y}) λ _ → refl
+        -- f : X → GraphHom G H 
+        -- h : Y → G .Node
+        -- g : Y → X
+        -- construct Y → H .Node
+        -- use f (g y) : GraphHom G H 
+        -- on  h y : G .Node
     hrm .N-hom f = funExt λ x → makeNatTransPath refl
+
 
     semctm : EnrichedFunctor (model.𝓟Mon (SET ℓ-zero)) ℓ-zero (ℓ-suc ℓ-zero) E (model.self (SET ℓ-zero))
     semctm .F₀ = semctm'
@@ -150,33 +157,18 @@ module src.cbpvopsem where
     denty : vTy cbpv → Type 
     denty A = ⊘ ⊢v A
 
-    mutual
-        denvtm' : {A : VTy}{Γ : Ctx} → Γ ⊢v A → clCtx Γ → clvTy A 
-        denvtm' (var i) γ = γ i
-        denvtm' u γ = u
-        denvtm' (pair x y) γ = pair (denvtm' x γ) ((denvtm' y γ))
-        denvtm' (thunk x) γ = thunk (denctm' x γ)
-
-        denctm' : {B : CTy}{Γ : Ctx} → Γ ⊢c B → clCtx Γ → clcTy B 
-        denctm' (ret x) γ = ret (denvtm' x γ)
-        denctm' (force x) γ = force (denvtm' x γ)
-        denctm' (lam x) = {!   !}
-        denctm' (app x y) γ = app (denctm' x  γ) (denvtm' y γ)
-        denctm' (rec× x y) γ = rec× (denvtm' x γ) {! denctm'  !}
-        denctm' (x >>=λx, y) = {!   !}
-
     dentm : (A : vTy cbpv) → NatTrans (vTm cbpv A) (semtm (denty A) ∘F (denctx ^opF)) 
-    dentm A .N-ob Γ = denvtm' {A} {Γ}
-    dentm A .N-hom = {!   !}
+    dentm A .N-ob Γ Γ⊢vA Γ∙ = vsub Γ∙ Γ⊢vA
+    dentm A .N-hom γ = {!   !}
 
 {-}
     denstk : EnrichedFunctor (model.𝓟Mon (𝓒 cbpv)) ℓ-zero ℓ-zero (𝓔 cbpv) (BaseChange denctx E)
     --(𝓔 sem))
     denstk .F₀ = dyn
-    denstk .F₁ {B}{B'} = natTrans (λ Γ Γ◂B⊢kB' Γ∙ → {!  com B B'   !}) {!   !}
+    denstk .F₁ {B}{B'} = natTrans (com B B') λ f → {! refl  !}
     denstk .Fid = {!   !}
-    denstk .Fseq = {!   !} -}
-    
+    denstk .Fseq = {!   !} 
+    -}
 
     
     opsem : CBPVModelHom cbpv sem
@@ -184,113 +176,3 @@ module src.cbpvopsem where
     opsem .ty = denty
     opsem .tm = dentm
     opsem .stk = {!   !} -- denstk
-
-    {-
-       record CBPVModelHom (M N : CBPVModel) : Set₂ where 
-        private module M = CBPVModel M 
-        private module N = CBPVModel N
-        field 
-            ctx : Functor M.𝓒 N.𝓒
-            ty : M.vTy → N.vTy
-            tm : (A : M.vTy) → NatTrans (M.vTm A) (N.vTm (ty A) ∘F (ctx ^opF)) 
-        open model M.𝓒 {ℓ-zero}
-        field
-            stk : EnrichedFunctor 𝓟Mon ℓ-zero ℓ-zero  M.𝓔  (BaseChange ctx N.𝓔 )
-    -}
-
-{-
-    -- subcategory of closed contexts..?
-    C : Category ℓ-zero ℓ-zero 
-    C .ob = Σ[ Γ ∈ Ctx ] clCtx Γ 
-    C .Hom[_,_] (γ , γ• )(δ , δ•) = {!   !}
-    C .id = {!   !}
-    C ._⋆_ = {!   !}
-    C .⋆IdL γ = {!   !} 
-    C .⋆IdR γ = {!   !} 
-    C .⋆Assoc = {!   !} 
-    C .isSetHom = {!   !}
-
-    const : {C D : Category _ _ } → (X : ob D) → Functor C D 
-    const X .F-ob _ = X
-    const {C} {D} X .F-hom f = D .id
-    const X .F-id = refl
-    const {C} {D} X .F-seq _ _ = sym (⋆IdL D _)
-    
-
-    -- doesn't use the enrichment?
-    E : {C : Category ℓ-zero ℓ-zero } → EnrichedCategory (model.𝓟Mon C) ℓ-zero
-    E .ob = Graph _ _
-    E .Hom[_,_] G H = const (GraphHom G H , {!   !})
-    E .id {G} = natTrans (λ {_ tt* → IdHom}) λ _ → refl
-    E .seq G H I = natTrans (λ{_ (f , g ) → f ⋆GrHom g }) λ f → refl
-    E .⋆IdL G H = makeNatTransPath refl
-    E .⋆IdR G H = makeNatTransPath refl
-    E .⋆Assoc G H I J = makeNatTransPath refl
-
-
-    open import Cubical.Categories.Presheaf
-
-    semtm : Set → Presheaf (SET ℓ-zero) ℓ-zero 
-    semtm A .F-ob Γ = (Γ .fst → A) , {!   !}
-    semtm A .F-hom γ = γ ∘s_
-    semtm A .F-id = {!   !}
-    semtm A .F-seq = {!   !}
-
-
-    semstk : Set → Set → Functor (SET ℓ-zero ^op) (SET ℓ-zero)
-    semstk X Y .F-ob Γ = {! Graph  !}
-    semstk X Y .F-hom = {!   !}
-    semstk X Y .F-id = {!   !}
-    semstk X Y .F-seq = {!   !}
-
-{-}
-    E : EnrichedCategory (model.𝓟Mon (SET ℓ-zero)) ℓ-zero 
-    E .ob = Set
-    E .Hom[_,_] = semstk
-    E .id {X} = {!   !}
-    E .seq X Y Z = {!   !}
-    E .⋆IdL X Y = {!   !}
-    E .⋆IdR X Y = {!   !}
-    E .⋆Assoc X Y Z W = {!   !}
-    -}
-    
-    sem : CBPVModel 
-    sem .𝓒 = SET ℓ-zero -- C 
-    sem .𝓔 = {! E  !} --E 
-    sem .vTy = Set 
-    sem .vTm = semtm
-    sem .TmB = {!   !}
-    sem .emp = {!   !}
-    sem ._×c_ = {!   !}
-    sem .up×c = {!   !}
-
-    open import Cubical.Data.Nat
-    open import Cubical.Data.Empty
-
-    denty : vTy cbpv → Set 
-    denty t = {!   !}
-
-    denctx' : Ctx → hSet ℓ-zero 
-    denctx' (zero , Γ) = ⊥ , {!  !}
-    denctx' (suc n , Γ) = denctx' {! projC   !} .fst × denty (Γ (toFin n)) , {!   !}
-    
-    denctx : Functor (𝓒 cbpv) (SET ℓ-zero)
-    denctx .F-ob = denctx'
-    denctx .F-hom = {!   !}
-    denctx .F-id = {!   !}
-    denctx .F-seq = {!   !}
-
-    open NatTrans
-
-    dentm : (A : vTy cbpv) → NatTrans (vTm cbpv A) (semtm (denty A) ∘F (denctx ^opF))
-    dentm A .N-ob Γ = {!   !}
-    dentm A .N-hom = {!   !}
-
-    open CBPVModelHom 
-    opsem : CBPVModelHom cbpv sem 
-    opsem .ctx = denctx
-    opsem .ty = denty
-    opsem .tm = dentm
-    opsem .stk = {!   !}
- -}
-  

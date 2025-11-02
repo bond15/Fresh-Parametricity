@@ -1,4 +1,5 @@
 {-# OPTIONS --allow-unsolved-metas #-}
+{-# OPTIONS --lossy-unification #-}
 module src.cbpvmodel where 
     open import Cubical.Categories.Category
     open import Cubical.Foundations.Prelude
@@ -60,7 +61,8 @@ module src.cbpvmodel where
         open model M.𝓒 {ℓ-zero}
         field
             stk : EnrichedFunctor 𝓟Mon ℓ-zero ℓ-zero  M.𝓔  (BaseChange ctx N.𝓔 )
-            --cmp : 
+            cmp : EnrichedNatTrans M.TmB {! BaseChangeF ? ?  !}
+                --EnrichedNatTrans M.TmB (BaseChangeF ctx N.TmB)
 
 
     𝓒 : Category ℓ-zero ℓ-zero 

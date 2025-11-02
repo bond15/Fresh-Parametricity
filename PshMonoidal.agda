@@ -163,12 +163,35 @@ module PshMonoidal where
         open model 𝓒 {ℓ-zero} renaming (𝓟Mon to 𝓒Mon)
         open model 𝓓 {ℓ-zero} renaming (𝓟Mon to 𝓓Mon)
 
+
         BaseChange : EnrichedCategory 𝓒Mon ℓS → EnrichedCategory 𝓓Mon ℓS 
         BaseChange C .ob = ob C
         BaseChange C .Hom[_,_] X Y = Hom[_,_] C X Y ∘F (F ^opF) 
-        BaseChange C .id {x} = {!   !}
-        BaseChange C .seq x y z = {!   !}
-        BaseChange C .⋆IdL = {!   !}
-        BaseChange C .⋆IdR = {!   !}
+        BaseChange C .id {x} = natTrans (λ{d → C .id .N-ob (F .F-ob d) }) λ f  → C .id .N-hom (F-hom F f)
+        BaseChange C .seq x y z = natTrans (λ{d  → C .seq x y z .N-ob (F .F-ob d) }) λ f  → C .seq _ _ _  .N-hom (F-hom F f)
+        BaseChange C .⋆IdL x y = makeNatTransPath (funExt λ d → funExt λ { (tt* , f) → cong (λ h → h .N-ob d (tt*  , f)) {! C .⋆IdL ? ?  !}})
+        BaseChange C .⋆IdR x y = makeNatTransPath (funExt λ d → {! C .⋆IdL x y   !})
         BaseChange C .⋆Assoc = {!   !}
-        
+
+    module _ 
+        {𝓒 𝓓 : Category ℓ ℓ'}
+        (F : Functor 𝓓 𝓒) 
+        {ℓS : Level} where 
+        open model 𝓒 {ℓ-zero} renaming (𝓟Mon to 𝓒Mon)
+        open model 𝓓 {ℓ-zero} renaming (𝓟Mon to 𝓓Mon)
+
+        module _ 
+            {C C' : EnrichedCategory 𝓒Mon ℓ-zero}
+            (𝓖 : EnrichedFunctor 𝓒Mon ℓ-zero ℓ-zero C C' ) where 
+
+            open EnrichedFunctor
+            
+            BaseChangeF : EnrichedFunctor 𝓓Mon ℓ-zero ℓ-zero (BaseChange F C) (BaseChange F C') 
+            BaseChangeF .F₀ = F₀ 𝓖
+            BaseChangeF .F₁ {X} {Y} = natTrans (λ d → 𝓖 .F₁ {X} {Y} .N-ob (F .F-ob d)) λ f → 𝓖 .F₁ {X}{Y} .N-hom (F .F-hom f)
+            BaseChangeF .Fid = makeNatTransPath {!   !}
+            BaseChangeF .Fseq = {!   !}
+
+
+
+         
